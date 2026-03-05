@@ -14,7 +14,7 @@ class ReportController extends Controller
     public function index()
     {
         $programs = Program::all(); // scope applied
-        $leaders  = User::where('church_id', auth()->user()->church_id)->where('role', 'leader')->get();
+        $leaders  = User::where('church_id', auth()->$this->user()->church_id)->where('role', 'leader')->get();
         return view('reports.index', compact('programs', 'leaders'));
     }
 
@@ -28,7 +28,7 @@ class ReportController extends Controller
             'leader_id'  => ['nullable', 'exists:users,id'],
         ]);
 
-        $churchId = auth()->user()->church_id;
+        $churchId = auth()->$this->user()->church_id;
 
         return $request->type === 'attendance'
             ? $this->reportService->attendanceCsv($churchId, $request->from, $request->to, $request->program_id)

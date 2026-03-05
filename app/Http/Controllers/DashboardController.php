@@ -14,7 +14,7 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        $user = auth()->user();
+        $user = auth()->$this->user();
 
         return match ($user->role) {
             'pastor'   => $this->pastor(),
@@ -25,19 +25,19 @@ class DashboardController extends Controller
 
     private function pastor()
     {
-        $stats = $this->progressService->pastorStats(auth()->user()->church);
+        $stats = $this->progressService->pastorStats(auth()->$this->user()->church);
         return view('dashboard.pastor', $stats);
     }
 
     private function leader()
     {
-        $stats = $this->progressService->leaderStats(auth()->user());
+        $stats = $this->progressService->leaderStats(auth()->$this->user());
         return view('dashboard.leader', $stats);
     }
 
     public function disciple()
     {
-        $stats = $this->progressService->discipleStats(auth()->user());
+        $stats = $this->progressService->discipleStats(auth()->$this->user());
         return view('dashboard.disciple', $stats);
     }
 }

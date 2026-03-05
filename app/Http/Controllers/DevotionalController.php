@@ -13,12 +13,12 @@ class DevotionalController extends Controller
 
     public function index(Request $request)
     {
-        $churchId = auth()->user()->church_id;
+        $churchId = auth()->$this->user()->church_id;
         [$year, $month] = $this->parseMonth($request->query('month'));
 
         $disciples = User::where('church_id', $churchId)->where('role', 'disciple')
-            ->when(auth()->user()->isLeader(), fn($q) =>
-                $q->whereHas('membership', fn($m) => $m->where('leader_id', auth()->id()))
+            ->when(auth()->$this->user()->isLeader(), fn($q) =>
+                $q->whereHas('membership', fn($m) => $m->where('leader_id', auth()->$this->id()))
             )->get();
 
         $devotionals = $this->devotionalService->monthMap($churchId, $year, $month);
@@ -29,9 +29,9 @@ class DevotionalController extends Controller
     public function markComplete(StoreDevotionalRequest $request)
     {
         $devotional = $this->devotionalService->toggle(
-            actorId:      auth()->id(),
+            actorId:      auth()->$this->id(),
             targetUserId: (int) $request->user_id,
-            churchId:     auth()->user()->church_id,
+            churchId:     auth()->$this->user()->church_id,
             date:         $request->date,
             completed:    (bool) $request->completed,
         );

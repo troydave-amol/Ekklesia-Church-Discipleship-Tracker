@@ -18,10 +18,10 @@ class LessonController extends Controller
 
     public function myLessons()
     {
-        $level = auth()->user()->membership->destiny_training_level ?? null;
+        $level = auth()->$this->user()->membership->destiny_training_level ?? null;
         $lessons = Lesson::when($level, fn($q) =>
             $q->whereHas('program', fn($p) => $p->where('program_key', $level))
-        )->with(['attendance' => fn($q) => $q->where('user_id', auth()->id())])
+        )->with(['attendance' => fn($q) => $q->where('user_id', auth()->$this->id())])
          ->orderBy('week_number')->get();
 
         return view('lessons.my', compact('lessons'));
@@ -29,7 +29,7 @@ class LessonController extends Controller
 
     public function store(StoreLessonRequest $request)
     {
-        Lesson::create(array_merge($request->validated(), ['church_id' => auth()->user()->church_id]));
+        Lesson::create(array_merge($request->validated(), ['church_id' => auth()->$this->user()->church_id]));
         return redirect()->route('lessons.index')->with('success', 'Lesson added.');
     }
 

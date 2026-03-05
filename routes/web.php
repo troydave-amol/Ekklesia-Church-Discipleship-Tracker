@@ -42,25 +42,30 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
         Route::post('/church/subscription', [ChurchController::class, 'updatePlan'])->name('church.subscription.update');
 
         // Member management (with plan limit gates)
-        Route::get('/disciples',         [DiscipleController::class, 'index'])->name('disciples.index');
-        Route::get('/disciples/create',  [DiscipleController::class, 'create'])->name('disciples.create');
-        Route::post('/disciples',        [DiscipleController::class, 'store'])->middleware('subscription:add_disciple')->name('disciples.store');
-        Route::get('/disciples/{id}',    [DiscipleController::class, 'show'])->name('disciples.show');
-        Route::get('/disciples/{id}/edit', [DiscipleController::class, 'edit'])->name('disciples.edit');
-        Route::put('/disciples/{id}',    [DiscipleController::class, 'update'])->name('disciples.update');
-        Route::delete('/disciples/{id}', [DiscipleController::class, 'destroy'])->name('disciples.destroy');
-        Route::post('/disciples/import', [DiscipleController::class, 'import'])->middleware('subscription:bulk_import')->name('disciples.import');
+        Route::get('/users',         [DiscipleController::class, 'index'])->name('users.index');
+        Route::get('/users/create',  [DiscipleController::class, 'create'])->name('users.create');
+        Route::post('/users',        [DiscipleController::class, 'store'])->middleware('subscription:add_disciple')->name('users.store');
+        Route::get('/users/{id}',    [DiscipleController::class, 'show'])->name('users.show');
+        Route::get('/users/{id}/edit', [DiscipleController::class, 'edit'])->name('users.edit');
+        Route::put('/users/{id}',    [DiscipleController::class, 'update'])->name('users.update');
+        Route::delete('/users/{id}', [DiscipleController::class, 'destroy'])->name('users.destroy');
+        Route::post('/users/import', [DiscipleController::class, 'import'])->middleware('subscription:bulk_import')->name('users.import');
 
         // Programs
         Route::get('/programs',          [ProgramController::class, 'index'])->name('programs.index');
         Route::post('/programs',         [ProgramController::class, 'store'])->name('programs.store');
         Route::put('/programs/{id}',     [ProgramController::class, 'update'])->name('programs.update');
         Route::delete('/programs/{id}',  [ProgramController::class, 'destroy'])->name('programs.destroy');
+        Route::patch('programs/{program}/toggle', [ProgramController::class, 'toggle'])->name('programs.toggle');
+        Route::get('programs/{program}/edit', [ProgramController::class, 'edit'])->name('programs.edit');
 
         // Lessons (pastor manages, disciples read)
         Route::post('/lessons',          [LessonController::class, 'store'])->name('lessons.store');
         Route::put('/lessons/{id}',      [LessonController::class, 'update'])->name('lessons.update');
         Route::delete('/lessons/{id}',   [LessonController::class, 'destroy'])->name('lessons.destroy');
+        Route::get('lessons/create', [LessonController::class, 'create'])->name('lessons.create');
+        Route::get('lessons/{lesson}', [LessonController::class, 'show'])->name('lessons.show');
+        Route::get('lessons/{lesson}/edit', [LessonController::class, 'edit'])->name('lessons.edit');
 
         // Reports — Standard/Premium only
         Route::middleware('subscription:export_sheets')->group(function () {
@@ -79,7 +84,7 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
         // Devotional tracking — Basic+ only
         Route::middleware('subscription:devotional')->group(function () {
             Route::get('/devotionals',              [DevotionalController::class, 'index'])->name('devotionals.index');
-            Route::post('/devotionals/mark',        [DevotionalController::class, 'markComplete'])->name('devotionals.mark');
+            Route::post('/devotionals/mark',        [DevotionalController::class, 'markComplete'])->name('devotionals.complete');
         });
     });
 

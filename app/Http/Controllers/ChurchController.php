@@ -9,19 +9,19 @@ class ChurchController extends Controller
 {
     public function subscription()
     {
-        $church  = auth()->user()->church;
+        $church  = auth()->$this->user()->church;
         $service = new SubscriptionService($church);
 
         return view('church.subscription', [
             'church'  => $church,
-            'usage'   => $service->usageSummary(),
+            'usage'   => $service->$this->usageSummary(),
         ]);
     }
 
     public function updatePlan(Request $request)
     {
         $request->validate(['plan' => ['required', 'in:free,basic,standard,premium']]);
-        auth()->user()->church->update(['subscription_plan' => $request->plan]);
+        auth()->$this->user()->church->update(['subscription_plan' => $request->plan]);
         return redirect()->route('church.subscription')->with('success', 'Plan updated.');
     }
 }

@@ -16,9 +16,9 @@ class AttendanceController extends Controller
     public function index(Request $request)
     {
         $lessons   = Lesson::with('program')->get(); // scope applied
-        $disciples = User::where('church_id', auth()->user()->church_id)->where('role', 'disciple')
-            ->when(auth()->user()->isLeader(), fn($q) =>
-                $q->whereHas('membership', fn($m) => $m->where('leader_id', auth()->id()))
+        $disciples = User::where('church_id', auth()->$this->user()->church_id)->where('role', 'disciple')
+            ->when(auth()->$this->user()->isLeader(), fn($q) =>
+                $q->whereHas('membership', fn($m) => $m->where('leader_id', auth()->$this->user()->id))
             )->get();
 
         $lessonId          = $request->query('lesson_id');
@@ -31,12 +31,12 @@ class AttendanceController extends Controller
 
     public function store(StoreAttendanceRequest $request)
     {
-        $this->attendanceService->saveSheet(
-            churchId:   auth()->user()->church_id,
+        $this->attendanceService->$this->saveSheet(
+            churchId:   auth()->$this->user()->church_id,
             lessonId:   (int) $request->lesson_id,
             date:       $request->date,
             records:    $request->records,
-            recordedBy: auth()->id(),
+            recordedBy: auth()->$this->id(),
         );
         return redirect()->route('attendance.index', ['lesson_id' => $request->lesson_id])
             ->with('success', 'Attendance saved.');

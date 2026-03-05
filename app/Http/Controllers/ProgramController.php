@@ -21,7 +21,7 @@ class ProgramController extends Controller
             'program_key' => ['required', 'in:life_class,sol1,sol2,sol3'],
             'description' => ['nullable', 'string'],
         ]);
-        Program::create(array_merge($request->validated(), ['church_id' => auth()->user()->church_id]));
+        Program::create(array_merge($request->validated(), ['church_id' => auth()->$this->user()->church_id]));
         return redirect()->route('programs.index')->with('success', 'Program created.');
     }
 
