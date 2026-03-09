@@ -91,7 +91,7 @@
                         <div style="width:8px;height:8px;border-radius:50%;background:{{ $pColor }};flex-shrink:0;"></div>
                         <span style="font-size:14px;">{{ $program->name }}</span>
                     </div>
-                    <span class="text-muted" style="font-size:13px;">{{ $program->disciples_count }} disciples</span>
+                    <span class="text-muted" style="font-size:13px;">{{ $program->members_count }} disciples</span>
                 </div>
                 <div class="progress">
                     <div class="progress-bar" style="width:{{ $program->completion_rate ?? 0 }}%;background:{{ $pColor }};"></div>
@@ -116,7 +116,7 @@
                 <div class="avatar avatar-md" style="background:{{ $lColor }}22;border:1.5px solid {{ $lColor }}44;color:{{ $lColor }};">{{ $initials }}</div>
                 <div style="flex:1;">
                     <div style="font-size:14px;font-weight:500;">{{ $leader->first_name }} {{ $leader->last_name }}</div>
-                    <div style="font-size:12px;color:var(--text-muted);">{{ $leader->disciples_count }} disciples</div>
+                    <div style="font-size:12px;color:var(--text-muted);">{{ $leader->assigned_disciples_count }} disciples</div>
                 </div>
                 <div style="display:flex;gap:14px;">
                     <div style="text-align:center;">
@@ -182,7 +182,7 @@
                             </div>
                         </div>
                     </td>
-                    <td><span style="font-size:13px;color:var(--text-muted);">{{ $disciple->membership->destinyLevel?->label() ?? '—' }}</span></td>
+                    <td><span style="font-size:13px;color:var(--text-muted);">{{ $disciple->membership->destinyLevel() ?? '—' }}</span></td>
                     <td>
                         @if($disciple->membership->leader)
                             <span style="font-size:13px;">{{ $disciple->membership->leader->first_name }} {{ $disciple->membership->leader->last_name }}</span>

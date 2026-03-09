@@ -97,4 +97,5 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
 
     // ── SHARED READ (any authenticated role) ──────────────────
     Route::get('/lessons', [LessonController::class, 'index'])->name('lessons.index');
+    Route::get('/settings/church', fn() => abort(404))->name('settings.church');
 });

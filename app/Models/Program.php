@@ -27,8 +27,18 @@ class Program extends Model
         return $this->belongsTo(Church::class);
     }
 
-    public function lesson()
+    public function lessons()
     {
         return $this->hasMany(Lesson::class);
+    }
+
+    public function programs()
+    {
+        return $this->hasMany(\App\Models\Program::class);
+    }
+
+    public function members()
+    {
+        return $this->hasMany(ChurchMembership::class, 'destiny_training_level', 'program_key');
     }
 }

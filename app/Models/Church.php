@@ -15,12 +15,25 @@ class Church extends Model
 
     // ── Relationships ──────────────────────────────────────────────
 
-    public function members()
+    public function users()
     {
-        return (bool) $this->is_active;
+        return $this->hasMany(User::class);
     }
 
-    public function users() {
-        return $this->hasMany(User::class);
+    public function members()
+    {
+        return $this->hasMany(User::class)->where('role', 'disciple');
+    }
+
+    public function programs()
+    {
+        return $this->hasMany(Program::class);
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────
+
+    public function isActive(): bool
+    {
+        return (bool) $this->is_active;
     }
 }

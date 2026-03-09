@@ -90,7 +90,7 @@
             @foreach($links as $item)
                 @php
                     $isActive = request()->routeIs($item['route']) || request()->routeIs($item['route'].'.*');
-                    $href = route($item['route']) ?? '#';
+                    $href = rescue(fn() => route($item['route']), '#', false);
                 @endphp
                 <a href="{{ $href }}" class="nav-item {{ $isActive ? 'active' : '' }}">
                     @include('partials.icon', ['name' => $item['icon'], 'size' => 17, 'color' => $isActive ? '#D4A853' : '#8B949E'])

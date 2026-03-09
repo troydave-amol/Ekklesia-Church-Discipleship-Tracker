@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Enums\DestinyLevel;
 
 class ChurchMembership extends Model
 {
@@ -19,6 +20,15 @@ class ChurchMembership extends Model
         'satellite',
         'destiny_training_level',
     ];
+
+    protected $casts = [
+        'destiny_training_level' => DestinyLevel::class,
+    ];
+
+    public function destinyLevel(): ?DestinyLevel
+    {
+        return $this->destiny_training_level;
+    }
 
     // ── Relationships ──────────────────────────────────────────────
 

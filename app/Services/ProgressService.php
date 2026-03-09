@@ -20,11 +20,32 @@ class ProgressService
     public function pastorStats(Church $church): array
     {
         $churchId = $church->id;
+
+        $disciples = \App\Models\User::where('church_id', $churchId)
+            ->where('role', 'disciple')
+            ->with(['membership', 'membership.leader']) 
+            ->paginate(20);
+
+        $leaders = \App\Models\User::where('church_id', $churchId)
+            ->where('role', 'leader')
+            ->withCount('assignedDisciples')
+            ->get();
+
+        $programs = \App\Models\Program::where('church_id', $churchId)
+            ->where('active', true)
+            ->withCount('members')  
+            ->get();
+
         return [
-            'totalDisciples'  => User::where('church_id', $churchId)->where('role', 'disciple')->count(),
-            'totalLeaders'    => User::where('church_id', $churchId)->where('role', 'leader')->count(),
-            'activePrograms'  => $church->programs()->where('active', true)->count(),
-            'weeklyStats'     => $this->attendanceService->weeklyStats($churchId),
+            'totalDisciples' => \App\Models\User::where('church_id', $churchId)->where('role', 'disciple')->count(),
+            'newThisMonth'   => \App\Models\User::where('church_id', $churchId)->where('role', 'disciple')->whereMonth('created_at', now()->month)->count(),
+            'activeLeaders'  => \App\Models\User::where('church_id', $churchId)->where('role', 'leader')->count(),
+            'avgAttendance'  => $this->attendanceService->churchAvgAttendance($churchId),
+            'devotionalRate' => 0, // placeholder until DevotionalService is ready
+            'programs'       => $programs,
+            'leaders'        => $leaders,
+            'disciples'      => $disciples,
+            'weeklyStats'    => $this->attendanceService->weeklyStats($churchId),
         ];
     }
 
