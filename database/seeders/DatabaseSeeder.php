@@ -147,7 +147,7 @@ class DatabaseSeeder extends Seeder
 
         foreach ($disciples as $disciple) {
             $level = $disciple->membership->destiny_training_level;
-            $lessons = $allLessons[$level] ?? [];
+            $lessons = ($level && isset($allLessons[$level->value])) ? $allLessons[$level->value] : [];
 
             foreach ($lessons as $lesson) {
                 $date = now()->subWeeks(rand(0, 4))->startOfWeek();
