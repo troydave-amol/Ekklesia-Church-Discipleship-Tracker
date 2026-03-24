@@ -9,9 +9,9 @@
     @csrf
 
     {{-- Church Info --}}
-    <div style="background:rgba(201,131,31,.06);border:1px solid rgba(201,131,31,.2);border-radius:10px;padding:14px 16px;margin-bottom:18px;">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin-bottom:12px;">
-            <i class="fas fa-church" style="margin-right:6px"></i> Church Information
+    <div class="church-info-section">
+        <div class="church-info-header">
+            <i class="fas fa-church"></i> Church Information
         </div>
         <div class="form-group" style="margin-bottom:0">
             <label class="form-label">Church Name</label>
@@ -23,7 +23,7 @@
     </div>
 
     {{-- Pastor Info --}}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
         <div class="form-group" style="margin-bottom:0">
             <label class="form-label">First Name</label>
             <div class="input-wrap">
@@ -41,29 +41,35 @@
         <label class="form-label">Email Address</label>
         <div class="input-wrap">
             <i class="fas fa-envelope input-icon"></i>
-            <input type="email" name="email" class="form-control" placeholder="pastor@mychurch.com" value="{{ old('email') }}" required>
+            <input type="email" name="email" class="form-control" placeholder="admin@library.com" value="{{ old('email') }}" required>
         </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;">
         <div class="form-group" style="margin-bottom:0">
             <label class="form-label">Password</label>
             <div class="input-wrap">
                 <i class="fas fa-lock input-icon"></i>
-                <input type="password" name="password" class="form-control" placeholder="Min. 8 chars" required>
+                <input type="password" name="password" id="reg-password" class="form-control" placeholder="••••••••" required>
+                <button type="button" class="password-toggle" onclick="togglePassword('reg-password', this)" aria-label="Toggle password visibility">
+                    <i class="fas fa-eye"></i>
+                </button>
             </div>
         </div>
         <div class="form-group" style="margin-bottom:0">
             <label class="form-label">Confirm Password</label>
             <div class="input-wrap">
                 <i class="fas fa-lock input-icon"></i>
-                <input type="password" name="password_confirmation" class="form-control" placeholder="••••••••" required>
+                <input type="password" name="password_confirmation" id="reg-password-confirm" class="form-control" placeholder="••••••••" required>
+                <button type="button" class="password-toggle" onclick="togglePassword('reg-password-confirm', this)" aria-label="Toggle password visibility">
+                    <i class="fas fa-eye"></i>
+                </button>
             </div>
         </div>
     </div>
 
     {{-- Plan Selection --}}
-    <div style="margin-bottom:18px;">
+    <div style="margin-bottom:20px;">
         <div class="form-label">Choose a Plan</div>
         <div class="plan-cards">
             <label class="plan-card selected" id="plan-free" onclick="selectPlan(this,'free')">
@@ -95,7 +101,7 @@
 
     @if($errors->any())
     <div class="alert-error" style="margin-bottom:14px">
-        <i class="fas fa-exclamation-circle" style="flex-shrink:0"></i>
+        <i class="fas fa-exclamation-circle"></i>
         <div>{{ $errors->first() }}</div>
     </div>
     @endif
@@ -103,7 +109,7 @@
     <button type="submit" class="btn-submit">Create Church Account</button>
 </form>
 
-<div class="auth-links" style="margin-top:16px">
+<div class="auth-links" style="margin-top:18px">
     Already have an account? <a href="{{ route('login') }}">Sign in</a>
 </div>
 @endsection
@@ -113,6 +119,17 @@
 function selectPlan(el, plan) {
     document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
+}
+function togglePassword(id, btn) {
+    const input = document.getElementById(id);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
 }
 </script>
 @endpush

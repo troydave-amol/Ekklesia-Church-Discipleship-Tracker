@@ -58,7 +58,7 @@
     <div id="tab-disciples" class="tab-content active">
         <div class="card" style="margin-top:16px;">
             <div class="card-header">
-                <form method="GET" action="{{ route('users.index') }}" style="display:flex;gap:8px;flex:1;">
+                <form method="GET" action="{{ route('users.index') }}" class="table-controls" style="flex:1;">
                     <div class="input-group" style="max-width:260px;">
                         @include('partials.icon',['name'=>'search','size'=>14,'color'=>'var(--text-dim)'])
                         <input name="q" value="{{ request('q') }}" placeholder="Search disciples…">
@@ -81,9 +81,9 @@
                         <option value="inactive" {{ request('status')=='inactive'?'selected':'' }}>Inactive</option>
                         <option value="visitor"  {{ request('status')=='visitor'?'selected':'' }}>Visitor</option>
                     </select>
-                    <button type="submit" class="btn btn-ghost btn-sm">Filter</button>
+                    <button type="submit" class="btn btn-ghost">Filter</button>
                     @if(request()->hasAny(['q','program','leader_id','status']))
-                        <a href="{{ route('users.index') }}" class="btn btn-ghost btn-sm">Clear</a>
+                        <a href="{{ route('users.index') }}" class="btn btn-ghost">Clear</a>
                     @endif
                 </form>
             </div>

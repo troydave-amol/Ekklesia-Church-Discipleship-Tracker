@@ -12,11 +12,7 @@
 <div class="flex items-center justify-between mb-20">
     <div>
         <h1 class="page-title">Good {{ now()->hour < 12 ? 'morning' : (now()->hour < 17 ? 'afternoon' : 'evening') }}, {{ $user->first_name }}</h1>
-        <p class="page-subtitle">{{ $church->name }} &nbsp;·&nbsp;
-            <span class="badge {{ match($church->subscription_plan) { 'premium'=>'badge-green','standard'=>'badge-gold','basic'=>'badge-purple',default=>'badge-blue' } }}">
-                {{ strtoupper($church->subscription_plan) }}
-            </span>
-        </p>
+        <p class="page-subtitle">{{ $church->name }}</p>
     </div>
     <div class="flex gap-8">
         <a href="{{ route('reports.index') }}" class="btn btn-ghost">
@@ -139,7 +135,7 @@
     <div class="card-header">
         <span class="section-title">Disciples Overview</span>
         <div class="flex gap-8">
-            <form method="GET" action="{{ route('dashboard') }}" style="display:flex;gap:8px;">
+            <form method="GET" action="{{ route('dashboard') }}" class="table-controls">
                 <div class="input-group">
                     @include('partials.icon',['name'=>'search','size'=>14,'color'=>'var(--text-dim)'])
                     <input name="q" value="{{ request('q') }}" placeholder="Search disciples…" style="max-width:200px;">
@@ -150,7 +146,7 @@
                         <option value="{{ $p->id }}" {{ request('program_id') == $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
                     @endforeach
                 </select>
-                <button type="submit" class="btn btn-ghost btn-sm">Filter</button>
+                <button type="submit" class="btn btn-ghost">Filter</button>
             </form>
         </div>
     </div>
