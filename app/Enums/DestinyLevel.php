@@ -7,6 +7,8 @@ enum DestinyLevel: string
     case LifeClass = 'life_class';
     case Sol1      = 'sol1';
     case Sol2      = 'sol2';
+    case Sol3      = 'sol3';
+    case Graduate  = 'graduate';
 
     public function label(): string
     {
@@ -14,6 +16,8 @@ enum DestinyLevel: string
             self::LifeClass => 'Life Class',
             self::Sol1      => 'SOL 1',
             self::Sol2      => 'SOL 2',
+            self::Sol3      => 'SOL 3',
+            self::Graduate  => 'Graduate',
         };
     }
 }
