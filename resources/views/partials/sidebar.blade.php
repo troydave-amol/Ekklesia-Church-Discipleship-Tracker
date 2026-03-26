@@ -67,11 +67,6 @@
             <strong>Discipleship</strong>
             <span>TRACKER</span>
         </div>
-        <button class="sidebar-toggle" id="sidebarToggle" title="Toggle sidebar">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
-            </svg>
-        </button>
     </div>
 
     {{-- Role chip --}}
@@ -104,26 +99,98 @@
     </nav>
 
     {{-- User row --}}
-    <div class="sidebar-user">
-        <div class="user-row">
-            @php
-                $initials = strtoupper(substr($user->first_name ?? 'U', 0, 1) . substr($user->last_name ?? '', 0, 1));
-            @endphp
-            <div class="avatar avatar-sm" style="background:{{ $roleColor }}22; border:1.5px solid {{ $roleColor }}44; color:{{ $roleColor }};">
-                {{ $initials }}
+    <div class="sidebar-user" style="padding: 12px 10px;">
+        <div class="profile-dropdown-wrapper" id="profileDropdownWrapper">
+            
+            {{-- Dropdown Menu (hidden by default) --}}
+            <div class="profile-dropdown" id="profileDropdown">
+                {{-- Header inside dropdown --}}
+                <div class="pd-header">
+                    <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                        @php $initials = strtoupper(substr($user->first_name ?? 'U', 0, 1) . substr($user->last_name ?? '', 0, 1)); @endphp
+                        <div class="avatar avatar-sm" style="flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background:{{ $roleColor }}22; border:1px solid {{ $roleColor }}44; color:{{ $roleColor }};">
+                            {{ $initials }}
+                        </div>
+                        <div style="display: flex; flex-direction: column; justify-content: center; min-width: 0; gap: 3px;">
+                            <span style="font-size: 13.5px; font-weight: 500; color: #ececf1; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $user->first_name ?? 'User' }} {{ $user->last_name ?? '' }}</span>
+                            @if($church)
+                            <span style="font-size: 11.5px; font-weight: 400; color: #9ca3af; line-height: 1;">
+                                {{ ucfirst(strtolower($church->subscription_plan ?? 'Free')) }}
+                            </span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Menu Items --}}
+                <div class="pd-divider"></div>
+
+                <div class="pd-item-wrapper">
+                    <a href="{{ route('users.show', $user->id ?? 1) }}" class="pd-item">
+                        @include('partials.icon',['name'=>'user','size'=>15])
+                        <span>My Profile</span>
+                    </a>
+                </div>
+
+                @if(isset($church) && ($role ?? $user->role ?? 'pastor') === 'pastor')
+                <div class="pd-item-wrapper">
+                    <a href="{{ route('settings.church') }}" class="pd-item">
+                        @include('partials.icon',['name'=>'settings','size'=>15])
+                        <span>Church Settings</span>
+                    </a>
+                </div>
+
+                <div class="pd-item-wrapper">
+                    <a href="{{ route('settings.church') }}#subscription" class="pd-item">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <span>Manage Subscription</span>
+                    </a>
+                </div>
+                @endif
+
+                <div class="pd-divider"></div>
+
+                <div class="pd-item-wrapper">
+                    <div class="pd-item" style="justify-content: space-between;">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span>Help & Support</span>
+                        </div>
+                        @include('partials.icon',['name'=>'arrow-right','size'=>14])
+                    </div>
+                </div>
+
+                <div class="pd-item-wrapper">
+                    <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                        @csrf
+                        <button type="submit" class="pd-item" style="width:100%; border:none; background:transparent; font-family:inherit; outline:none;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                            <span>Log out</span>
+                        </button>
+                    </form>
+                </div>
             </div>
-            <div class="user-info">
-                <div class="user-name">{{ $user->first_name ?? 'User' }} {{ $user->last_name ?? '' }}</div>
-                <div class="user-email">{{ $user->email ?? '' }}</div>
+
+            {{-- Trigger Row --}}
+            <div class="user-row" id="profileTrigger" style="display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 8px; cursor: pointer;">
+                {{-- Circular Avatar --}}
+                <div class="avatar avatar-sm" style="flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background:{{ $roleColor }}22; border:1px solid {{ $roleColor }}44; color:{{ $roleColor }};">
+                    {{ $initials }}
+                </div>
+                
+                {{-- Stacked Text --}}
+                <div class="user-info" style="display: flex; flex-direction: column; justify-content: center; min-width: 0; flex: 1; gap: 3px;">
+                    <span class="user-name" style="display: block; font-size: 13.5px; font-weight: 500; color: var(--text); line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $user->first_name ?? 'User' }} {{ $user->last_name ?? '' }}</span>
+                    @if($church)
+                        <span style="display: block; font-size: 11.5px; font-weight: 400; color: var(--text-muted); opacity: 0.85; line-height: 1;">
+                            {{ ucfirst(strtolower($church->subscription_plan ?? 'Free')) }}
+                        </span>
+                    @endif
+                </div>
+
+                {{-- Upgrade Button --}}
+                <a href="{{ route('settings.church') }}#subscription" class="btn btn-ghost btn-sm" style="flex-shrink: 0; padding: 4px 12px; height: auto; border-radius: 9999px; font-size: 11.5px; font-weight: 600; color: var(--text); background: transparent; border-color: var(--border);" onclick="event.stopPropagation();">Upgrade</a>
             </div>
-            <form method="POST" action="{{ route('logout') }}" style="margin:0;">
-                @csrf
-                <button type="submit" class="btn btn-ghost btn-icon btn-sm" title="Logout" style="border:none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-                    </svg>
-                </button>
-            </form>
         </div>
     </div>
 </aside>
