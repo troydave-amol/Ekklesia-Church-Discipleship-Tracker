@@ -2,7 +2,7 @@
 // provision.js — Tenant provisioning animation
 // ════════════════════════════════════════
 
-function runProvisioning() {
+window.runProvisioning = function() {
   const subdomain = document.getElementById('subdomain').value.trim();
   const plan      = PLANS[state.selectedPlan];
   const dbName    = 'tenant_' + subdomain;

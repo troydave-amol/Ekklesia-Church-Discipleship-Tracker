@@ -2,7 +2,7 @@
 // router.js — Page navigation & scroll helpers
 // ════════════════════════════════════════
 
-function goToPage(id) {
+window.goToPage = function(id) {
   const pages = document.querySelectorAll('.page');
   const target = document.getElementById(id);
 
@@ -21,15 +21,15 @@ function goToPage(id) {
   console.log('Navigated to:', id);
 }
 
-function scrollToPlans() {
+window.scrollToPlans = function() {
   navigateAndScroll('plans-section');
 }
 
-function scrollToFlow() {
+window.scrollToFlow = function() {
   navigateAndScroll('flow-section');
 }
 
-function navigateAndScroll(sectionId) {
+window.navigateAndScroll = function(sectionId) {
   if (state.currentPage !== 'page-landing') {
     goToPage('page-landing');
 
@@ -43,7 +43,7 @@ function navigateAndScroll(sectionId) {
   document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
 }
 
-function goToRegisterWithPlan(plan) {
+window.goToRegisterWithPlan = function(plan) {
   goToPage('page-register');
 
   requestAnimationFrame(() => {
@@ -53,4 +53,24 @@ function goToRegisterWithPlan(plan) {
       console.warn('selectPlan() not loaded yet');
     }
   });
+}
+
+// ── TENANT NAVIGATION ──
+function getTenantBaseUrl() {
+  const subdomain = document.getElementById('subdomain').value.trim();
+  const currentHost = window.location.hostname;
+  const port = window.location.port ? ':' + window.location.port : '';
+
+  if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+    return `http://${subdomain}.localhost${port}`;
+  }
+  return `https://${subdomain}.ekklesia.app`;
+}
+
+window.goToTenantDashboard = function() {
+  window.location.href = getTenantBaseUrl() + '/dashboard';
+}
+
+window.goToTenantHome = function() {
+  window.location.href = getTenantBaseUrl();
 }

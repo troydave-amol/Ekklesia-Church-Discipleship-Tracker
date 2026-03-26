@@ -121,15 +121,15 @@ class TenancyServiceProvider extends ServiceProvider
     }
 
     protected function mapRoutes()
-{
-    if (file_exists(base_path('routes/tenant.php'))) {
-        Route::middleware([
-            'central-app',
-            InitializeTenancyBySubdomain::class,
-            PreventAccessFromCentralDomains::class,
-        ])->group(base_path('routes/tenant.php'));
+    {
+        if (file_exists(base_path('routes/tenant.php'))) {
+            Route::middleware([
+                'web',
+                InitializeTenancyBySubdomain::class,
+                PreventAccessFromCentralDomains::class,
+            ])->group(base_path('routes/tenant.php'));
+        }
     }
-}
 
     protected function makeTenancyMiddlewareHighestPriority()
     {

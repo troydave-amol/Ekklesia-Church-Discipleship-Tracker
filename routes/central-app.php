@@ -21,5 +21,6 @@ Route::get('/register', [AuthController::class, 'showRegister'])->name('register
 Route::post('/register',[AuthController::class, 'register'])->name('register.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/forgot-password', fn() => view('auth.forgot-password'))->name('password.request');
+Route::get('/provision-simulation', fn() => view('ProvisionSimulation'))->name('provision-simulation');
 
 
