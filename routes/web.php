@@ -10,6 +10,15 @@ use App\Http\Controllers\LessonController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DevotionalController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\TenantRegistrationController;
+
+
+// Landing page
+Route::get('/', fn() => view('welcome'));
+
+// Registration API endpoints
+Route::post('/register-tenant', [TenantRegistrationController::class, 'store']);
+Route::get('/check-subdomain', [TenantRegistrationController::class, 'checkSubdomain']);
 
 // ══════════════════════════════════════════════
 //  GUEST ROUTES
@@ -19,7 +28,6 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::get('/login',     [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login',    [AuthController::class, 'login']);
-    Route::get('/', fn() => view('welcome'))->name('home');
     Route::get('/forgot-password', fn() => view('auth.forgot-password'))->name('password.request');
 });
 
