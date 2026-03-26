@@ -12,6 +12,8 @@ use Stancl\Tenancy\Events;
 use Stancl\Tenancy\Jobs;
 use Stancl\Tenancy\Listeners;
 use Stancl\Tenancy\Middleware;
+use Stancl\Tenancy\Middleware\InitializeTenancyBySubdomain;
+use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 
 class TenancyServiceProvider extends ServiceProvider
 {
@@ -119,14 +121,15 @@ class TenancyServiceProvider extends ServiceProvider
     }
 
     protected function mapRoutes()
-    {
-        $this->app->booted(function () {
-            if (file_exists(base_path('routes/tenant.php'))) {
-                Route::namespace(static::$controllerNamespace)
-                    ->group(base_path('routes/tenant.php'));
-            }
-        });
+{
+    if (file_exists(base_path('routes/tenant.php'))) {
+        Route::middleware([
+            'central-app',
+            InitializeTenancyBySubdomain::class,
+            PreventAccessFromCentralDomains::class,
+        ])->group(base_path('routes/tenant.php'));
     }
+}
 
     protected function makeTenancyMiddlewareHighestPriority()
     {

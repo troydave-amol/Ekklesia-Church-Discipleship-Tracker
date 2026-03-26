@@ -1,0 +1,146 @@
+/* ════════════════════════════════════════
+   base.css — Variables, Reset, Nav, Buttons, Footer, Utilities
+════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --cream: #F7F3EE;
+  --ink: #1A1612;
+  --ink2: #3D3630;
+  --ink3: #7A7068;
+  --gold: #C49A3C;
+  --gold-light: #E8C97A;
+  --gold-pale: #F5EDD6;
+  --sage: #4A6741;
+  --sage-light: #6B9162;
+  --sage-pale: #E8F0E6;
+  --red: #C0392B;
+  --red-pale: #FDECEA;
+  --border: rgba(26,22,18,0.12);
+  --border-strong: rgba(26,22,18,0.25);
+  --shadow: 0 2px 16px rgba(26,22,18,0.08);
+  --shadow-lg: 0 8px 48px rgba(26,22,18,0.14);
+  --radius: 12px;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+
+/* ── RESET ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--cream);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── PAGE SYSTEM ── */
+.page { display: none; min-height: 100vh; }
+.page.active { display: block; }
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 48px; height: 64px;
+  background: rgba(247,243,238,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  font-family: var(--font-display);
+  font-size: 22px; font-weight: 700;
+  color: var(--ink); letter-spacing: -0.02em;
+}
+.nav-logo span { color: var(--gold); }
+.nav-links { display: flex; gap: 32px; align-items: center; }
+.nav-links a {
+  font-size: 14px; font-weight: 500;
+  color: var(--ink2); text-decoration: none;
+  transition: color 0.2s; cursor: pointer;
+}
+.nav-links a:hover { color: var(--gold); }
+.btn-nav {
+  background: var(--ink); color: var(--cream);
+  border: none; border-radius: 8px;
+  padding: 8px 20px; font-size: 14px; font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer; transition: background 0.2s, transform 0.15s;
+}
+.btn-nav:hover { background: var(--ink2); transform: translateY(-1px); }
+
+/* ── BUTTONS ── */
+.btn-primary {
+  background: var(--gold); color: var(--ink);
+  border: none; border-radius: 10px;
+  padding: 14px 32px; font-size: 15px; font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer; transition: all 0.2s;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-primary:hover {
+  background: var(--gold-light);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(196,154,60,0.35);
+}
+.btn-secondary {
+  background: transparent; color: var(--ink2);
+  border: 1.5px solid var(--border-strong); border-radius: 10px;
+  padding: 13px 32px; font-size: 15px; font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-secondary:hover { border-color: var(--ink); background: rgba(26,22,18,0.04); }
+.btn-ghost {
+  background: transparent; color: var(--ink3);
+  border: none; font-size: 14px; font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer; padding: 8px 0; transition: color 0.2s;
+}
+.btn-ghost:hover { color: var(--ink); }
+
+/* ── SECTION SHARED ── */
+.section { padding: 96px 48px; max-width: 1200px; margin: 0 auto; }
+.section-eyebrow {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 12px;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(30px, 3.5vw, 44px);
+  font-weight: 700; line-height: 1.15;
+  letter-spacing: -0.02em; color: var(--ink); margin-bottom: 16px;
+}
+.section-sub { font-size: 17px; line-height: 1.65; color: var(--ink3); max-width: 560px; }
+
+/* ── FOOTER ── */
+.footer {
+  background: var(--ink); padding: 48px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 16px;
+}
+.footer-logo {
+  font-family: var(--font-display);
+  font-size: 20px; font-weight: 700; color: var(--cream);
+}
+.footer-logo span { color: var(--gold); }
+.footer-copy { font-size: 13px; color: rgba(247,243,238,0.4); }
+
+/* ── UTILITY ── */
+.hidden { display: none !important; }
+.mt-4 { margin-top: 16px; }
+.mt-6 { margin-top: 24px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  nav { padding: 0 24px; }
+  .nav-links { gap: 16px; }
+}
