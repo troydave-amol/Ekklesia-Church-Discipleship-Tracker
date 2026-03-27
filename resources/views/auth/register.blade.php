@@ -6,7 +6,6 @@
     @vite(['resources/css/app.css', 'resources/css/base.css', 'resources/css/landing.css', 'resources/css/register.css', 'resources/css/provision.css'])
     @vite(['resources/js/state.js', 'resources/js/router.js', 'resources/js/register.js', 'resources/js/provision.js'])
   
-
   <div class="register-wrap">
     <div class="register-header">
       <h2>Register your church</h2>
