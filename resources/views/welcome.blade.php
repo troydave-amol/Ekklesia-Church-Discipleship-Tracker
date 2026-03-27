@@ -282,9 +282,9 @@
       <div class="success-icon">🎉</div>
       <h3>Your platform is ready!</h3>
       <p>Your church's dedicated platform has been created and is live right now. Share the link below with your leaders to get started.</p>
-      <div class="success-url" id="success-url-link" onclick="alert('Opening your subdomain...')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/></svg><span id="success-url-text"></span></div>
+      <div class="success-url" id="success-url-link" onclick="goToTenantHome()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/></svg><span id="success-url-text"></span></div>
       <div class="success-detail" id="success-detail"></div>
-      <button class="btn-primary" style="width:100%;justify-content:center;" onclick="alert('In a real implementation, this would open your church dashboard.')">Go to my dashboard <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+      <button class="btn-primary" style="width:100%;justify-content:center;" onclick="goToTenantDashboard()">Go to my dashboard <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
       <div style="margin-top:16px;"><button class="btn-ghost" onclick="resetAll()">Register another church</button></div>
     </div>
   </div>

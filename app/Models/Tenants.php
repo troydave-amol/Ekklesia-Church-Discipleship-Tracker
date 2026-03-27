@@ -11,18 +11,25 @@ class Tenants extends BaseTenant implements TenantWithDatabase
 {
     use HasDatabase, HasDomains;
 
-    protected $fillable = [
-        'id',
-        'church_name',
-        'church_address',
-        'pastor_name',
-        'pastor_email',
-        'subdomain',
-        'subscription_plan',
-        'status',
-        'subscription_started_at',
-        'subscription_due_at',
-    ];
+    /**
+     * Tell stancl/tenancy which attributes are REAL database columns.
+     * Without this, BaseTenant puts everything into the `data` JSON column.
+     */
+    public static function getCustomColumns(): array
+    {
+        return [
+            'id',
+            'church_name',
+            'church_address',
+            'pastor_name',
+            'pastor_email',
+            'subdomain',
+            'subscription_plan',
+            'status',
+            'subscription_started_at',
+            'subscription_due_at',
+        ];
+    }
 
     protected $casts = [
         'subscription_started_at' => 'datetime',

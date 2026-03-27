@@ -21,7 +21,7 @@ class TenantRegistrationController extends Controller
 
         // Check subdomain not already taken
         $taken = \Stancl\Tenancy\Database\Models\Domain::where(
-            'domain', 'like', $validated['subdomain'] . '.%'
+            'domain', $validated['subdomain']
         )->exists();
 
         if ($taken) {
@@ -33,26 +33,34 @@ class TenantRegistrationController extends Controller
 
         // Create the tenant record
         $tenant = Tenants::create([
-            'id'   => Str::uuid(),
-            'data' => [
-                'church_name'    => $validated['church_name'],
-                'church_address' => $validated['church_address'],
-                'pastor_name'    => $validated['pastor_name'],
-                'pastor_email'   => $validated['pastor_email'],
-                'subdomain'      => $validated['subdomain'],
-                'plan'           => $validated['plan'],
-            ],
+            'id'                => Str::uuid()->toString(),
+            'church_name'       => $validated['church_name'],
+            'church_address'    => $validated['church_address'],
+            'pastor_name'       => $validated['pastor_name'],
+            'pastor_email'      => $validated['pastor_email'],
+            'subdomain'         => $validated['subdomain'],
+            'subscription_plan' => $validated['plan'],
+            'status'            => 'active',
         ]);
 
-        // Attach the subdomain domain
+        // Store JUST the subdomain in the domains table.
+        // InitializeTenancyBySubdomain extracts only the subdomain part
+        // from the hostname (e.g. 'mysite' from 'mysite.localhost:8000')
+        // and queries: WHERE domain = 'mysite'
         $tenant->domains()->create([
-            'domain' => $validated['subdomain'] . '.ekklesia.test',
+            'domain' => $validated['subdomain'],
         ]);
+
+        // Build the full URL for the response
+        $isLocal = in_array(request()->getHost(), ['localhost', '127.0.0.1']);
+        $domainSuffix = $isLocal ? '.localhost' : '.ekklesia.app';
+        $protocol = $isLocal ? 'http' : 'https';
+        $port = $isLocal && request()->getPort() != 80 ? ':' . request()->getPort() : '';
 
         return response()->json([
             'success'   => true,
             'subdomain' => $validated['subdomain'],
-            'url'       => 'http://' . $validated['subdomain'] . '.ekklesia.test',
+            'url'       => $protocol . '://' . $validated['subdomain'] . $domainSuffix . $port,
         ]);
     }
 
@@ -67,7 +75,7 @@ class TenantRegistrationController extends Controller
         }
 
         $taken = \Stancl\Tenancy\Database\Models\Domain::where(
-            'domain', 'like', $subdomain . '.%'
+            'domain', $subdomain
         )->exists();
 
         return response()->json(['available' => !$taken]);

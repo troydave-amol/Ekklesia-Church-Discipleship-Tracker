@@ -3,8 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
-use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
-use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ChurchController;
 use App\Http\Controllers\DiscipleController;
@@ -27,15 +25,20 @@ use App\Http\Controllers\AuthController;
 |
 */
 
-Route::middleware([
-    'web',
-    InitializeTenancyByDomain::class,
-    PreventAccessFromCentralDomains::class,
-])->group(function () {
-    Route::get('/', function () {
-        return 'This is your multi-tenant application. The id of the current tenant is ' . tenant('id');
-    });
+// Root tenant landing page
+// Note: 'web', InitializeTenancyBySubdomain, and PreventAccessFromCentralDomains
+// are already applied by TenancyServiceProvider::mapRoutes()
+Route::get('/', function () {
+    return redirect()->route('login');
 });
+
+// ══════════════════════════════════════════════
+//  GUEST ROUTES (tenant-level auth)
+// ══════════════════════════════════════════════
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
+Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
 
 // ══════════════════════════════════════════════
 //  AUTHENTICATED ROUTES
