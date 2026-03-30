@@ -13,6 +13,7 @@ use App\Policies\DisciplePolicy;
 use App\Policies\AttendancePolicy;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
+use App\Services\TenantDatabaseManager;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(DevotionalService::class);
         $this->app->singleton(ProgramEnrollmentService::class);
         $this->app->singleton(ReportExportService::class);
+        $this->app->singleton(TenantDatabaseManager::class);
 
         // ProgressService depends on Attendance + Devotional services
         $this->app->singleton(ProgressService::class, fn($app) =>
@@ -35,6 +37,12 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+
+        // Migration paths
+        $this->loadMigrationsFrom([
+            database_path('migrations/central-app'),
+        ]);
+
         // Register Policies
         Gate::policy(User::class, DisciplePolicy::class);
     }

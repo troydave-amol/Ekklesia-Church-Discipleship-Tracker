@@ -58,7 +58,7 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'These credentials do not match our records.']);
         }
         $request->session()->regenerate();
-        return redirect()->route('dashboard');
+        return redirect()->route('tenant.dashboard');  // was 'dashboard'
     }
 
     public function logout(Request $request)
@@ -66,6 +66,6 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect()->route('login');
+        return redirect()->route('tenant.login');  // was 'login'
     }
 }

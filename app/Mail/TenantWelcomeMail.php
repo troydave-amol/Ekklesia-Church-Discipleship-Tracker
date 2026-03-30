@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Mail;
+
+use App\Models\Tenants;
+use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
+
+class TenantWelcomeMail extends Mailable
+{
+    use Queueable, SerializesModels;
+
+    public function __construct(
+        public readonly Tenants $tenant
+    ) {}
+
+    public function envelope(): Envelope
+    {
+        return new Envelope(
+            subject: 'Welcome to Church Discipleship Tracker!',
+        );
+    }
+
+    public function content(): Content
+    {
+        return new Content(
+            markdown: 'emails.tenant.welcome',
+            with: [
+                'tenantName' => $this->tenant->name,
+                'subdomain'  => $this->tenant->subdomain,
+                'loginUrl'   => "https://{$this->tenant->subdomain}." . config('app.domain') . "/login",
+                'trialEnds'  => $this->tenant->trial_ends_at?->format('F j, Y'),
+            ],
+        );
+    }
+}

@@ -31,6 +31,20 @@ class AttendanceService
         return (int) round(($attended / $total) * 100);
     }
 
+    public function countForUser(int $userId, int $churchId): int
+    {
+        return Attendance::where('church_id', $churchId)
+            ->where('user_id', $userId)
+            ->count();
+    }
+
+    public function totalSessions(int $churchId): int
+    {
+        return Attendance::where('church_id', $churchId)
+            ->distinct('date')
+            ->count('date');
+    }
+
     public function churchAvgAttendance(int $churchId): int
     {
         $users = \App\Models\User::where('church_id', $churchId)

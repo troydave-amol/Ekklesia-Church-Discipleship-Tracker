@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Church;
 use App\Models\Attendance;
 use App\Models\Devotional;
+use App\Models\Program;
 
 class ProgressService
 {
@@ -21,25 +22,25 @@ class ProgressService
     {
         $churchId = $church->id;
 
-        $disciples = \App\Models\User::where('church_id', $churchId)
+        $disciples = User::where('church_id', $churchId)
             ->where('role', 'disciple')
             ->with(['membership', 'membership.leader']) 
             ->paginate(20);
 
-        $leaders = \App\Models\User::where('church_id', $churchId)
+        $leaders = User::where('church_id', $churchId)
             ->where('role', 'leader')
             ->withCount('assignedDisciples')
             ->get();
 
-        $programs = \App\Models\Program::where('church_id', $churchId)
+        $programs = Program::where('church_id', $churchId)
             ->where('active', true)
             ->withCount('members')  
             ->get();
 
         return [
-            'totalDisciples' => \App\Models\User::where('church_id', $churchId)->where('role', 'disciple')->count(),
-            'newThisMonth'   => \App\Models\User::where('church_id', $churchId)->where('role', 'disciple')->whereMonth('created_at', now()->month)->count(),
-            'activeLeaders'  => \App\Models\User::where('church_id', $churchId)->where('role', 'leader')->count(),
+            'totalDisciples' => User::where('church_id', $churchId)->where('role', 'disciple')->count(),
+            'newThisMonth'   => User::where('church_id', $churchId)->where('role', 'disciple')->whereMonth('created_at', now()->month)->count(),
+            'activeLeaders'  => User::where('church_id', $churchId)->where('role', 'leader')->count(),
             'avgAttendance'  => $this->attendanceService->churchAvgAttendance($churchId),
             'devotionalRate' => 0, // placeholder until DevotionalService is ready
             'programs'       => $programs,
@@ -90,14 +91,38 @@ class ProgressService
             ->orderBy('week_number')
             ->get();
 
+        $completedLessons = $myLessons->filter(fn($l) => $l->attendance->isNotEmpty())->count();
+        $totalLessons     = $myLessons->count();
+        $attendanceRate   = $this->attendanceService->rateForUser($disciple->id, $churchId);
+        $streak           = $this->devotionalService->streakForUser($disciple->id, $churchId);
+        $monthMap         = $this->devotionalService->monthMap($churchId, now()->year, now()->month);
+        $calendarData     = $monthMap[$disciple->id] ?? [];
+
+        // Check if devotional done today
+        $devotionalDoneToday = Devotional::where('church_id', $churchId)
+            ->where('user_id', $disciple->id)
+            ->whereDate('date', today())
+            ->where('completed', 1)
+            ->exists();
+
+        // Current lesson (first incomplete)
+        $currentLesson = $myLessons->first(fn($l) => $l->attendance->isEmpty());
+
         return [
-            'attendanceRate'       => $this->attendanceService->rateForUser($disciple->id, $churchId),
-            'devStreak'            => $this->devotionalService->streakForUser($disciple->id, $churchId),
-            'devRate'              => $this->devotionalService->monthlyRate($disciple->id, $churchId),
-            'lessonsCompleted'     => $myLessons->filter(fn($l) => $l->attendance->isNotEmpty())->count(),
-            'totalLessons'         => $myLessons->count(),
-            'myLessons'            => $myLessons,
-            'devotionalsThisMonth' => $this->devotionalService->monthMap($churchId, now()->year, now()->month)[$disciple->id] ?? [],
+            'attendanceRate'     => $attendanceRate,
+            'attendedSessions'   => $this->attendanceService->countForUser($disciple->id, $churchId) ?? 0,
+            'totalSessions'      => $this->attendanceService->totalSessions($churchId) ?? 0,
+            'streak'             => $streak,
+            'personalBest'       => $streak, // update later when you track personal best separately
+            'devRate'            => $this->devotionalService->monthlyRate($disciple->id, $churchId),
+            'completedLessons'   => $completedLessons,
+            'totalLessons'       => $totalLessons,
+            'completionRate'     => $totalLessons > 0 ? (int)round(($completedLessons / $totalLessons) * 100) : 0,
+            'lessons'            => $myLessons,
+            'currentLesson'      => $currentLesson,
+            'currentProgram'     => null, // wire up later
+            'calendarData'       => $calendarData,
+            'devotionalDoneToday'=> $devotionalDoneToday,
         ];
     }
 }

@@ -11,52 +11,50 @@ class Tenants extends BaseTenant implements TenantWithDatabase
 {
     use HasDatabase, HasDomains;
 
-    /**
-     * Tell stancl/tenancy which attributes are REAL database columns.
-     * Without this, BaseTenant puts everything into the `data` JSON column.
-     */
+    protected $fillable = [
+        'name',
+        'email',
+        'subdomain',
+        'db_name',
+        'status',
+        'subscription_plan',
+        'trial_ends_at',
+        'activated_at',
+    ];
+
+    protected $casts = [
+        'trial_ends_at' => 'datetime',
+        'activated_at'  => 'datetime',
+    ];
+
+    // ← THIS IS THE KEY METHOD — tells stancl these are real columns not JSON
     public static function getCustomColumns(): array
     {
         return [
             'id',
-            'church_name',
-            'church_address',
-            'pastor_name',
-            'pastor_email',
+            'name',
+            'email',
             'subdomain',
-            'subscription_plan',
+            'db_name',
             'status',
-            'subscription_started_at',
-            'subscription_due_at',
+            'subscription_plan',
+            'trial_ends_at',
+            'activated_at',
         ];
     }
 
-    protected $casts = [
-        'subscription_started_at' => 'datetime',
-        'subscription_due_at' => 'datetime',
-    ];
-
-    // Relationships to central DB models
-    public function subscriptionPlan()
+    public function isActive(): bool
     {
-        return $this->belongsTo(SubscriptionPlan::class);
+        return $this->status === 'active';
     }
 
-    public function billingCycles()
+    public function scopeActive($query)
     {
-        return $this->hasMany(BillingCycle::class);
+        return $query->where('status', 'active');
     }
 
-    // Convenience: check current plan features
-    public function canAddDisciple(int $currentCount): bool
+    public function scopeInactive($query)
     {
-        $max = $this->subscriptionPlan->max_disciples;
-        return $max === null || $currentCount < $max; // null = unlimited
-    }
-
-    public function canAddLeader(int $currentCount): bool
-    {
-        $max = $this->subscriptionPlan->max_leaders;
-        return $max === null || $currentCount < $max;
+        return $query->where('status', 'inactive');
     }
 }

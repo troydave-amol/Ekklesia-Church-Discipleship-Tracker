@@ -1,77 +1,89 @@
-// ════════════════════════════════════════
-// provision.js — Tenant provisioning animation
-// ════════════════════════════════════════
+// resources/js/provision.js
 
-window.runProvisioning = function() {
+let tenantUrl   = null;
+let animationDone = false;
+let apiDone       = false;
+let apiSuccess    = false;
+
+if (!document.getElementById('subdomain')) {
+    throw new Error('provision.js: not on provision page, stopping.');
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  // Read plan from hidden input (set by Laravel from URL param)
+  const plan = document.getElementById('plan')?.value || 'free';
+
+  // Wait for PLANS to load from state.js
+  const checkState = setInterval(() => {
+    if (window.PLANS) {
+      clearInterval(checkState);
+      if (window.state) window.state.selectedPlan = plan;
+      runProvisioningSteps();
+      createTenantViaAPI();
+    }
+  }, 100);
+});
+
+function createTenantViaAPI() {
+  const urlParams = new URLSearchParams(window.location.search);
+
+  const payload = {
+    church_name:    urlParams.get('church_name')    || '',
+    church_address: urlParams.get('church_address') || '',
+    pastor_name:    urlParams.get('pastor_name')    || '',
+    pastor_email:   urlParams.get('email')          || '',
+    subdomain:      urlParams.get('subdomain')      || '',
+    plan:           urlParams.get('plan')            || 'free',
+  };
+
+  fetch('/register-tenant', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      tenantUrl  = data.url;
+      apiDone    = true;
+      apiSuccess = true;
+      showSuccessIfReady();
+    } else {
+      showProvError(data.message || 'Could not create your platform.');
+    }
+  })
+  .catch(err => {
+    console.error('Network error:', err);
+    showProvError('A network error occurred. Please try again.');
+  });
+}
+
+function runProvisioningSteps() {
   const subdomain = document.getElementById('subdomain').value.trim();
-  const plan      = PLANS[state.selectedPlan];
-  const dbName    = 'tenant_' + subdomain;
   const email     = document.getElementById('pastor-email').value.trim();
+  const plan      = document.getElementById('plan').value.trim();
+  const planLabel = window.PLANS?.[plan]?.name || plan;
+  const dbName    = 'church_' + subdomain;
 
-  // ── Terminal lines ──
-  const terminalLines = [
-    { delay: 200,  type: 'comment', text: '# Ekklesia TenantProvisioningService' },
-    { delay: 600,  type: 'cmd',     text: `php artisan tenant:create --subdomain=${subdomain}` },
-    { delay: 1200, type: 'info',    text: `→ Validating subdomain "${subdomain}"... OK` },
-    { delay: 1700, type: 'cmd',     text: `mysql -e "CREATE DATABASE ${dbName} CHARACTER SET utf8mb4;"` },
-    { delay: 2400, type: 'success', text: `✓ Database "${dbName}" created` },
-    { delay: 2900, type: 'cmd',     text: `php artisan migrate --database=tenant --path=database/migrations/tenant` },
-    { delay: 3300, type: 'info',    text: '  Migrating: 2024_01_01_create_programs_table' },
-    { delay: 3600, type: 'info',    text: '  Migrating: 2024_01_02_create_leaders_table' },
-    { delay: 3900, type: 'info',    text: '  Migrating: 2024_01_03_create_disciples_table' },
-    { delay: 4200, type: 'info',    text: '  Migrating: 2024_01_04_create_lessons_table' },
-    { delay: 4500, type: 'info',    text: '  Migrating: 2024_01_05_create_attendance_table' },
-    { delay: 4700, type: 'info',    text: '  Migrating: 2024_01_06_create_devotionals_table' },
-    { delay: 4900, type: 'info',    text: '  Migrating: 2024_01_07_create_progress_table' },
-    { delay: 5200, type: 'success', text: '✓ All migrations ran successfully' },
-    { delay: 5600, type: 'cmd',     text: `php artisan db:seed --class=TenantSeeder --plan=${state.selectedPlan}` },
-    { delay: 6100, type: 'info',    text: `  Seeding plan config: ${plan.name}` },
-    { delay: 6400, type: 'info',    text: '  Seeding default programs...' },
-    { delay: 6800, type: 'success', text: '✓ Tenant seeded successfully' },
-    { delay: 7100, type: 'cmd',     text: `php artisan tenant:register-subdomain ${subdomain}` },
-    { delay: 7600, type: 'info',    text: `  Wildcard DNS: *.ekklesia.app → 103.x.x.x` },
-    { delay: 7900, type: 'success', text: `✓ Subdomain ${subdomain}.ekklesia.app is live` },
-    { delay: 8200, type: 'cmd',     text: 'php artisan mail:send --type=TenantWelcomeMail' },
-    { delay: 8600, type: 'success', text: `✓ Welcome email sent to ${email}` },
-    { delay: 9000, type: 'success', text: '✓ Provisioning complete!' },
-  ];
-
-  // ── Progress steps ──
-  const provSteps = [
+  const steps = [
     { delay: 1700, doneDelay: 2400, step: 1, label: dbName },
-    { delay: 2900, doneDelay: 5200, step: 2, label: 'Running 7 migrations' },
-    { delay: 5600, doneDelay: 6800, step: 3, label: `Plan: ${plan.name}` },
-    { delay: 7100, doneDelay: 7900, step: 4, label: `${subdomain}.ekklesia.app` },
+    { delay: 2900, doneDelay: 5200, step: 2, label: 'Running migrations' },
+    { delay: 5600, doneDelay: 6800, step: 3, label: 'Plan: ' + planLabel },
+    { delay: 7100, doneDelay: 7900, step: 4, label: subdomain + '.ekklesia.app' },
     { delay: 8200, doneDelay: 8600, step: 5, label: email },
   ];
 
-  // ── Render terminal ──
-  const body = document.getElementById('terminal-body');
-  body.innerHTML = '';
-
-  terminalLines.forEach(({ delay, type, text }) => {
+  steps.forEach(({ delay, doneDelay, step, label }) => {
     setTimeout(() => {
-      const line = document.createElement('div');
-      line.className = 't-line';
-      if      (type === 'cmd')     line.innerHTML = `<span class="t-prompt">$</span><span class="t-cmd">${text}</span>`;
-      else if (type === 'comment') line.innerHTML = `<span class="t-comment">${text}</span>`;
-      else if (type === 'success') line.innerHTML = `<span class="t-success">${text}</span>`;
-      else                         line.innerHTML = `<span class="t-info">${text}</span>`;
-      body.appendChild(line);
-      requestAnimationFrame(() => { line.classList.add('show'); body.scrollTop = body.scrollHeight; });
-    }, delay);
-  });
-
-  // ── Progress step states ──
-  provSteps.forEach(({ delay, doneDelay, step, label }) => {
-    setTimeout(() => {
-      const el       = document.getElementById('pstep-' + step);
-      const stat     = document.getElementById('pstatus-' + step);
-      const sublabel = document.getElementById('pslabel-' + step);
-      el.classList.add('running');
-      stat.className   = 'prov-status running';
-      stat.innerHTML   = `<span class="spinner"></span>`;
-      sublabel.textContent = label;
+      document.getElementById('pstep-' + step).classList.add('running');
+      const stat = document.getElementById('pstatus-' + step);
+      stat.className = 'prov-status running';
+      stat.innerHTML = '<span class="spinner"></span>';
+      document.getElementById('pslabel-' + step).textContent = label;
     }, delay);
 
     setTimeout(() => {
@@ -84,33 +96,55 @@ window.runProvisioning = function() {
     }, doneDelay);
   });
 
-  // ── Show success card ──
   setTimeout(() => {
-    document.getElementById('prov-title').textContent = 'Platform ready!';
-    document.getElementById('prov-sub').textContent   = 'Your church platform is live and accessible.';
-
-    const now = new Date();
-    const due = new Date(now); due.setDate(due.getDate() + 30);
-
-    document.getElementById('success-url-text').textContent = subdomain + '.ekklesia.app';
-    document.getElementById('success-detail').innerHTML = `
-      <div class="success-detail-item">
-        <div class="success-detail-label">Database</div>
-        <div class="success-detail-value">${dbName}</div>
-      </div>
-      <div class="success-detail-item">
-        <div class="success-detail-label">Plan</div>
-        <div class="success-detail-value">${plan.name}</div>
-      </div>
-      <div class="success-detail-item">
-        <div class="success-detail-label">Activated on</div>
-        <div class="success-detail-value">${now.toLocaleDateString('en-PH')}</div>
-      </div>
-      <div class="success-detail-item">
-        <div class="success-detail-label">Next renewal</div>
-        <div class="success-detail-value">${plan.paid ? due.toLocaleDateString('en-PH') : 'N/A'}</div>
-      </div>`;
-
-    document.getElementById('success-card').classList.add('show');
+    animationDone = true;
+    showSuccessIfReady();
   }, 9600);
+}
+
+function showSuccessIfReady() {
+  if (!animationDone || !apiDone || !apiSuccess) return;
+
+  const subdomain = document.getElementById('subdomain').value.trim();
+  const plan      = document.getElementById('plan').value.trim();
+  const planLabel = window.PLANS?.[plan]?.name || plan;
+  const planPaid  = window.PLANS?.[plan]?.paid  || false;
+  const dbName    = 'church_' + subdomain;
+  const now       = new Date();
+  const due       = new Date(now);
+  due.setDate(due.getDate() + 30);
+
+  document.getElementById('prov-title').textContent = 'Platform ready!';
+  document.getElementById('prov-sub').textContent   = 'Your church platform is live and accessible.';
+  document.getElementById('success-url-text').textContent = subdomain + '.ekklesia.app';
+  document.getElementById('success-detail').innerHTML = `
+    <div class="success-detail-item"><div class="success-detail-label">Database</div><div class="success-detail-value">${dbName}</div></div>
+    <div class="success-detail-item"><div class="success-detail-label">Plan</div><div class="success-detail-value">${planLabel}</div></div>
+    <div class="success-detail-item"><div class="success-detail-label">Activated on</div><div class="success-detail-value">${now.toLocaleDateString('en-PH')}</div></div>
+    <div class="success-detail-item"><div class="success-detail-label">Next renewal</div><div class="success-detail-value">${planPaid ? due.toLocaleDateString('en-PH') : 'N/A'}</div></div>`;
+  document.getElementById('success-card').classList.add('show');
+}
+
+function showProvError(msg) {
+  document.getElementById('prov-error-msg').textContent = msg;
+  document.getElementById('prov-error').style.display  = 'block';
+}
+
+function getTenantBaseUrl() {
+  if (tenantUrl) return tenantUrl;
+  const subdomain   = document.getElementById('subdomain').value.trim();
+  const currentHost = window.location.hostname;
+  const port        = window.location.port ? ':' + window.location.port : '';
+  if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+    return `http://${subdomain}.localhost${port}`;
+  }
+  return `https://${subdomain}.ekklesia.app`;
+}
+
+function goToTenantDashboard() {
+  window.location.href = getTenantBaseUrl() + '/login';
+}
+
+function goToTenantHome() {
+  window.location.href = getTenantBaseUrl();
 }

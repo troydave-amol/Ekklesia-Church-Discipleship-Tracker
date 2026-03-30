@@ -2,82 +2,152 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TenantWelcomeMail;
 use App\Models\Tenants;
+use App\Services\TenantDatabaseManager;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Throwable;
 
 class TenantRegistrationController extends Controller
 {
-    public function store(Request $request)
+    public function __construct(
+        protected TenantDatabaseManager $dbManager
+    ) {}
+
+    // ── Show the registration form ────────────────────────────
+    public function showForm()
     {
-        $validated = $request->validate([
-            'church_name'    => 'required|string|max:255',
-            'church_address' => 'required|string|max:500',
-            'pastor_name'    => 'required|string|max:255',
-            'pastor_email'   => 'required|email',
-            'subdomain'      => 'required|string|alpha_num|max:32',
-            'plan'           => 'required|in:free,basic,standard,premium',
-        ]);
+        return view('auth.register-tenant');
+    }
 
-        // Check subdomain not already taken
-        $taken = \Stancl\Tenancy\Database\Models\Domain::where(
-            'domain', $validated['subdomain']
-        )->exists();
+    // ── Show the provision animation page ────────────────────
+    public function provision()
+    {
+        return view('provision');
+    }
 
-        if ($taken) {
-            return response()->json([
-                'success' => false,
-                'message' => 'That subdomain is already taken.'
-            ], 422);
+    // ── AJAX subdomain availability check ────────────────────
+    public function checkSubdomain(Request $request)
+    {
+        $subdomain = strtolower(trim($request->input('subdomain', '')));
+
+        $error = $this->validateSubdomainString($subdomain);
+        if ($error) {
+            return response()->json(['available' => false, 'message' => $error]);
         }
 
-        // Create the tenant record
-        $tenant = Tenants::create([
-            'id'                => Str::uuid()->toString(),
-            'church_name'       => $validated['church_name'],
-            'church_address'    => $validated['church_address'],
-            'pastor_name'       => $validated['pastor_name'],
-            'pastor_email'      => $validated['pastor_email'],
-            'subdomain'         => $validated['subdomain'],
-            'subscription_plan' => $validated['plan'],
-            'status'            => 'active',
-        ]);
-
-        // Store JUST the subdomain in the domains table.
-        // InitializeTenancyBySubdomain extracts only the subdomain part
-        // from the hostname (e.g. 'mysite' from 'mysite.localhost:8000')
-        // and queries: WHERE domain = 'mysite'
-        $tenant->domains()->create([
-            'domain' => $validated['subdomain'],
-        ]);
-
-        // Build the full URL for the response
-        $isLocal = in_array(request()->getHost(), ['localhost', '127.0.0.1']);
-        $domainSuffix = $isLocal ? '.localhost' : '.ekklesia.app';
-        $protocol = $isLocal ? 'http' : 'https';
-        $port = $isLocal && request()->getPort() != 80 ? ':' . request()->getPort() : '';
+        $taken = Tenants::where('subdomain', $subdomain)->exists();
 
         return response()->json([
-            'success'   => true,
-            'subdomain' => $validated['subdomain'],
-            'url'       => $protocol . '://' . $validated['subdomain'] . $domainSuffix . $port,
+            'available' => !$taken,
+            'message'   => $taken ? 'This subdomain is already taken.' : 'Available!',
         ]);
     }
 
-    public function checkSubdomain(Request $request)
+    // ── Main API endpoint — called by provision page JS ───────
+    public function store(Request $request)
     {
-        $subdomain = strtolower(
-            preg_replace('/[^a-z0-9]/', '', $request->query('subdomain', ''))
-        );
+        // Validate — field names match what your JS sends
+        $validated = $request->validate([
+            'church_name'    => ['required', 'string', 'max:255'],
+            'pastor_name'    => ['required', 'string', 'max:255'],
+            'pastor_email'   => ['required', 'email', 'unique:tenants,email'],
+            'subdomain'      => [
+                'required',
+                'string',
+                'min:3',
+                'max:32',
+                'regex:/^[a-z0-9][a-z0-9\-]*[a-z0-9]$/',
+                'unique:tenants,subdomain',
+            ],
+            'plan'           => ['sometimes', 'string', 'in:free,basic,standard,premium'],
+            'church_address' => ['sometimes', 'nullable', 'string', 'max:500'],
+        ], [
+            'subdomain.regex'  => 'Only lowercase letters, numbers, and hyphens allowed.',
+            'subdomain.unique' => 'This subdomain is already taken.',
+            'pastor_email.unique' => 'An account with this email already exists.',
+        ]);
 
-        if (!$subdomain) {
-            return response()->json(['available' => false]);
+        $dbName = 'church_' . str_replace('-', '_', $validated['subdomain']);
+        $tenant = null;
+
+        try {
+            // Create tenant record in central DB
+            // Create tenant record in central DB
+            $tenant = Tenants::create([
+                'name'              => $validated['church_name'],
+                'email'             => $validated['pastor_email'],
+                'subdomain'         => $validated['subdomain'],
+                'db_name'           => $dbName,
+                'status'            => 'active',
+                'subscription_plan' => $validated['plan'] ?? 'basic',
+                'trial_ends_at'     => now()->addDays(14),
+                'activated_at'      => now(),
+            ]);
+
+            // ── ADD THIS BLOCK ──────────────────────────────────────────
+            // Register the subdomain in stancl/tenancy's domains table
+            $domain = $this->buildTenantUrl($validated['subdomain']);
+            $domainOnly = $validated['subdomain'] . '.' . config('app.domain', 'localhost');
+
+            $tenant->domains()->create([
+                'domain' => $domainOnly,  // e.g. "gracechurch.localhost"
+            ]);
+            // ───────────────────────────────────────────────────────────
+
+            // Provision the tenant database + run migrations
+            $this->dbManager->createDatabase($tenant);
+            $this->dbManager->runMigrations($tenant);
+
+        } catch (Throwable $e) {
+            // Clean up partial creation
+            if ($tenant?->id) {
+                try { $this->dbManager->dropDatabase($tenant); } catch (Throwable) {}
+                $tenant->delete();
+            }
+
+            Log::error('Tenant provisioning failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to provision workspace: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    // ── Helpers ───────────────────────────────────────────────
+    private function buildTenantUrl(string $subdomain): string
+    {
+        $domain = config('app.domain', 'localhost');
+        $scheme = request()->getScheme();
+        $port   = request()->getPort();
+
+        // Local dev — include port number
+        if (in_array($domain, ['localhost', '127.0.0.1'])) {
+            return "{$scheme}://{$subdomain}.{$domain}:{$port}";
         }
 
-        $taken = \Stancl\Tenancy\Database\Models\Domain::where(
-            'domain', $subdomain
-        )->exists();
+        return "https://{$subdomain}.{$domain}";
+    }
 
-        return response()->json(['available' => !$taken]);
+    private function validateSubdomainString(string $subdomain): ?string
+    {
+        if (strlen($subdomain) < 3) return 'Too short — minimum 3 characters.';
+        if (strlen($subdomain) > 32) return 'Too long — maximum 32 characters.';
+        if (!preg_match('/^[a-z0-9][a-z0-9\-]*[a-z0-9]$/', $subdomain)) {
+            return 'Only lowercase letters, numbers, and hyphens allowed.';
+        }
+
+        $reserved = ['www', 'app', 'api', 'admin', 'mail', 'ftp', 'dev', 'staging'];
+        if (in_array($subdomain, $reserved)) {
+            return 'This subdomain is reserved.';
+        }
+
+        return null;
     }
 }

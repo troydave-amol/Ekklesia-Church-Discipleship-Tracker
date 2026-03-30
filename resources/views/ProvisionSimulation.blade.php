@@ -51,6 +51,46 @@
 // Global state: tenant URL set after real provisioning
 // ════════════════════════════════════════
 let tenantUrl = null;
+let animationDone = false;
+let apiDone = false;
+let apiSuccess = false;
+
+function showSuccessIfReady() {
+    // Only show when BOTH animation AND API are done
+    if (!animationDone || !apiDone || !apiSuccess) return;
+
+    const subdomain = document.getElementById('subdomain').value.trim();
+    const plan = PLANS[state.selectedPlan];
+    const dbName = 'church_' + subdomain;
+
+    document.getElementById('prov-title').textContent = 'Platform ready!';
+    document.getElementById('prov-sub').textContent   = 'Your church platform is live and accessible.';
+
+    const now = new Date();
+    const due = new Date(now);
+    due.setDate(due.getDate() + 30);
+
+    document.getElementById('success-url-text').textContent = subdomain + '.ekklesia.app';
+    document.getElementById('success-detail').innerHTML = `
+        <div class="success-detail-item">
+            <div class="success-detail-label">Database</div>
+            <div class="success-detail-value">${dbName}</div>
+        </div>s
+        <div class="success-detail-item">
+            <div class="success-detail-label">Plan</div>
+            <div class="success-detail-value">${plan.name}</div>
+        </div>
+        <div class="success-detail-item">
+            <div class="success-detail-label">Activated on</div>
+            <div class="success-detail-value">${now.toLocaleDateString('en-PH')}</div>
+        </div>
+        <div class="success-detail-item">
+            <div class="success-detail-label">Next renewal</div>
+            <div class="success-detail-value">${plan.paid ? due.toLocaleDateString('en-PH') : 'N/A'}</div>
+        </div>`;
+
+    document.getElementById('success-card').classList.add('show');
+}
 
 // ════════════════════════════════════════
 // Initialize on page load
@@ -100,14 +140,14 @@ function createTenantViaAPI() {
   .then(res => res.json())
   .then(data => {
     if (data.success) {
-      // Store the real tenant URL from the server
-      tenantUrl = data.url;
-      console.log('Tenant created successfully:', tenantUrl);
+        tenantUrl = data.url;
+        apiDone = true;
+        apiSuccess = true;
+        showSuccessIfReady();  // ← try to show success card
     } else {
-      console.error('Tenant creation failed:', data.message);
-      showError(data.message || 'Could not create your platform. The subdomain may already be taken.');
+        showError(data.message || 'Could not create your platform. The subdomain may already be taken.');
     }
-  })
+})
   .catch(err => {
     console.error('Network error during tenant creation:', err);
     showError('A network error occurred. Please try again.');
@@ -159,17 +199,8 @@ function runProvisioningSteps() {
 
   // Show success card
   setTimeout(() => {
-    document.getElementById('prov-title').textContent = 'Platform ready!';
-    document.getElementById('prov-sub').textContent   = 'Your church platform is live and accessible.';
-    const now = new Date();
-    const due = new Date(now); due.setDate(due.getDate() + 30);
-    document.getElementById('success-url-text').textContent = subdomain + '.ekklesia.app';
-    document.getElementById('success-detail').innerHTML = `
-      <div class="success-detail-item"><div class="success-detail-label">Database</div><div class="success-detail-value">${dbName}</div></div>
-      <div class="success-detail-item"><div class="success-detail-label">Plan</div><div class="success-detail-value">${plan.name}</div></div>
-      <div class="success-detail-item"><div class="success-detail-label">Activated on</div><div class="success-detail-value">${now.toLocaleDateString('en-PH')}</div></div>
-      <div class="success-detail-item"><div class="success-detail-label">Next renewal</div><div class="success-detail-value">${plan.paid ? due.toLocaleDateString('en-PH') : 'N/A'}</div></div>`;
-    document.getElementById('success-card').classList.add('show');
+    animationDone = true;
+    showSuccessIfReady();  // ← try to show success card
   }, 9600);
 }
 

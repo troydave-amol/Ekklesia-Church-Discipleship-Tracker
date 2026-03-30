@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Stancl\Tenancy\Database\Models\Domain;
-use Stancl\Tenancy\Database\Models\Tenant;
+use App\Models\Tenants;
 
 return [
-    'tenant_model' => \App\Models\Tenants::class,
+    'tenant_model' => Tenants::class,
     'id_generator' => Stancl\Tenancy\UUIDGenerator::class,
 
     'domain_model' => Domain::class,
@@ -185,7 +185,7 @@ return [
      * Parameters used by the tenants:migrate command.
      */
     'migration_parameters' => [
-    '--path'     => [database_path('migrations/tenant')],
+    '--path'     => [database_path('migrations/tenant')], // Run central app migrations before tenant migrations
     '--realpath' => true,
     ],
 
