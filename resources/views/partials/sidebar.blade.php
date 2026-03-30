@@ -7,42 +7,42 @@
     $navGroups = [
         'pastor' => [
             'Overview' => [
-                ['route' => 'dashboard',          'label' => 'Dashboard',   'icon' => 'home'],
+                ['route' => 'tenant.dashboard', 'label' => 'Dashboard', 'icon' => 'home'],
             ],
             'Church' => [
-                ['route' => 'programs.index',     'label' => 'Programs',    'icon' => 'cross'],
-                ['route' => 'lessons.index',      'label' => 'Lessons',     'icon' => 'book'],
-                ['route' => 'users.index',        'label' => 'Members',     'icon' => 'users'],
+                ['route' => 'tenant.programs.index',     'label' => 'Programs',    'icon' => 'cross'],
+                ['route' => 'tenant.lessons.index',      'label' => 'Lessons',     'icon' => 'book'],
+                ['route' => 'tenant.users.index',        'label' => 'Members',     'icon' => 'users'],
             ],
             'Tracking' => [
-                ['route' => 'attendance.index',   'label' => 'Attendance',  'icon' => 'calendar'],
-                ['route' => 'devotionals.index',  'label' => 'Devotionals', 'icon' => 'heart'],
+                ['route' => 'tenant.attendance.index',   'label' => 'Attendance',  'icon' => 'calendar'],
+                ['route' => 'tenant.devotionals.index',  'label' => 'Devotionals', 'icon' => 'heart'],
             ],
             'Analytics' => [
-                ['route' => 'reports.index',      'label' => 'Reports',     'icon' => 'chart'],
+                ['route' => 'tenant.reports.index',      'label' => 'Reports',     'icon' => 'chart'],
             ],
             'Admin' => [
-                ['route' => 'settings.church',    'label' => 'Settings',    'icon' => 'settings'],
+                ['route' => 'tenant.settings.church',    'label' => 'Settings',    'icon' => 'settings'],
             ],
         ],
         'leader' => [
             'Overview' => [
-                ['route' => 'dashboard',          'label' => 'Dashboard',   'icon' => 'home'],
+                ['route' => 'tenant.dashboard',          'label' => 'Dashboard',   'icon' => 'home'],
             ],
             'My Work' => [
-                ['route' => 'attendance.index',   'label' => 'Attendance',  'icon' => 'calendar'],
-                ['route' => 'devotionals.index',  'label' => 'Devotionals', 'icon' => 'heart'],
-                ['route' => 'users.disciples',    'label' => 'My Disciples','icon' => 'users'],
+                ['route' => 'tenant.attendance.index',   'label' => 'Attendance',  'icon' => 'calendar'],
+                ['route' => 'tenant.devotionals.index',  'label' => 'Devotionals', 'icon' => 'heart'],
+                ['route' => 'tenant.users.disciples',    'label' => 'My Disciples','icon' => 'users'],
             ],
         ],
         'disciple' => [
             'My Journey' => [
-                ['route' => 'dashboard',          'label' => 'Dashboard',   'icon' => 'home'],
-                ['route' => 'lessons.my',         'label' => 'My Lessons',  'icon' => 'book'],
-                ['route' => 'devotionals.mine',   'label' => 'Devotionals', 'icon' => 'heart'],
+                ['route' => 'tenant.dashboard',          'label' => 'Dashboard',   'icon' => 'home'],
+                ['route' => 'tenant.lessons.my',         'label' => 'My Lessons',  'icon' => 'book'],
+                ['route' => 'tenant.devotionals.mine',   'label' => 'Devotionals', 'icon' => 'heart'],
             ],
             'Profile' => [
-                ['route' => 'profile.edit',       'label' => 'My Profile',  'icon' => 'user'],
+                ['route' => 'tenant.profile.edit',       'label' => 'My Profile',  'icon' => 'user'],
             ],
         ],
     ];
@@ -161,7 +161,7 @@
                 </div>
 
                 <div class="pd-item-wrapper">
-                    <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                    <form method="POST" action="{{ route('tenant.logout') }}" style="margin:0;">
                         @csrf
                         <button type="submit" class="pd-item" style="width:100%; border:none; background:transparent; font-family:inherit; outline:none;">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>

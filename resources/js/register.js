@@ -97,63 +97,56 @@ function updatePips(active) {
 
 // ── SUBDOMAIN CHECK (inline feedback) ──
 window.checkSubdomain = function(val) {
-  const indicator = document.getElementById('avail-indicator');
-  const dot = document.getElementById('avail-dot');
-  const text = document.getElementById('avail-text');
+    const indicator = document.getElementById('avail-indicator');
+    const dot       = document.getElementById('avail-dot');
+    const text      = document.getElementById('avail-text');
 
-  if (!val.match(/^[a-zA-Z0-9]+$/)) {
-    state.subdomainAvailable = false;
-    indicator.style.display = 'flex';
-    dot.style.background = 'red';
-    text.textContent = 'Invalid';
-    return;
-  }
-
-  // mock async check
-  setTimeout(()=>{
-    const taken = ['grace','test'];
-    if (taken.includes(val.toLowerCase())) {
-      state.subdomainAvailable = false;
-      dot.style.background = 'red';
-      text.textContent = 'Taken';
-    } else {
-      state.subdomainAvailable = true;
-      dot.style.background = 'green';
-      text.textContent = 'Available';
+    if (!val || !val.match(/^[a-z0-9][a-z0-9\-]*[a-z0-9]$/) || val.length < 3) {
+        state.subdomainAvailable = false;
+        indicator.style.display = 'flex';
+        dot.style.background = 'red';
+        text.textContent = 'Invalid — letters and numbers only';
+        return;
     }
+
     indicator.style.display = 'flex';
-  }, 300);
+    dot.style.background = 'orange';
+    text.textContent = 'Checking...';
+
+    clearTimeout(window._subdomainTimer);
+    window._subdomainTimer = setTimeout(() => {
+        fetch(`/check-subdomain?subdomain=${encodeURIComponent(val)}`)
+            .then(r => r.json())
+            .then(data => {
+                state.subdomainAvailable = data.available;
+                dot.style.background = data.available ? 'green' : 'red';
+                text.textContent = data.message;
+                indicator.style.display = 'flex';
+            })
+            .catch(() => {
+                dot.style.background = 'orange';
+                text.textContent = 'Could not check — try again';
+            });
+    }, 500);
 }
 
 window.submitRegistration = function() {
-    // Final validation
     if (!state.selectedPlan) {
         alert("Please select a plan first.");
         return;
     }
 
-    // Collect all registration data
-    const data = {
-        church_name:    document.getElementById('church-name').value,
-        church_address: document.getElementById('church-address').value,
-        pastor_name:    document.getElementById('pastor-name').value,
-        email:          document.getElementById('pastor-email').value,
-        subdomain:      document.getElementById('subdomain').value,
+    const params = new URLSearchParams({
+        church_name:    document.getElementById('church-name').value.trim(),
+        church_address: document.getElementById('church-address').value.trim(),
+        pastor_name:    document.getElementById('pastor-name').value.trim(),
+        email:          document.getElementById('pastor-email').value.trim(),
+        subdomain:      document.getElementById('subdomain').value.trim(),
         plan:           state.selectedPlan || 'free',
-    };
+    });
 
-    // Determine destination
-    const provisionPage = document.getElementById('page-provision');
-    
-    if (provisionPage) {
-        // SPA Mode (welcome.blade.php)
-        goToPage('page-provision');
-        runProvisioning();
-    } else {
-        // Form Mode — redirect with all params
-        const params = new URLSearchParams(data).toString();
-        window.location.href = `/provision-simulation?${params}`;
-    }
+    // Always redirect to /provision — no more SPA switching
+    window.location.href = '/provision?' + params.toString();
 }
 
 // ── DYNAMIC STEP BUILDERS ──
@@ -217,3 +210,4 @@ function buildConfirmStep() {
       </div>
     </div>`;
 }
+

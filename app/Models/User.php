@@ -13,6 +13,8 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    protected $connection = 'tenant';
+
     protected $fillable = [
         'church_id',
         'first_name',

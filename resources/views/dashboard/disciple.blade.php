@@ -10,9 +10,9 @@
         <h1 class="page-title">Welcome back, {{ $user->first_name }}</h1>
         <p class="page-subtitle">{{ $currentProgram->name ?? 'Life Class' }} · Week {{ $currentLesson->week_number ?? 1 }} of {{ $totalLessons }}</p>
     </div>
-    <form method="POST" action="{{ route('devotionals.markToday') }}">
+    <form method="POST" action="{{ route('devotionals.complete') }}">
         @csrf
-        @if(!$devotionalMarkedToday)
+        @if(!$devotionalDoneToday)
         <button type="submit" class="btn btn-primary">
             @include('partials.icon',['name'=>'heart','size'=>14])
             Mark Today's Devotional

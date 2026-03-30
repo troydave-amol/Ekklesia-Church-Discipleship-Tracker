@@ -13,15 +13,21 @@ class CreateDomainsTable extends Migration
      *
      * @return void
      */
+    // database/migrations/central-app/2019_09_15_000020_create_domains_table.php
+
     public function up(): void
     {
         Schema::create('domains', function (Blueprint $table) {
-            $table->increments('id');
+            $table->id();
             $table->string('domain', 255)->unique();
-            $table->string('tenant_id');
-
+            $table->uuid('tenant_id');             
             $table->timestamps();
-            $table->foreign('tenant_id')->references('id')->on('tenants')->onUpdate('cascade')->onDelete('cascade');
+
+            $table->foreign('tenant_id')
+                ->references('id')          
+                ->on('tenants')
+                ->onUpdate('cascade')
+                ->onDelete('cascade');
         });
     }
 
