@@ -42,6 +42,33 @@
             <div class="form-group span2"><label for="church-address">Church address</label><input type="text" id="church-address" placeholder="e.g. 123 Rizal Ave, Quezon City"><div class="field-error" id="err-church-address">Please enter the church address.</div></div>
             <div class="form-group"><label for="pastor-name">Pastor's full name</label><input type="text" id="pastor-name" placeholder="e.g. Rev. Juan dela Cruz"><div class="field-error" id="err-pastor-name">Please enter the pastor's name.</div></div>
             <div class="form-group"><label for="pastor-email">Pastor's email</label><input type="email" id="pastor-email" placeholder="pastor@church.org"><div class="field-error" id="err-pastor-email">Please enter a valid email address.</div></div>
+            <!-- Password -->
+            <div class="form-group">
+              <label for="pastor-password">Password</label>
+              <input 
+                type="password" 
+                id="pastor-password" 
+                name="password"
+                placeholder="Create a strong password"
+              >
+              <div class="field-error" id="err-pastor-password">
+                Password must be at least 8 characters.
+              </div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="form-group">
+              <label for="pastor-password-confirm">Confirm password</label>
+              <input 
+                type="password" 
+                id="pastor-password-confirm" 
+                name="password_confirmation"
+                placeholder="Re-enter your password"
+              >
+              <div class="field-error" id="err-password-confirm">
+                Passwords do not match.
+              </div>
+            </div>
             <div class="form-group span2">
               <label for="subdomain">Subdomain <span class="label-hint">(your church's URL)</span></label>
               <div class="subdomain-wrap" id="subdomain-wrap">

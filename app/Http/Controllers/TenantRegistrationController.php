@@ -53,6 +53,7 @@ class TenantRegistrationController extends Controller
             'church_name'    => ['required', 'string', 'max:255'],
             'pastor_name'    => ['required', 'string', 'max:255'],
             'pastor_email'   => ['required', 'email', 'unique:tenants,email'],
+            'pastor_password' => ['required', 'string', 'min:8'],
             'subdomain'      => [
                 'required',
                 'string',
@@ -77,6 +78,7 @@ class TenantRegistrationController extends Controller
             $tenant = Tenant::create([
                 'name'              => $validated['church_name'],
                 'email'             => $validated['pastor_email'],
+                'password'          => bcrypt($validated['pastor_password'] ?? str()->random(8)), // random password if not provided
                 'subdomain'         => $validated['subdomain'],
                 'db_name'           => $dbName,
                 'status'            => 'active',

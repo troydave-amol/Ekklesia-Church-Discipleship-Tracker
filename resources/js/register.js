@@ -130,55 +130,57 @@ window.checkSubdomain = function(val) {
     }, 500);
 }
 
-window.submitRegistration = function() {
-    if (!state.selectedPlan) {
-        alert("Please select a plan first.");
-        return;
-    }
+window.submitRegistration = async function() {
+  // Step 1: validate all steps
+  if (!validateStep1()) return;
+  if (!validateStep2()) return;
 
-    const params = new URLSearchParams({
-        church_name:    document.getElementById('church-name').value.trim(),
-        church_address: document.getElementById('church-address').value.trim(),
-        pastor_name:    document.getElementById('pastor-name').value.trim(),
-        email:          document.getElementById('pastor-email').value.trim(),
-        subdomain:      document.getElementById('subdomain').value.trim(),
-        plan:           state.selectedPlan || 'free',
+  // Collect data
+  const payload = {
+    church_name:    document.getElementById('church-name').value.trim(),
+    church_address: document.getElementById('church-address').value.trim(),
+    pastor_name:    document.getElementById('pastor-name').value.trim(),
+    pastor_email:   document.getElementById('pastor-email').value.trim(),
+    pastor_password: document.getElementById('pastor-password').value, // raw password
+    subdomain:      document.getElementById('subdomain').value.trim(),
+    plan:           state.selectedPlan || 'free',
+  };
+
+  // Optional: disable button to prevent double submit
+  const btn = document.getElementById('submit-btn');
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch('/register-tenant', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(payload),
     });
 
-    // Always redirect to /provision — no more SPA switching
-    window.location.href = '/provision?' + params.toString();
-}
+    const data = await res.json();
 
-// ── DYNAMIC STEP BUILDERS ──
-function buildPaymentStep() {
-  const plan = PLANS[state.selectedPlan];
-  const body = document.getElementById('payment-body');
-  if (!body) return;
+    if (data.success) {
+      // Tenant created successfully → go to provisioning page
+      const params = new URLSearchParams({
+        subdomain: payload.subdomain,
+        email: payload.pastor_email,
+        church_name: payload.church_name,
+        plan: payload.plan
+      });
 
-  if (plan.price === 0) {
-    body.innerHTML = `
-      <div class="gcash-note">
-        <div class="gcash-note-icon">✨</div>
-        <div class="gcash-note-text">You've selected the <strong>Free Plan</strong>. No payment is required. Provisioning will begin immediately.</div>
-      </div>`;
-    document.getElementById('payment-step-title').textContent = 'No payment required';
-    document.getElementById('payment-step-sub').textContent = 'Confirm your free subscription to continue.';
-    document.getElementById('payment-next-btn').textContent = 'Confirm & Continue →';
-  } else {
-    body.innerHTML = `
-      <div class="payment-summary">
-        <div class="payment-plan-name">${plan.name} Plan</div>
-        <div class="payment-plan-price">${plan.priceStr}</div>
-        <div class="payment-plan-sub">Billed monthly</div>
-      </div>
-      <div class="gcash-note">
-        <div class="gcash-note-icon">📱</div>
-        <div class="gcash-note-text">Please send payment to <strong>0912-345-6789 (Ekklesia)</strong> and enter the reference number below.</div>
-      </div>
-      <div class="form-group">
-        <label>GCash Reference Number</label>
-        <input type="text" id="payment-ref" placeholder="12-digit number">
-      </div>`;
+      window.location.href = '/provision?' + params.toString();
+    } else {
+      alert(data.message || 'Registration failed. Please try again.');
+      if (btn) btn.disabled = false;
+    }
+  } catch (err) {
+    console.error(err);
+    alert('A network error occurred. Please try again.');
+    if (btn) btn.disabled = false;
   }
 }
 
