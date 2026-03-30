@@ -17,7 +17,22 @@ class Program extends Model
         'active',
     ];
 
-     protected static function booted(): void
+    protected $casts = [
+        'active' => 'boolean',
+    ];
+
+    // Maps is_active → active so both work
+    public function getIsActiveAttribute(): bool
+    {
+        return (bool) $this->active;
+    }
+
+    public function setIsActiveAttribute(bool $value): void
+    {
+        $this->attributes['active'] = $value;
+    }
+
+    protected static function booted(): void
     {
         static::addGlobalScope(new ChurchTenantScope());
     }
@@ -30,11 +45,6 @@ class Program extends Model
     public function lessons()
     {
         return $this->hasMany(Lesson::class);
-    }
-
-    public function programs()
-    {
-        return $this->hasMany(\App\Models\Program::class);
     }
 
     public function members()

@@ -163,8 +163,12 @@ window.submitRegistration = async function() {
 
     const data = await res.json();
 
+    if (data.success && data.pending_approval) {
+      window.location.href = '/registration-pending';
+      return;
+    }
+
     if (data.success) {
-      // Tenant created successfully → go to provisioning page
       const params = new URLSearchParams({
         subdomain: payload.subdomain,
         email: payload.pastor_email,

@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\Tenants;
+use App\Models\Tenant;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -14,7 +14,7 @@ class TenantWelcomeMail extends Mailable
     use Queueable, SerializesModels;
 
     public function __construct(
-        public readonly Tenants $tenant
+        public readonly Tenant $tenant
     ) {}
 
     public function envelope(): Envelope
