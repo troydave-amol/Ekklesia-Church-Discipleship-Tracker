@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Tenants;
+use App\Models\Tenant;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
@@ -12,7 +12,7 @@ use Throwable;
 class TenantDatabaseManager
 {
     // ── Create the physical MySQL database ────────────────────
-    public function createDatabase(Tenants $tenant): void
+    public function createDatabase(Tenant $tenant): void
     {
         $dbName = $this->sanitizeDbName($tenant->db_name);
 
@@ -28,7 +28,7 @@ class TenantDatabaseManager
     }
 
     // ── Wire up a dynamic connection then run migrations ──────
-    public function runMigrations(Tenants $tenant): void
+    public function runMigrations(Tenant $tenant): void
     {
         $dbName     = $this->sanitizeDbName($tenant->db_name);
         $connName   = $this->connectionName($tenant);
@@ -69,7 +69,7 @@ class TenantDatabaseManager
     }
 
     // ── Roll back tenant migrations (for testing/cleanup) ─────
-    public function rollbackMigrations(Tenants $tenant): void
+    public function rollbackMigrations(Tenant $tenant): void
     {
         $connName = $this->connectionName($tenant);
 
@@ -81,7 +81,7 @@ class TenantDatabaseManager
     }
 
     // ── Drop the physical database (cleanup on failed signup) ─
-    public function dropDatabase(Tenants $tenant): void
+    public function dropDatabase(Tenant $tenant): void
     {
         $dbName = $this->sanitizeDbName($tenant->db_name);
 
@@ -93,7 +93,7 @@ class TenantDatabaseManager
     }
 
     // ── Check if the database already exists ──────────────────
-    public function databaseExists(Tenants $tenant): bool
+    public function databaseExists(Tenant $tenant): bool
     {
         $dbName = $this->sanitizeDbName($tenant->db_name);
 
@@ -109,7 +109,7 @@ class TenantDatabaseManager
     // ── Helpers ───────────────────────────────────────────────
 
     // Consistent connection name per tenant
-    private function connectionName(Tenants $tenant): string
+    private function connectionName(Tenant $tenant): string
     {
         return "tenant_{$tenant->id}";
     }
