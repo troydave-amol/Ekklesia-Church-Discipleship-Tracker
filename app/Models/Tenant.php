@@ -7,19 +7,14 @@ use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDomains;
 
-class Tenants extends BaseTenant implements TenantWithDatabase
+class Tenant extends BaseTenant implements TenantWithDatabase
 {
     use HasDatabase, HasDomains;
 
     protected $fillable = [
-        'name',
-        'email',
-        'subdomain',
-        'db_name',
-        'status',
-        'subscription_plan',
-        'trial_ends_at',
-        'activated_at',
+        'name', 'email', 'subdomain', 'db_name',
+        'status', 'subscription_plan',
+        'trial_ends_at', 'activated_at',
     ];
 
     protected $casts = [
@@ -27,20 +22,19 @@ class Tenants extends BaseTenant implements TenantWithDatabase
         'activated_at'  => 'datetime',
     ];
 
-    // ← THIS IS THE KEY METHOD — tells stancl these are real columns not JSON
     public static function getCustomColumns(): array
     {
         return [
-            'id',
-            'name',
-            'email',
-            'subdomain',
-            'db_name',
-            'status',
-            'subscription_plan',
-            'trial_ends_at',
-            'activated_at',
+            'id', 'name', 'email', 'subdomain', 'db_name',
+            'status', 'subscription_plan',
+            'trial_ends_at', 'activated_at',
         ];
+    }
+
+    // ← THIS tells stancl to use church_baptistchurch instead of tenant{uuid}
+    public function getTenancyDatabaseName(): string
+    {
+        return $this->db_name;
     }
 
     public function isActive(): bool

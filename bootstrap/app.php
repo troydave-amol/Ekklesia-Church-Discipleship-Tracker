@@ -12,6 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
 
+        $middleware->redirectGuestsTo('/login');  
+
         $middleware->alias([
             'role'          => \App\Http\Middleware\CheckRole::class,
             'church.tenant' => \App\Http\Middleware\EnsureChurchTenant::class,

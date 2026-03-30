@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\TenantWelcomeMail;
-use App\Models\Tenants;
+use App\Models\Tenant;
 use App\Services\TenantDatabaseManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -38,7 +38,7 @@ class TenantRegistrationController extends Controller
             return response()->json(['available' => false, 'message' => $error]);
         }
 
-        $taken = Tenants::where('subdomain', $subdomain)->exists();
+        $taken = Tenant::where('subdomain', $subdomain)->exists();
 
         return response()->json([
             'available' => !$taken,
@@ -49,7 +49,6 @@ class TenantRegistrationController extends Controller
     // ── Main API endpoint — called by provision page JS ───────
     public function store(Request $request)
     {
-        // Validate — field names match what your JS sends
         $validated = $request->validate([
             'church_name'    => ['required', 'string', 'max:255'],
             'pastor_name'    => ['required', 'string', 'max:255'],
@@ -65,8 +64,8 @@ class TenantRegistrationController extends Controller
             'plan'           => ['sometimes', 'string', 'in:free,basic,standard,premium'],
             'church_address' => ['sometimes', 'nullable', 'string', 'max:500'],
         ], [
-            'subdomain.regex'  => 'Only lowercase letters, numbers, and hyphens allowed.',
-            'subdomain.unique' => 'This subdomain is already taken.',
+            'subdomain.regex'     => 'Only lowercase letters, numbers, and hyphens allowed.',
+            'subdomain.unique'    => 'This subdomain is already taken.',
             'pastor_email.unique' => 'An account with this email already exists.',
         ]);
 
@@ -74,9 +73,8 @@ class TenantRegistrationController extends Controller
         $tenant = null;
 
         try {
-            // Create tenant record in central DB
-            // Create tenant record in central DB
-            $tenant = Tenants::create([
+            // 1. Create tenant record
+            $tenant = Tenant::create([
                 'name'              => $validated['church_name'],
                 'email'             => $validated['pastor_email'],
                 'subdomain'         => $validated['subdomain'],
@@ -87,22 +85,40 @@ class TenantRegistrationController extends Controller
                 'activated_at'      => now(),
             ]);
 
-            // ── ADD THIS BLOCK ──────────────────────────────────────────
-            // Register the subdomain in stancl/tenancy's domains table
-            $domain = $this->buildTenantUrl($validated['subdomain']);
-            $domainOnly = $validated['subdomain'] . '.' . config('app.domain', 'localhost');
-
+            // 2. Create domain record (subdomain only — no .localhost suffix)
             $tenant->domains()->create([
-                'domain' => $domainOnly,  // e.g. "gracechurch.localhost"
+                'domain' => $validated['subdomain'],
             ]);
-            // ───────────────────────────────────────────────────────────
 
-            // Provision the tenant database + run migrations
+            // 3. Create tenant database
             $this->dbManager->createDatabase($tenant);
+
+            // 4. Run tenant migrations
             $this->dbManager->runMigrations($tenant);
 
+            // 5. Send welcome email (non-blocking)
+            try {
+                Mail::to($tenant->email)->send(new TenantWelcomeMail($tenant));
+            } catch (Throwable $e) {
+                Log::warning('Welcome email failed', [
+                    'tenant_id' => $tenant->id,
+                    'error'     => $e->getMessage(),
+                ]);
+            }
+
+            // 6. Return success JSON to provision page
+            return response()->json([
+                'success' => true,
+                'url'     => $this->buildTenantUrl($validated['subdomain']),
+                'tenant'  => [
+                    'id'        => $tenant->id,
+                    'name'      => $tenant->name,
+                    'subdomain' => $tenant->subdomain,
+                    'plan'      => $tenant->subscription_plan,
+                ],
+            ]);
+
         } catch (Throwable $e) {
-            // Clean up partial creation
             if ($tenant?->id) {
                 try { $this->dbManager->dropDatabase($tenant); } catch (Throwable) {}
                 $tenant->delete();
