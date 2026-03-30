@@ -43,7 +43,8 @@
 .form-card {
   background: white; border-radius: 16px;
   border: 1px solid var(--border);
-  box-shadow: var(--shadow); overflow: hidden;
+  box-shadow: var(--shadow); overflow: visible;
+  min-width: 0
 }
 .form-card-header {
   padding: 24px 32px 20px; border-bottom: 1px solid var(--border); background: var(--cream);
@@ -61,7 +62,8 @@ label { font-size: 13px; font-weight: 600; color: var(--ink2); }
 label .label-hint { font-weight: 400; color: var(--ink3); margin-left: 4px; }
 
 input[type=text],
-input[type=email],
+input[type=email],  
+input[type=password],
 select {
   height: 44px; border-radius: 10px;
   border: 1.5px solid var(--border);

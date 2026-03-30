@@ -32,8 +32,9 @@ function createTenantViaAPI() {
     church_address: urlParams.get('church_address') || '',
     pastor_name:    urlParams.get('pastor_name')    || '',
     pastor_email:   urlParams.get('email')          || '',
+    pastor_password: urlParams.get('password')      || '',
     subdomain:      urlParams.get('subdomain')      || '',
-    plan:           urlParams.get('plan')            || 'free',
+    plan:           urlParams.get('plan')           || 'free',
   };
 
   fetch('/register-tenant', {

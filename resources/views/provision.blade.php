@@ -76,6 +76,7 @@
 {{-- Data passed via URL params — read by provision.js --}}
 <input type="hidden" id="subdomain"    value="{{ request('subdomain') }}">
 <input type="hidden" id="pastor-email" value="{{ request('email') }}">
+<input type="hidden" id="pastor-password" value="{{ request('password') }}">
 <input type="hidden" id="church-name"  value="{{ request('church_name') }}">
 <input type="hidden" id="plan"         value="{{ request('plan', 'free') }}">
 

@@ -3,7 +3,7 @@
      Include inside <div id="page-register" class="page">
 ════════════════════════════════════════ -->
 
-    @vite(['resources/css/app.css', 'resources/css/base.css', 'resources/css/landing.css', 'resources/css/register.css', 'resources/css/provision.css'])
+    @vite(['resources/css/register.css'])
     @vite(['resources/js/state.js', 'resources/js/router.js', 'resources/js/register.js', 'resources/js/provision.js'])
   
   <div class="register-wrap">
@@ -40,57 +40,115 @@
       <div class="form-card">
         <div class="form-card-header">
           <div class="form-card-title">Church information</div>
-          <div class="form-card-sub">Tell us about your church and the pastor registering this account.</div>
+          <div class="form-card-sub">
+            Tell us about your church and the pastor registering this account.
+          </div>
         </div>
+
         <div class="form-card-body">
           <div class="form-grid">
 
+            <!-- Church Name -->
             <div class="form-group span2">
-                <input type="text" id="church-name" placeholder="e.g. Grace Community Church">
-                <div class="field-error" id="err-church-name">Please enter your church name.</div>
-
+              <label for="church-name">Church name</label>
+              <input 
+                type="text" 
+                id="church-name" 
+                name="church_name"
+                placeholder="e.g. Grace Community Church"
+              >
+              <div class="field-error" id="err-church-name">
+                Please enter your church name.
+              </div>
             </div>
 
+            <!-- Address -->
             <div class="form-group span2">
               <label for="church-address">Church address</label>
-              <input type="text" id="church-address" placeholder="e.g. 123 Rizal Ave, Quezon City">
-              <div class="field-error" id="err-church-address">Please enter the church address.</div>
+              <input 
+                type="text" 
+                id="church-address" 
+                name="church_address"
+                placeholder="e.g. 123 Rizal Ave, Quezon City"
+              >
+              <div class="field-error" id="err-church-address">
+                Please enter the church address.
+              </div>
             </div>
 
+            <!-- Pastor Name -->
             <div class="form-group">
               <label for="pastor-name">Pastor's full name</label>
-              <input type="text" id="pastor-name" placeholder="e.g. Rev. Juan dela Cruz">
-              <div class="field-error" id="err-pastor-name">Please enter the pastor's name.</div>
+              <input 
+                type="text" 
+                id="pastor-name" 
+                name="pastor_name"
+                placeholder="e.g. Rev. Juan dela Cruz"
+              >
+              <div class="field-error" id="err-pastor-name">
+                Please enter the pastor's name.
+              </div>
             </div>
 
+            <!-- Email -->
             <div class="form-group">
               <label for="pastor-email">Pastor's email</label>
-              <input type="email" id="pastor-email" placeholder="pastor@church.org">
-              <div class="field-error" id="err-pastor-email">Please enter a valid email address.</div>
+              <input 
+                type="email" 
+                id="pastor-email" 
+                name="email"
+                placeholder="pastor@church.org"
+              >
+              <div class="field-error" id="err-pastor-email">
+                Please enter a valid email address.
+              </div>
             </div>
 
+            
+
+            <p style="color:red;">DEBUG VIEW</p>
+
+            <!-- Subdomain -->
             <div class="form-group span2">
-              <label for="subdomain">Subdomain <span class="label-hint">(your church's URL)</span></label>
+              <label for="subdomain">
+                Subdomain <span class="label-hint">(your church's URL)</span>
+              </label>
+
               <div class="subdomain-wrap" id="subdomain-wrap">
-                <input type="text" class="subdomain-input" id="subdomain"
-                       placeholder="gracechurch"
-                       oninput="checkSubdomain(this.value)"
-                       maxlength="32">
+                <input 
+                  type="text" 
+                  class="subdomain-input" 
+                  id="subdomain"
+                  name="subdomain"
+                  placeholder="gracechurch"
+                  maxlength="32"
+                  oninput="checkSubdomain(this.value)"
+                >
                 <div class="subdomain-suffix">.ekklesia.app</div>
               </div>
+
               <div class="avail-indicator" id="avail-indicator" style="display:none;">
                 <div class="avail-dot" id="avail-dot"></div>
                 <span id="avail-text"></span>
               </div>
-              <div class="field-error" id="err-subdomain">Please enter a valid subdomain (letters and numbers only).</div>
+
+              <div class="field-error" id="err-subdomain">
+                Please enter a valid subdomain.
+              </div>
             </div>
 
           </div>
         </div>
+
         <div class="form-nav">
-          <button class="btn-ghost" onclick="window.location.href='/ '">← Back to home</button>
-          <button class="btn-primary" onclick="nextStep(1)">Continue to plan selection →</button>
+          <button class="btn-ghost" onclick="window.location.href='/'">
+            ← Back to home
+          </button>
+          <button class="btn-primary" onclick="nextStep(1)">
+            Continue to plan selection →
+          </button>
         </div>
+
       </div>
     </div>
 

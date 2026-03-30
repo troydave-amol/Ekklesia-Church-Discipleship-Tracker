@@ -49,7 +49,7 @@ class AuthController extends Controller
         });
 
         Auth::login($pastor);
-        return redirect()->route('dashboard');
+        return redirect()->route('login');
     }
 
     public function login(LoginRequest $request)
