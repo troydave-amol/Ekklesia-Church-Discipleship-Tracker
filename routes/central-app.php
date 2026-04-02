@@ -2,11 +2,8 @@
 
 use App\Http\Controllers\Admin\CentralDashboardController;
 use App\Http\Controllers\Admin\TenantSignupController;
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TenantRegistrationController;
 use Illuminate\Support\Facades\Route;
-use Stancl\Tenancy\Middleware\InitializeTenancyBySubdomain;
-use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 
 // ── Central routes (no tenancy) ───────────────────────────────────────────────
 
@@ -32,19 +29,4 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('tenants', TenantRegistrationController::class)->only(['index', 'show']);
 });
 
-// ── Tenant routes (tenancy initialized here) ──────────────────────────────────
-
-Route::middleware([
-    'web',
-    InitializeTenancyBySubdomain::class,
-    PreventAccessFromCentralDomains::class,
-])->group(function () {
-    Route::get('/login', [AuthController::class, 'showLogin'])->name('tenant.login');
-    Route::post('/login', [AuthController::class, 'login'])->name('tenant.login.post');
-    Route::post('/logout', [AuthController::class, 'logout'])->name('tenant.logout');
-
-    Route::middleware(['auth'])->group(function () {
-        Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('tenant.dashboard');
-        // all other tenant routes go here
-    });
-});
+// Tenant subdomain routes are defined in routes/tenant.php (loaded by TenancyServiceProvider).

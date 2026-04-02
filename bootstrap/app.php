@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role'          => \App\Http\Middleware\CheckRole::class,
+            'permission'    => \App\Http\Middleware\CheckPermission::class,
             'church.tenant' => \App\Http\Middleware\EnsureChurchTenant::class,
             'subscription'  => \App\Http\Middleware\CheckSubscriptionLimit::class,
         ]);

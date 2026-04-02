@@ -28,7 +28,7 @@ class ProgressService
             ->paginate(20);
 
         $leaders = User::where('church_id', $churchId)
-            ->where('role', 'leader')
+            ->whereIn('role', ['program_leader', 'cell_leader', 'leader'])
             ->withCount('assignedDisciples')
             ->get();
 
@@ -40,7 +40,9 @@ class ProgressService
         return [
             'totalDisciples' => User::where('church_id', $churchId)->where('role', 'disciple')->count(),
             'newThisMonth'   => User::where('church_id', $churchId)->where('role', 'disciple')->whereMonth('created_at', now()->month)->count(),
-            'activeLeaders'  => User::where('church_id', $churchId)->where('role', 'leader')->count(),
+            'activeLeaders'  => User::where('church_id', $churchId)
+                ->whereIn('role', ['program_leader', 'cell_leader', 'leader'])
+                ->count(),
             'avgAttendance'  => $this->attendanceService->churchAvgAttendance($churchId),
             'devotionalRate' => 0, // placeholder until DevotionalService is ready
             'programs'       => $programs,

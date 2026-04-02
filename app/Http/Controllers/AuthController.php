@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\RegisterChurchRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\Church;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\UserProfile;
 use App\Models\ChurchMembership;
@@ -27,13 +28,16 @@ class AuthController extends Controller
                 'subscription_plan' => $request->subscription_plan,
             ]);
 
+            $adminRoleId = Role::query()->where('slug', 'church_admin')->value('id');
+
             $pastor = User::create([
                 'church_id'  => $church->id,
                 'first_name' => $request->first_name,
                 'last_name'  => $request->last_name,
                 'email'      => $request->email,
                 'password'   => Hash::make($request->password),
-                'role'       => 'pastor',
+                'role'       => 'church_admin',
+                'role_id'    => $adminRoleId,
             ]);
 
             UserProfile::create(['user_id' => $pastor->id]);
@@ -66,6 +70,6 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect()->route('tenant.login');  // was 'login'
+        return redirect()->route('login');
     }
 }

@@ -11,7 +11,7 @@ class StoreLessonRequest extends FormRequest
      */
     public function authorize(): bool
     {
-         return auth()->user()->isPastor();
+        return auth()->user()->isChurchAdmin();
     }
 
     /**
