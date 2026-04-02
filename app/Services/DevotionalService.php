@@ -15,12 +15,11 @@ class DevotionalService
     {
         $actor = User::findOrFail($actorId);
 
-        // Leader authorization
-        if ($actor->isLeader()) {
+        if ($actor->isRestrictedLeader()) {
             $isAssigned = $actor->assignedDisciples()
                 ->where('user_id', $targetUserId)
                 ->exists();
-            if (!$isAssigned) {
+            if (! $isAssigned) {
                 abort(403, 'This disciple is not assigned to you.');
             }
         }
@@ -34,8 +33,8 @@ class DevotionalService
             ['church_id' => $churchId, 'user_id' => $targetUserId, 'date' => $date],
             [
                 'completed'   => $completed,
-                'verified_by' => $actor->isLeader() ? $actorId : null,
-                'verified_at' => $actor->isLeader() ? now() : null,
+                'verified_by' => $actor->isRestrictedLeader() ? $actorId : null,
+                'verified_at' => $actor->isRestrictedLeader() ? now() : null,
             ]
         );
     }

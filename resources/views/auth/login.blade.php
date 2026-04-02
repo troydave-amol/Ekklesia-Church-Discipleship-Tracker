@@ -12,7 +12,7 @@
 </div>
 @endif
 
-<form action="{{ route('tenant.login') }}" method="POST">
+<form action="{{ route('login') }}" method="POST">
     @csrf
     <div class="form-group">
         <label class="form-label">Email Address</label>

@@ -17,7 +17,7 @@
     <div class="flex gap-8">
         <a href="{{ route('reports.index') }}" class="btn btn-ghost">
             @include('partials.icon',['name'=>'download','size'=>14])
-            Export Report
+            Reports
         </a>
         <a href="{{ route('users.create') }}" class="btn btn-primary">
             @include('partials.icon',['name'=>'plus','size'=>14])

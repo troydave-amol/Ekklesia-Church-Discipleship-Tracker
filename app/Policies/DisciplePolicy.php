@@ -12,11 +12,11 @@ class DisciplePolicy
      */
     public function view(User $actor, User $disciple): bool
     {
-        if ($actor->isPastor()) {
+        if ($actor->isChurchAdmin()) {
             return $actor->church_id === $disciple->church_id;
         }
 
-        if ($actor->isLeader()) {
+        if ($actor->isRestrictedLeader()) {
             return $disciple->membership?->leader_id === $actor->id;
         }
 
@@ -26,11 +26,11 @@ class DisciplePolicy
 
     public function update(User $actor, User $disciple): bool
     {
-        if ($actor->isPastor()) {
+        if ($actor->isChurchAdmin()) {
             return $actor->church_id === $disciple->church_id;
         }
 
-        if ($actor->isLeader()) {
+        if ($actor->isRestrictedLeader()) {
             return $disciple->membership?->leader_id === $actor->id;
         }
 
@@ -39,8 +39,7 @@ class DisciplePolicy
 
     public function delete(User $actor, User $disciple): bool
     {
-        // Only pastors can delete members
-        return $actor->isPastor() && $actor->church_id === $disciple->church_id;
+        return $actor->isChurchAdmin() && $actor->church_id === $disciple->church_id;
     }
 }
 

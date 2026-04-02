@@ -7,6 +7,7 @@ use App\Models\Church;
 use App\Models\ChurchMembership;
 use App\Models\Tenant;
 use App\Models\TenantSignup;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\UserProfile;
 use Illuminate\Support\Facades\Log;
@@ -79,13 +80,16 @@ class TenantProvisionService
 
         $passwordHash = $signup->getRawOriginal('password');
 
+        $adminRoleId = Role::query()->where('slug', 'church_admin')->value('id');
+
         $user = User::query()->create([
             'church_id'  => $church->id,
             'first_name' => $firstName,
             'last_name'  => $lastName,
             'email'      => $signup->pastor_email,
             'password'   => $passwordHash,
-            'role'       => 'pastor',
+            'role'       => 'church_admin',
+            'role_id'    => $adminRoleId,
         ]);
 
         UserProfile::query()->create([

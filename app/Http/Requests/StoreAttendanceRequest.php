@@ -11,7 +11,9 @@ class StoreAttendanceRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return in_array(auth()->user()->role, ['pastor', 'leader']);
+        $u = auth()->user();
+
+        return $u->isChurchAdmin() || $u->isRestrictedLeader();
     }
 
     /**

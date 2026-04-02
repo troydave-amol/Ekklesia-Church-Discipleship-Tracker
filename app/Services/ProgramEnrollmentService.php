@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Role;
 use App\Models\User;
 use App\Models\UserProfile;
 use App\Models\ChurchMembership;
@@ -17,14 +18,26 @@ class ProgramEnrollmentService
     {
         return DB::transaction(function () use ($churchId, $data) {
 
+            $roleSlug = $data['role'] ?? 'disciple';
+            $roleSlug = match ($roleSlug) {
+                'leader' => 'program_leader',
+                'pastor', 'church_admin' => 'church_admin',
+                default  => in_array($roleSlug, ['disciple', 'program_leader', 'cell_leader'], true)
+                    ? $roleSlug
+                    : 'disciple',
+            };
+
+            $roleId = Role::query()->where('slug', $roleSlug)->value('id');
+
             $user = User::create([
                 'church_id'  => $churchId,
                 'first_name' => $data['first_name'],
                 'last_name'  => $data['last_name'],
                 'nickname'   => $data['nickname'] ?? null,
                 'email'      => $data['email'],
-                'password'   => Hash::make($data['password'] ?? 'Welcome1!'),
-                'role'       => $data['role'] ?? 'disciple',
+                'password'   => Hash::make(! empty($data['password']) ? $data['password'] : 'Welcome1!'),
+                'role'       => $roleSlug,
+                'role_id'    => $roleId,
             ]);
 
             UserProfile::create([

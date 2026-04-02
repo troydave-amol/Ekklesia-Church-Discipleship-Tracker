@@ -6,9 +6,10 @@
 
 <div class="flex items-center justify-between mb-20">
     <div>
-        <h1 class="page-title">User Management</h1>
-        <p class="page-subtitle">Manage disciples, leaders, and their assignments</p>
+        <h1 class="page-title">{{ ($leaderScope ?? false) ? 'My disciples' : 'User Management' }}</h1>
+        <p class="page-subtitle">{{ ($leaderScope ?? false) ? 'Disciples assigned to you' : 'Manage disciples, leaders, and their assignments' }}</p>
     </div>
+    @unless($leaderScope ?? false)
     <div class="flex gap-8">
         @can('import-disciples')
         <button class="btn btn-ghost" onclick="document.getElementById('importModal').style.display='flex'">
@@ -21,6 +22,7 @@
             Add Member
         </a>
     </div>
+    @endunless
 </div>
 
 {{-- Plan limits notice --}}
@@ -43,8 +45,9 @@
 <div data-tab-group="users" style="margin-bottom:20px;">
     <div class="tabs">
         <button class="tab active" data-tab-target="tab-disciples">
-            Disciples <span class="badge badge-blue" style="margin-left:6px;">{{ $totalDisciples }}</span>
+            Disciples <span class="badge badge-blue" style="margin-left:6px;">{{ ($leaderScope ?? false) ? $disciples->total() : $totalDisciples }}</span>
         </button>
+        @unless($leaderScope ?? false)
         <button class="tab" data-tab-target="tab-leaders">
             Leaders <span class="badge badge-blue" style="margin-left:6px;">{{ $totalLeaders }}</span>
         </button>
@@ -52,6 +55,7 @@
             @include('partials.icon',['name'=>'plus','size'=>13,'color'=>'currentColor'])
             Add Member
         </button>
+        @endunless
     </div>
 
     {{-- Disciples Tab --}}
@@ -98,7 +102,9 @@
                             <th style="min-width:120px;">Attendance</th>
                             <th style="min-width:120px;">Devotional</th>
                             <th>Status</th>
+                            @unless($leaderScope ?? false)
                             <th>Actions</th>
+                            @endunless
                         </tr>
                     </thead>
                     <tbody>
@@ -152,6 +158,7 @@
                                     {{ strtoupper(str_replace('_',' ',$d->membership->status ?? 'inactive')) }}
                                 </span>
                             </td>
+                            @unless($leaderScope ?? false)
                             <td>
                                 <div class="flex gap-8">
                                     <a href="{{ route('users.show', $d) }}" class="btn btn-ghost btn-icon btn-sm" title="View">@include('partials.icon',['name'=>'user','size'=>13])</a>
@@ -162,9 +169,10 @@
                                     </form>
                                 </div>
                             </td>
+                            @endunless
                         </tr>
                         @empty
-                        <tr><td colspan="8" style="text-align:center;padding:48px;color:var(--text-muted);">
+                        <tr><td colspan="{{ ($leaderScope ?? false) ? 7 : 8 }}" style="text-align:center;padding:48px;color:var(--text-muted);">
                             No disciples found. <a href="{{ route('users.create') }}" style="color:var(--gold);">Add your first disciple →</a>
                         </td></tr>
                         @endforelse
@@ -181,7 +189,7 @@
     </div>
 
     {{-- Leaders Tab --}}
-    <div id="tab-leaders" class="tab-content">
+    <div id="tab-leaders" class="tab-content" @if($leaderScope ?? false) style="display:none;" @endif>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:16px;">
             @forelse($leaders as $index => $leader)
             @php $lColors=['var(--gold)','var(--blue)','var(--purple)','var(--green)','var(--orange)']; $lc=$lColors[$index%5]; @endphp
@@ -200,7 +208,7 @@
                     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
                         <div class="flex justify-between" style="font-size:13px;">
                             <span class="text-muted">Assigned Disciples</span>
-                            <span style="font-weight:600;">{{ $leader->disciples_count }}</span>
+                            <span style="font-weight:600;">{{ $leader->assigned_disciples_count }}</span>
                         </div>
                         <div>
                             <div class="flex justify-between" style="font-size:12px;margin-bottom:4px;">
@@ -232,7 +240,7 @@
     </div>
 
     {{-- Add Member Tab --}}
-    <div id="tab-add" class="tab-content">
+    <div id="tab-add" class="tab-content" @if($leaderScope ?? false) style="display:none;" @endif>
         <div class="grid-2 mt-16">
             @include('users.partials.create-form')
         </div>

@@ -1,56 +1,72 @@
 {{-- resources/views/partials/sidebar.blade.php --}}
 @php
-    $role = auth()->user()->role ?? 'disciple';
-    $church = auth()->user()->church ?? null;
-    $user = auth()->user();
+    $user   = auth()->user();
+    $church = $user->church ?? null;
+
+    $navFor = function (string $key) use ($rawRole, $user): bool {
+        if ($user->isChurchAdmin()) {
+            return $key === 'church_admin';
+        }
+        if ($user->isRestrictedLeader()) {
+            return $key === 'leader';
+        }
+
+        return $key === 'disciple';
+    };
 
     $navGroups = [
-        'pastor' => [
+        'church_admin' => [
             'Overview' => [
-                ['route' => 'tenant.dashboard', 'label' => 'Dashboard', 'icon' => 'home'],
+                ['route' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home'],
             ],
             'Church' => [
-                ['route' => 'tenant.programs.index',     'label' => 'Programs',    'icon' => 'cross'],
-                ['route' => 'tenant.lessons.index',      'label' => 'Lessons',     'icon' => 'book'],
-                ['route' => 'tenant.users.index',        'label' => 'Members',     'icon' => 'users'],
+                ['route' => 'programs.index',     'label' => 'Programs',    'icon' => 'cross'],
+                ['route' => 'lessons.index',      'label' => 'Lessons',     'icon' => 'book'],
+                ['route' => 'users.index',        'label' => 'Members',     'icon' => 'users'],
             ],
             'Tracking' => [
-                ['route' => 'tenant.attendance.index',   'label' => 'Attendance',  'icon' => 'calendar'],
-                ['route' => 'tenant.devotionals.index',  'label' => 'Devotionals', 'icon' => 'heart'],
+                ['route' => 'attendance.index',   'label' => 'Attendance',  'icon' => 'calendar'],
+                ['route' => 'devotionals.index',  'label' => 'Devotionals', 'icon' => 'heart'],
             ],
             'Analytics' => [
-                ['route' => 'tenant.reports.index',      'label' => 'Reports',     'icon' => 'chart'],
+                ['route' => 'reports.index',      'label' => 'Reports',     'icon' => 'chart'],
             ],
             'Admin' => [
-                ['route' => 'tenant.settings.church',    'label' => 'Settings',    'icon' => 'settings'],
+                ['route' => 'settings.church',    'label' => 'Settings',    'icon' => 'settings'],
             ],
         ],
         'leader' => [
             'Overview' => [
-                ['route' => 'tenant.dashboard',          'label' => 'Dashboard',   'icon' => 'home'],
+                ['route' => 'dashboard',           'label' => 'Dashboard',    'icon' => 'home'],
             ],
             'My Work' => [
-                ['route' => 'tenant.attendance.index',   'label' => 'Attendance',  'icon' => 'calendar'],
-                ['route' => 'tenant.devotionals.index',  'label' => 'Devotionals', 'icon' => 'heart'],
-                ['route' => 'tenant.users.disciples',    'label' => 'My Disciples','icon' => 'users'],
+                ['route' => 'attendance.index',   'label' => 'Attendance',   'icon' => 'calendar'],
+                ['route' => 'devotionals.index',  'label' => 'Devotionals',  'icon' => 'heart'],
+                ['route' => 'users.disciples',    'label' => 'My Disciples', 'icon' => 'users'],
             ],
         ],
         'disciple' => [
             'My Journey' => [
-                ['route' => 'tenant.dashboard',          'label' => 'Dashboard',   'icon' => 'home'],
-                ['route' => 'tenant.lessons.my',         'label' => 'My Lessons',  'icon' => 'book'],
-                ['route' => 'tenant.devotionals.mine',   'label' => 'Devotionals', 'icon' => 'heart'],
-            ],
-            'Profile' => [
-                ['route' => 'tenant.profile.edit',       'label' => 'My Profile',  'icon' => 'user'],
+                ['route' => 'dashboard',           'label' => 'Dashboard',     'icon' => 'home'],
+                ['route' => 'lessons.my',          'label' => 'My Lessons',    'icon' => 'book'],
+                ['route' => 'devotionals.mine',   'label' => 'Devotionals',  'icon' => 'heart'],
             ],
         ],
     ];
 
-    $items = $navGroups[$role] ?? $navGroups['disciple'];
-
-    $roleColors = ['pastor' => '#D4A853', 'leader' => '#58A6FF', 'disciple' => '#BC8CFF'];
-    $roleColor  = $roleColors[$role] ?? '#D4A853';
+    if ($navFor('church_admin')) {
+        $items     = $navGroups['church_admin'];
+        $roleLabel = 'Church Admin';
+        $roleColor = '#D4A853';
+    } elseif ($navFor('leader')) {
+        $items     = $navGroups['leader'];
+        $roleLabel = 'Leader';
+        $roleColor = '#58A6FF';
+    } else {
+        $items     = $navGroups['disciple'];
+        $roleLabel = 'Disciple';
+        $roleColor = '#BC8CFF';
+    }
 @endphp
 
 <aside class="sidebar" id="sidebar">
@@ -58,7 +74,6 @@
     {{-- Brand --}}
     <div class="sidebar-brand">
         <div class="brand-icon">
-            {{-- Cross icon --}}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0D1117" stroke-width="2">
                 <line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="9" x2="22" y2="9"/>
             </svg>
@@ -73,7 +88,7 @@
     <div class="sidebar-role">
         <div class="role-chip" style="border-color:{{ $roleColor }}33; background:{{ $roleColor }}11;">
             <div class="role-dot" style="background:{{ $roleColor }};"></div>
-            <span class="role-label" style="color:{{ $roleColor }};">{{ ucfirst($role) }}</span>
+            <span class="role-label" style="color:{{ $roleColor }};">{{ $roleLabel }}</span>
             <span class="role-church">{{ Str::limit($church->name ?? 'Church', 14) }}</span>
         </div>
     </div>
@@ -85,7 +100,7 @@
             @foreach($links as $item)
                 @php
                     $isActive = request()->routeIs($item['route']) || request()->routeIs($item['route'].'.*');
-                    $href = rescue(fn() => route($item['route']), '#', false);
+                    $href = rescue(fn () => route($item['route']), '#', false);
                 @endphp
                 <a href="{{ $href }}" class="nav-item {{ $isActive ? 'active' : '' }}">
                     @include('partials.icon', ['name' => $item['icon'], 'size' => 17, 'color' => $isActive ? '#D4A853' : '#8B949E'])
@@ -101,10 +116,8 @@
     {{-- User row --}}
     <div class="sidebar-user" style="padding: 12px 10px;">
         <div class="profile-dropdown-wrapper" id="profileDropdownWrapper">
-            
-            {{-- Dropdown Menu (hidden by default) --}}
+
             <div class="profile-dropdown" id="profileDropdown">
-                {{-- Header inside dropdown --}}
                 <div class="pd-header">
                     <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
                         @php $initials = strtoupper(substr($user->first_name ?? 'U', 0, 1) . substr($user->last_name ?? '', 0, 1)); @endphp
@@ -122,17 +135,16 @@
                     </div>
                 </div>
 
-                {{-- Menu Items --}}
                 <div class="pd-divider"></div>
 
                 <div class="pd-item-wrapper">
-                    <a href="{{ route('users.show', $user->id ?? 1) }}" class="pd-item">
+                    <a href="{{ route('users.show', $user->id) }}" class="pd-item">
                         @include('partials.icon',['name'=>'user','size'=>15])
                         <span>My Profile</span>
                     </a>
                 </div>
 
-                @if(isset($church) && ($role ?? $user->role ?? 'pastor') === 'pastor')
+                @if($user->isChurchAdmin())
                 <div class="pd-item-wrapper">
                     <a href="{{ route('settings.church') }}" class="pd-item">
                         @include('partials.icon',['name'=>'settings','size'=>15])
@@ -161,7 +173,7 @@
                 </div>
 
                 <div class="pd-item-wrapper">
-                    <form method="POST" action="{{ route('tenant.logout') }}" style="margin:0;">
+                    <form method="POST" action="{{ route('logout') }}" style="margin:0;">
                         @csrf
                         <button type="submit" class="pd-item" style="width:100%; border:none; background:transparent; font-family:inherit; outline:none;">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -171,14 +183,11 @@
                 </div>
             </div>
 
-            {{-- Trigger Row --}}
             <div class="user-row" id="profileTrigger" style="display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 8px; cursor: pointer;">
-                {{-- Circular Avatar --}}
                 <div class="avatar avatar-sm" style="flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background:{{ $roleColor }}22; border:1px solid {{ $roleColor }}44; color:{{ $roleColor }};">
                     {{ $initials }}
                 </div>
-                
-                {{-- Stacked Text --}}
+
                 <div class="user-info" style="display: flex; flex-direction: column; justify-content: center; min-width: 0; flex: 1; gap: 3px;">
                     <span class="user-name" style="display: block; font-size: 13.5px; font-weight: 500; color: var(--text); line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $user->first_name ?? 'User' }} {{ $user->last_name ?? '' }}</span>
                     @if($church)
@@ -188,8 +197,9 @@
                     @endif
                 </div>
 
-                {{-- Upgrade Button --}}
+                @if($user->isChurchAdmin())
                 <a href="{{ route('settings.church') }}#subscription" class="btn btn-ghost btn-sm" style="flex-shrink: 0; padding: 4px 12px; height: auto; border-radius: 9999px; font-size: 11.5px; font-weight: 600; color: var(--text); background: transparent; border-color: var(--border);" onclick="event.stopPropagation();">Upgrade</a>
+                @endif
             </div>
         </div>
     </div>

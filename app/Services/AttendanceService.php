@@ -74,4 +74,25 @@ class AttendanceService
     {
         Attendance::where('church_id', $churchId)->findOrFail($id)->delete();
     }
+
+    /**
+     * @param  list<array{user_id: int, status: string}>  $records
+     */
+    public function saveSheet(int $churchId, int $lessonId, string $date, array $records, int $recordedBy): void
+    {
+        foreach ($records as $row) {
+            Attendance::withoutGlobalScopes()->updateOrCreate(
+                [
+                    'church_id' => $churchId,
+                    'user_id'   => (int) $row['user_id'],
+                    'lesson_id' => $lessonId,
+                    'date'      => $date,
+                ],
+                [
+                    'status'       => $row['status'],
+                    'recorded_by'  => $recordedBy,
+                ]
+            );
+        }
+    }
 }

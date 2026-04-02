@@ -44,9 +44,9 @@ class ReportExportService
     {
         $rows = Devotional::withoutGlobalScopes()
             ->join('users', 'users.id', '=', 'devotionals.user_id')
-            ->join('church_memberships', 'church_memberships.user_id', '=', 'devotionals.user_id')
+            ->join('church_membership', 'church_membership.user_id', '=', 'devotionals.user_id')
             ->where('devotionals.church_id', $churchId)
-            ->when($leaderId, fn($q) => $q->where('church_memberships.leader_id', $leaderId))
+            ->when($leaderId, fn ($q) => $q->where('church_membership.leader_id', $leaderId))
             ->whereBetween('devotionals.date', [$from, $to])
             ->select('users.first_name', 'users.last_name', 'users.email',
                      'devotionals.date', 'devotionals.completed')
@@ -62,5 +62,35 @@ class ReportExportService
             }
             fclose($h);
         }, 'devotionals-' . now()->format('Y-m-d') . '.csv');
+    }
+
+    public function programsSummaryCsv(int $churchId, string $from, string $to): StreamedResponse
+    {
+        $rows = Attendance::withoutGlobalScopes()
+            ->join('lessons', 'lessons.id', '=', 'attendance.lesson_id')
+            ->join('programs', 'programs.id', '=', 'lessons.program_id')
+            ->where('attendance.church_id', $churchId)
+            ->whereBetween('attendance.date', [$from, $to])
+            ->selectRaw(
+                'programs.name as program, COUNT(*) as sessions, SUM(CASE WHEN attendance.status = ? THEN 1 ELSE 0 END) as present_count',
+                ['present']
+            )
+            ->groupBy('programs.id', 'programs.name')
+            ->orderBy('programs.name')
+            ->get();
+
+        return response()->streamDownload(function () use ($rows) {
+            $h = fopen('php://output', 'w');
+            fputcsv($h, ['Program', 'Records', 'Present']);
+            foreach ($rows as $r) {
+                fputcsv($h, [$r->program, $r->sessions, $r->present_count]);
+            }
+            fclose($h);
+        }, 'programs-summary-' . now()->format('Y-m-d') . '.csv');
+    }
+
+    public function historicalAttendanceCsv(int $churchId, string $from, string $to): StreamedResponse
+    {
+        return $this->attendanceCsv($churchId, $from, $to, null);
     }
 }

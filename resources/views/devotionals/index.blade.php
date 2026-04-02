@@ -134,7 +134,7 @@
 </div>
 
 {{-- Quick Mark Today (for leaders) --}}
-@if(auth()->user()->role === 'leader' || auth()->user()->role === 'pastor')
+@if(auth()->user()->isChurchAdmin() || auth()->user()->isRestrictedLeader())
 <div class="card mt-16">
     <div class="card-header">
         <span class="section-title">Mark Today's Devotionals</span>

@@ -6,23 +6,31 @@ use App\Models\Church;
 
 class SubscriptionService
 {
-    // Plan limits per feature
-    protected array $limits = [
-        'basic'   => ['members' => 50,  'attendance' => true,  'finance' => false, 'reports' => false],
-        'standard'=> ['members' => 200, 'attendance' => true,  'finance' => true,  'reports' => false],
-        'premium' => ['members' => null,'attendance' => true,  'finance' => true,  'reports' => true],
-    ];
-
     public function isAllowed(Church $church, string $feature): bool
     {
-        $plan = $this->limits[$church->plan] ?? $this->limits['basic'];
+        $planKey = strtolower((string) ($church->subscription_plan ?? 'free'));
+        $plans  = config('subscription.plans', []);
+        $plan   = $plans[$planKey] ?? $plans['free'];
 
-        if (!isset($plan[$feature])) return false;
+        return match ($feature) {
+            'add_disciple' => $this->underDiscipleCap($church, $plan),
+            'bulk_import'  => in_array($planKey, ['premium'], true),
+            'devotional'   => in_array($planKey, ['free', 'basic', 'standard', 'premium'], true),
+            'export_sheets'=> in_array($planKey, ['standard', 'premium'], true),
+            default        => false,
+        };
+    }
 
-        // Boolean gate
-        if (is_bool($plan[$feature])) return $plan[$feature];
+    /**
+     * @param  array<string, mixed>  $plan
+     */
+    protected function underDiscipleCap(Church $church, array $plan): bool
+    {
+        $max = $plan['disciples_max'] ?? null;
+        if ($max === null) {
+            return true;
+        }
 
-        // Count gate (e.g. members)
-        return $church->members()->count() < $plan[$feature];
+        return $church->members()->count() < (int) $max;
     }
 }

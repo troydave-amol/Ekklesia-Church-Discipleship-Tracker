@@ -25,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ProgramEnrollmentService::class);
         $this->app->singleton(ReportExportService::class);
         $this->app->singleton(TenantDatabaseManager::class);
+        $this->app->singleton(SubscriptionService::class);
 
         // ProgressService depends on Attendance + Devotional services
         $this->app->singleton(ProgressService::class, fn($app) =>
@@ -45,5 +46,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Register Policies
         Gate::policy(User::class, DisciplePolicy::class);
+
+        Gate::define('manage-lessons', fn (User $user) => $user->isChurchAdmin());
+        Gate::define('export-reports', fn (User $user) => $user->isChurchAdmin()
+            && app(SubscriptionService::class)->isAllowed($user->church, 'export_sheets'));
+        Gate::define('import-disciples', fn (User $user) => $user->isChurchAdmin()
+            && app(SubscriptionService::class)->isAllowed($user->church, 'bulk_import'));
     }
 }
