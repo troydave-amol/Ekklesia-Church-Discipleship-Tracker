@@ -27,7 +27,7 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('tenant.dashboard');
 
     // Church Admin (registering pastor) — legacy role slug "pastor" still accepted by middleware
     Route::middleware('role:church_admin,pastor')->group(function () {

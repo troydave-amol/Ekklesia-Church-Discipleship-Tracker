@@ -20,10 +20,10 @@ class AuthService
 
         // 2. Route by role
         return match($user->role) {
-            'pastor'   => route('dashboard.pastor'),
-            'leader'   => route('dashboard.leader'),
-            'disciple' => route('dashboard.disciple'),
-            default    => route('dashboard'),
+            'pastor'   => route('tenant.dashboard'),
+            'leader'   => route('tenant.dashboard'),
+            'disciple' => route('tenant.dashboard'),
+            default    => route('tenant.dashboard'),
         };
     }
 }

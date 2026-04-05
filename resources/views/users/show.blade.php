@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="mb-20">
-    <a href="{{ auth()->user()->isChurchAdmin() ? route('users.index') : route('dashboard') }}" class="btn btn-ghost btn-sm">← {{ auth()->user()->isChurchAdmin() ? 'Members' : 'Dashboard' }}</a>
+    <a href="{{ auth()->user()->isChurchAdmin() ? route('users.index') : route('tenant.dashboard') }}" class="btn btn-ghost btn-sm">← {{ auth()->user()->isChurchAdmin() ? 'Members' : 'Dashboard' }}</a>
     @if(auth()->user()->isChurchAdmin())
     <a href="{{ route('users.edit', $user) }}" class="btn btn-ghost btn-sm">Edit</a>
     @endif
