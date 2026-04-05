@@ -135,7 +135,7 @@
     <div class="card-header">
         <span class="section-title">Disciples Overview</span>
         <div class="flex gap-8">
-            <form method="GET" action="{{ route('dashboard') }}" class="table-controls">
+            <form method="GET" action="{{ route('tenant.dashboard') }}" class="table-controls">
                 <div class="input-group">
                     @include('partials.icon',['name'=>'search','size'=>14,'color'=>'var(--text-dim)'])
                     <input name="q" value="{{ request('q') }}" placeholder="Search disciples…" style="max-width:200px;">

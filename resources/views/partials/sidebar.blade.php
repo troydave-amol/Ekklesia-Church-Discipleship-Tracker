@@ -2,6 +2,7 @@
 @php
     $user   = auth()->user();
     $church = $user->church ?? null;
+    $rawRole = $user->role;
 
     $navFor = function (string $key) use ($rawRole, $user): bool {
         if ($user->isChurchAdmin()) {
@@ -17,7 +18,7 @@
     $navGroups = [
         'church_admin' => [
             'Overview' => [
-                ['route' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home'],
+                ['route' => 'tenant.dashboard', 'label' => 'Dashboard', 'icon' => 'home'],
             ],
             'Church' => [
                 ['route' => 'programs.index',     'label' => 'Programs',    'icon' => 'cross'],
@@ -37,7 +38,7 @@
         ],
         'leader' => [
             'Overview' => [
-                ['route' => 'dashboard',           'label' => 'Dashboard',    'icon' => 'home'],
+                ['route' => 'tenant.dashboard',           'label' => 'Dashboard',    'icon' => 'home'],
             ],
             'My Work' => [
                 ['route' => 'attendance.index',   'label' => 'Attendance',   'icon' => 'calendar'],
@@ -47,7 +48,7 @@
         ],
         'disciple' => [
             'My Journey' => [
-                ['route' => 'dashboard',           'label' => 'Dashboard',     'icon' => 'home'],
+                ['route' => 'tenant.dashboard',           'label' => 'Dashboard',     'icon' => 'home'],
                 ['route' => 'lessons.my',          'label' => 'My Lessons',    'icon' => 'book'],
                 ['route' => 'devotionals.mine',   'label' => 'Devotionals',  'icon' => 'heart'],
             ],

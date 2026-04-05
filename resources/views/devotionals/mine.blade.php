@@ -13,7 +13,7 @@
     <div class="flex gap-8">
         <a href="?week={{ $prevWeek }}" class="btn btn-ghost btn-sm">← Prev Week</a>
         <a href="?week={{ $nextWeek }}" class="btn btn-ghost btn-sm">Next Week →</a>
-        <a href="{{ route('dashboard') }}" class="btn btn-primary btn-sm">Dashboard</a>
+        <a href="{{ route('tenant.dashboard') }}" class="btn btn-primary btn-sm">Dashboard</a>
     </div>
 </div>
 
@@ -66,7 +66,7 @@
 
 <div class="card mt-16">
     <div class="card-body" style="font-size:14px;color:var(--text-muted);">
-        Mark today’s devotional from the <a href="{{ route('dashboard') }}" style="color:var(--gold);">dashboard</a>.
+        Mark today's devotional from the <a href="{{ route('tenant.dashboard') }}" style="color:var(--gold);">dashboard</a>.
     </div>
 </div>
 @endsection
