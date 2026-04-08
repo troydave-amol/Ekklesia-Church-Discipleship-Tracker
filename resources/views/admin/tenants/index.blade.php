@@ -1,35 +1,56 @@
 @extends('layouts.central-admin')
 
 @section('title', 'Tenants')
+@section('topbar-title', 'Tenants')
 
 @section('content')
-<h2>Provisioned tenants</h2>
-<p class="muted" style="margin-bottom:1rem;">Churches with an active subdomain and database.</p>
+<div class="ca-page-head">
+    <h1 class="ca-page-title">Provisioned Tenants</h1>
+    <p class="ca-page-desc">Churches with an active subdomain and database — their workspaces are live.</p>
+</div>
 
-<table>
-    <thead>
-        <tr>
-            <th>Church</th>
-            <th>Subdomain</th>
-            <th>Plan</th>
-            <th>Status</th>
-            <th>Created</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach($tenants as $t)
+<div class="ca-table-card">
+    <table class="ca-table">
+        <thead>
             <tr>
-                <td>{{ $t->name }}</td>
-                <td><code>{{ $t->subdomain }}</code></td>
-                <td>{{ ucfirst($t->subscription_plan) }}</td>
-                <td>{{ $t->status }}</td>
-                <td class="muted">{{ $t->created_at->format('M j, Y') }}</td>
-                <td><a href="{{ route('admin.tenants.show', $t) }}">Details</a></td>
+                <th>Church</th>
+                <th>Subdomain</th>
+                <th>Plan</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th></th>
             </tr>
-        @endforeach
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @forelse($tenants as $t)
+                <tr>
+                    <td class="ca-table-strong">{{ $t->name }}</td>
+                    <td><code class="ca-code">{{ $t->subdomain }}</code></td>
+                    <td>{{ ucfirst($t->subscription_plan) }}</td>
+                    <td>
+                        @if($t->status === 'active')
+                            <span class="ca-pill ca-pill-active">
+                                <span class="ca-pill-dot"></span> Active
+                            </span>
+                        @else
+                            <span class="ca-pill ca-pill-inactive">
+                                <span class="ca-pill-dot"></span> {{ ucfirst($t->status) }}
+                            </span>
+                        @endif
+                    </td>
+                    <td class="ca-table-muted">{{ $t->created_at->format('M j, Y') }}</td>
+                    <td>
+                        <a href="{{ route('admin.tenants.show', $t) }}" class="ca-btn ca-btn-link">Details →</a>
+                    </td>
+                </tr>
+            @empty
+                <tr><td colspan="6" class="ca-table-empty">No tenants provisioned yet.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
 
-<div style="margin-top:1rem;">{{ $tenants->links() }}</div>
+<div class="ca-pagination">
+    {{ $tenants->links() }}
+</div>
 @endsection
