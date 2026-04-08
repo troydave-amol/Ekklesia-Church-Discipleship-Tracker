@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\TenantRejectedMail;
 use App\Models\TenantSignup;
 use App\Services\TenantProvisionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use Throwable;
 
@@ -58,6 +61,15 @@ class TenantSignupController extends Controller
             'status'         => 'rejected',
             'rejection_note' => $request->input('rejection_note'),
         ]);
+
+        try {
+            Mail::to($signup->pastor_email)->send(new TenantRejectedMail($signup));
+        } catch (Throwable $e) {
+            Log::warning('Rejection email failed to dispatch', [
+                'signup_id' => $signup->id,
+                'error'     => $e->getMessage(),
+            ]);
+        }
 
         return back()->with('success', 'Registration request rejected.');
     }
