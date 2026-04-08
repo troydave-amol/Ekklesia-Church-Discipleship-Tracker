@@ -10,6 +10,7 @@ export default defineConfig({
                 'resources/css/landing.css',
                 'resources/css/register.css',
                 'resources/css/provision.css',
+                'resources/css/admin.css',
                 'resources/js/app.js',
                 'resources/js/state.js',
                 'resources/js/router.js',

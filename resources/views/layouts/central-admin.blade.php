@@ -4,69 +4,111 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Central app') — Ekklesia</title>
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: #0d1117; color: #e6edf3; line-height: 1.5; min-height: 100vh; }
-        a { color: #58a6ff; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        .shell { display: flex; min-height: 100vh; }
-        .side { width: 220px; background: #161b22; border-right: 1px solid #30363d; padding: 1.25rem; flex-shrink: 0; }
-        .side h1 { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #8b949e; margin-bottom: 1rem; }
-        .side nav { display: flex; flex-direction: column; gap: 0.25rem; }
-        .side nav a { padding: 0.5rem 0.65rem; border-radius: 6px; color: #c9d1d9; font-size: 0.9rem; }
-        .side nav a:hover { background: #21262d; text-decoration: none; }
-        .side nav a.active { background: #21262d; color: #fff; }
-        main { flex: 1; padding: 2rem; max-width: 1100px; }
-        .flash { padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem; }
-        .flash.ok { background: #1a3a20; border: 1px solid #3fb950; color: #aff5b4; }
-        .flash.err { background: #3a1a1a; border: 1px solid #f85149; color: #ffb4b0; }
-        h2 { font-size: 1.35rem; font-weight: 600; margin-bottom: 1rem; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-        .card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 1rem 1.15rem; }
-        .card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #8b949e; margin-bottom: 0.35rem; }
-        .card .value { font-size: 1.5rem; font-weight: 600; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-        th, td { text-align: left; padding: 0.65rem 0.75rem; border-bottom: 1px solid #30363d; }
-        th { color: #8b949e; font-weight: 500; font-size: 0.75rem; text-transform: uppercase; }
-        tr:hover td { background: #161b22; }
-        .btn { display: inline-block; padding: 0.4rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; cursor: pointer; font-weight: 500; }
-        .btn-primary { background: #238636; color: #fff; }
-        .btn-primary:hover { background: #2ea043; }
-        .btn-danger { background: #da3633; color: #fff; }
-        .btn-danger:hover { background: #f85149; }
-        .btn-ghost { background: transparent; border: 1px solid #30363d; color: #c9d1d9; }
-        .pill { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.75rem; font-weight: 500; }
-        .pill-pending { background: #3d2a00; color: #d4a72c; }
-        .pill-ok { background: #1a3a20; color: #3fb950; }
-        .pill-no { background: #3a1a1a; color: #f85149; }
-        form.inline { display: inline; }
-        .muted { color: #8b949e; font-size: 0.85rem; }
-        .stack { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
-    </style>
+    <title>@yield('title', 'Central Admin') — Ekklesia</title>
+    @vite(['resources/css/admin.css'])
     @stack('styles')
 </head>
-<body>
-<div class="shell">
-    <aside class="side">
-        <h1>Central app</h1>
-        <nav>
-            <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">Monitoring</a>
-            <a href="{{ route('admin.signups.index') }}" class="{{ request()->routeIs('admin.signups.*') ? 'active' : '' }}">Approvals</a>
-            <a href="{{ route('admin.tenants.index') }}" class="{{ request()->routeIs('admin.tenants.*') ? 'active' : '' }}">Tenants</a>
-            <a href="{{ route('home') }}">Public site</a>
+<body class="ca-body">
+<div class="ca-shell">
+
+    {{-- ═══ SIDEBAR ═══ --}}
+    <aside class="ca-sidebar">
+
+        <div class="ca-brand">
+            <div class="ca-brand-name">Ekk<em>l</em>esia</div>
+            <div class="ca-brand-tag">Control Plane</div>
+        </div>
+
+        <nav class="ca-nav">
+            <div class="ca-nav-group">
+                <div class="ca-nav-label">Overview</div>
+                <a href="{{ route('admin.dashboard') }}"
+                   class="ca-nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                    <svg class="ca-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                    </svg>
+                    Monitoring
+                </a>
+            </div>
+
+            <div class="ca-nav-group">
+                <div class="ca-nav-label">Manage</div>
+                <a href="{{ route('admin.signups.index') }}"
+                   class="ca-nav-link {{ request()->routeIs('admin.signups.*') ? 'active' : '' }}">
+                    <svg class="ca-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4-4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <line x1="19" y1="8" x2="19" y2="14"/>
+                        <line x1="22" y1="11" x2="16" y2="11"/>
+                    </svg>
+                    Approvals
+                </a>
+                <a href="{{ route('admin.tenants.index') }}"
+                   class="ca-nav-link {{ request()->routeIs('admin.tenants.*') ? 'active' : '' }}">
+                    <svg class="ca-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                    Tenants
+                </a>
+            </div>
         </nav>
+
+        <div class="ca-sidebar-foot">
+            <a href="{{ route('home') }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                    <polyline points="15 3 21 3 21 9"/>
+                    <line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+                Public Site
+            </a>
+        </div>
+
     </aside>
-    <main>
-        @if(session('success'))
-            <div class="flash ok">{{ session('success') }}</div>
-        @endif
-        @if(session('error'))
-            <div class="flash err">{{ session('error') }}</div>
-        @endif
-        @yield('content')
-    </main>
+
+    {{-- ═══ MAIN ═══ --}}
+    <div class="ca-main">
+
+        <header class="ca-topbar">
+            <div class="ca-topbar-left">
+                <span class="ca-topbar-title">@yield('topbar-title', 'Dashboard')</span>
+            </div>
+            <div class="ca-topbar-right">
+                {{ now()->format('l, M j') }}
+            </div>
+        </header>
+
+        <div class="ca-content ca-fade-up">
+            @if(session('success'))
+                <div class="ca-flash ca-flash-ok">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    {{ session('success') }}
+                </div>
+            @endif
+            @if(session('error'))
+                <div class="ca-flash ca-flash-err">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    {{ session('error') }}
+                </div>
+            @endif
+            @yield('content')
+        </div>
+
+    </div>
+
 </div>
+
+<script>
+/* Auto-dismiss flash messages */
+document.querySelectorAll('.ca-flash').forEach(el => {
+    setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .4s'; }, 4000);
+    setTimeout(() => el.remove(), 4400);
+});
+</script>
 @stack('scripts')
 </body>
 </html>
