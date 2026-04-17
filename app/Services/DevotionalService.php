@@ -95,4 +95,20 @@ class DevotionalService
             ->count();
         return (int) round($completed / $daysPassed * 100);
     }
+
+    /**
+     * Average devotional rate across all disciples in a church (this month).
+     */
+    public function churchAvgRate(int $churchId): int
+    {
+        $discipleIds = User::where('church_id', $churchId)
+            ->where('role', 'disciple')
+            ->pluck('id');
+
+        if ($discipleIds->isEmpty()) return 0;
+
+        $rates = $discipleIds->map(fn ($id) => $this->monthlyRate($id, $churchId));
+
+        return (int) round($rates->avg());
+    }
 }

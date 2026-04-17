@@ -81,6 +81,7 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
         Route::middleware('subscription:devotional')->group(function () {
             Route::get('/devotionals', [DevotionalController::class, 'index'])->name('devotionals.index');
             Route::post('/devotionals/bulk', [DevotionalController::class, 'bulkStore'])->name('devotionals.bulk');
+            Route::post('/devotionals', [DevotionalController::class, 'bulkStore'])->name('devotionals.store');
             Route::post('/devotionals/self', [DevotionalController::class, 'markComplete'])->name('devotionals.complete');
         });
     });

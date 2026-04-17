@@ -95,4 +95,33 @@ class AttendanceService
             );
         }
     }
+
+    /**
+     * Recent attendance history grouped by lesson+date, with present/absent/total counts.
+     */
+    public function recentHistory(int $churchId, int $limit = 10): \Illuminate\Support\Collection
+    {
+        $rows = Attendance::withoutGlobalScopes()
+            ->where('church_id', $churchId)
+            ->selectRaw('lesson_id, date, COUNT(*) as total_count, SUM(CASE WHEN status = \'present\' THEN 1 ELSE 0 END) as present_count')
+            ->groupBy('lesson_id', 'date')
+            ->orderByDesc('date')
+            ->limit($limit)
+            ->get();
+
+        // Eager-load lesson + program for display
+        $lessonIds = $rows->pluck('lesson_id')->unique();
+        $lessons = \App\Models\Lesson::withoutGlobalScopes()
+            ->whereIn('id', $lessonIds)
+            ->with('program')
+            ->get()
+            ->keyBy('id');
+
+        return $rows->map(function ($row) use ($lessons) {
+            $row->lesson        = $lessons[$row->lesson_id] ?? null;
+            $row->absent_count  = $row->total_count - $row->present_count;
+            $row->date          = \Carbon\Carbon::parse($row->date);
+            return $row;
+        });
+    }
 }

@@ -27,10 +27,30 @@ class ProgressService
             ->with(['membership', 'membership.leader']) 
             ->paginate(20);
 
+        // Enrich paginated disciples with per-user rates for the overview table
+        foreach ($disciples as $d) {
+            $d->attendance_rate = $this->attendanceService->rateForUser($d->id, $churchId);
+            $d->devotional_rate = $this->devotionalService->monthlyRate($d->id, $churchId);
+        }
+
         $leaders = User::where('church_id', $churchId)
             ->whereIn('role', ['program_leader', 'cell_leader', 'leader'])
             ->withCount('assignedDisciples')
             ->get();
+
+        // Compute per-leader attendance and devotional rates
+        foreach ($leaders as $leader) {
+            $discipleIds = $leader->assignedDisciples->pluck('user_id');
+            if ($discipleIds->isEmpty()) {
+                $leader->attendance_rate = 0;
+                $leader->devotional_rate = 0;
+                continue;
+            }
+            $attRates = $discipleIds->map(fn ($id) => $this->attendanceService->rateForUser($id, $churchId));
+            $devRates = $discipleIds->map(fn ($id) => $this->devotionalService->monthlyRate($id, $churchId));
+            $leader->attendance_rate = (int) round($attRates->avg());
+            $leader->devotional_rate = (int) round($devRates->avg());
+        }
 
         $programs = Program::where('church_id', $churchId)
             ->where('active', true)
@@ -44,7 +64,7 @@ class ProgressService
                 ->whereIn('role', ['program_leader', 'cell_leader', 'leader'])
                 ->count(),
             'avgAttendance'  => $this->attendanceService->churchAvgAttendance($churchId),
-            'devotionalRate' => 0, // placeholder until DevotionalService is ready
+            'devotionalRate' => $this->devotionalService->churchAvgRate($churchId),
             'programs'       => $programs,
             'leaders'        => $leaders,
             'disciples'      => $disciples,
@@ -122,7 +142,7 @@ class ProgressService
             'completionRate'     => $totalLessons > 0 ? (int)round(($completedLessons / $totalLessons) * 100) : 0,
             'lessons'            => $myLessons,
             'currentLesson'      => $currentLesson,
-            'currentProgram'     => null, // wire up later
+            'currentProgram'     => $currentLesson?->program ?? $myLessons->first()?->program,
             'calendarData'       => $calendarData,
             'devotionalDoneToday'=> $devotionalDoneToday,
         ];

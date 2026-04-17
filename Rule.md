@@ -18,15 +18,18 @@ Non-negotiable:
 - **Church A must never see Church B data.**
 
 ## 2) Tenancy rules (hard requirements)
-- Use **single database, shared tables** design.
-- All tenant-related tables must include a **church_id** column.
-- Every read/write query for tenant data must be scoped by the authenticated user's **church_id**.
-- Never trust church_id coming from the client. Derive tenant scope from the logged-in user/session.
+- Use **multi-database tenancy** design powered by `stancl/tenancy`.
+- Each tenant (church) has its own isolated database.
+- Central database maintains a `tenants` and `domains` table.
+- Read/write queries for tenant data naturally fall under the tenant DB connection (`protected $connection = 'tenant';`).
+- Even though true database isolation is used, some legacy relation tables maintain a `church_id` index logically.
 
 ## 3) Roles and permissions (RBAC)
-Three roles only:
-- pastor
-- leader
+Database-backed RBAC using `roles`, `permissions`, and `permission_role` tables.
+There are four core roles implemented:
+- church_admin (replaces pastor)
+- program_leader (replaces leader)
+- cell_leader 
 - disciple
 
 ### Pastor permissions
@@ -111,12 +114,13 @@ Use these core tables and fields (names should match unless the stack forces a s
 2. users (auth + role)
 - id
 - church_id
+- role_id (foreign key to roles table)
 - first_name
 - last_name
 - nickname
 - email
 - password
-- role (pastor, leader, disciple)
+- role (church_admin, program_leader, cell_leader, disciple)
 - created_at
 
 3. user_profiles (personal + address)
@@ -269,5 +273,5 @@ MODULE 9: Reports (Standard & Premium only)
 ## 10) Out of scope (unless explicitly added later)
 - Messaging/SMS/email automation
 - Public multi-church discovery directory
-- Anything that breaks the 3-role model
+- Anything that breaks the established RBAC role model
 - Any feature that allows cross-tenant visibility
