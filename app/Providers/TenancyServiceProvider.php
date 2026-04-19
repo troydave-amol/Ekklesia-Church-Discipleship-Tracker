@@ -127,6 +127,7 @@ class TenancyServiceProvider extends ServiceProvider
                 'web',
                 InitializeTenancyBySubdomain::class,
                 PreventAccessFromCentralDomains::class,
+                \App\Http\Middleware\EnsureTenantIsActive::class,
             ])->group(base_path('routes/tenant.php'));
         }
     }

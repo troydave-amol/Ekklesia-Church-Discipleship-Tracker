@@ -35,6 +35,37 @@ class TenantRegistrationController extends Controller
         return view('admin.tenants.show', compact('tenant'));
     }
 
+    public function edit(Tenant $tenant): View
+    {
+        return view('admin.tenants.edit', compact('tenant'));
+    }
+
+    public function update(Request $request, Tenant $tenant)
+    {
+        $data = $request->validate([
+            'name'              => ['required', 'string', 'max:255'],
+            'email'             => ['required', 'email', 'max:255'],
+            'subscription_plan' => ['required', 'in:free,basic,standard,premium'],
+            'status'            => ['required', 'in:active,inactive,suspended'],
+        ]);
+
+        $tenant->update($data);
+
+        return redirect()
+            ->route('admin.tenants.show', $tenant)
+            ->with('success', "Tenant \"{$tenant->name}\" updated successfully.");
+    }
+
+    public function toggleStatus(Tenant $tenant)
+    {
+        $newStatus = $tenant->status === 'active' ? 'suspended' : 'active';
+        $tenant->update(['status' => $newStatus]);
+
+        $label = $newStatus === 'active' ? 'enabled' : 'suspended';
+
+        return back()->with('success', "Tenant \"{$tenant->name}\" has been {$label}.");
+    }
+
     public function checkSubdomain(Request $request): JsonResponse
     {
         $subdomain = strtolower(trim($request->input('subdomain', '')));
