@@ -72,7 +72,7 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
     ->whereNumber('id')
     ->name('users.show');
 
-    Route::middleware('role:church_admin,pastor,program_leader,leader,cell_leader')->group(function () {
+    Route::middleware(['role:church_admin,pastor,program_leader,leader,cell_leader', 'permission:attendance.manage'])->group(function () {
         Route::get('/my-disciples', [DiscipleController::class, 'leaderDisciples'])->name('users.disciples');
 
         Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
@@ -81,16 +81,17 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
         Route::middleware('subscription:devotional')->group(function () {
             Route::get('/devotionals', [DevotionalController::class, 'index'])->name('devotionals.index');
             Route::post('/devotionals/bulk', [DevotionalController::class, 'bulkStore'])->name('devotionals.bulk');
+            Route::post('/devotionals', [DevotionalController::class, 'bulkStore'])->name('devotionals.store');
             Route::post('/devotionals/self', [DevotionalController::class, 'markComplete'])->name('devotionals.complete');
         });
     });
 
-    Route::middleware('role:disciple')->group(function () {
+    Route::middleware(['role:disciple', 'permission:dashboard.view'])->group(function () {
         Route::get('/my-lessons', [LessonController::class, 'myLessons'])->name('lessons.my');
         Route::get('/my-progress', [DashboardController::class, 'discipleDashboard'])->name('progress.my');
     });
 
-    Route::middleware(['role:disciple', 'subscription:devotional'])->group(function () {
+    Route::middleware(['role:disciple', 'permission:dashboard.view', 'subscription:devotional'])->group(function () {
         Route::get('/my-devotionals', [DevotionalController::class, 'mine'])->name('devotionals.mine');
         Route::post('/devotionals/self', [DevotionalController::class, 'markComplete'])->name('devotionals.complete');
     });

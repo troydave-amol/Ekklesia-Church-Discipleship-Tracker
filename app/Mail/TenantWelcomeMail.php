@@ -26,7 +26,8 @@ class TenantWelcomeMail extends Mailable implements ShouldQueue
     public int $backoff = 60;
 
     public function __construct(
-        public readonly Tenant $tenant
+        public readonly Tenant $tenant,
+        private readonly string $plainPassword = '',
     ) {}
 
     public function envelope(): Envelope
@@ -43,11 +44,13 @@ class TenantWelcomeMail extends Mailable implements ShouldQueue
         return new Content(
             markdown: 'emails.tenant.welcome',
             with: [
-                'tenantName'  => $this->tenant->name,
-                'subdomain'   => $this->tenant->subdomain,
-                'loginUrl'    => $loginUrl,
-                'trialEnds'   => $this->tenant->trial_ends_at?->format('F j, Y'),
-                'plan'        => ucfirst($this->tenant->subscription_plan ?? 'free'),
+                'tenantName'    => $this->tenant->name,
+                'subdomain'     => $this->tenant->subdomain,
+                'loginUrl'      => $loginUrl,
+                'loginEmail'    => $this->tenant->email,
+                'loginPassword' => $this->plainPassword,
+                'trialEnds'     => $this->tenant->trial_ends_at?->format('F j, Y'),
+                'plan'          => ucfirst($this->tenant->subscription_plan ?? 'free'),
             ],
         );
     }

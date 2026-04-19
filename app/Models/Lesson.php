@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Scopes\ChurchTenantScope;
 
 class Lesson extends Model
@@ -30,5 +31,10 @@ class Lesson extends Model
     public function program()
     {
         return $this->belongsTo(Program::class);
+    }
+
+    public function attendance(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
     }
 }

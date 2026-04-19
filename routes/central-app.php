@@ -26,7 +26,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/signups/{signup}/approve', [TenantSignupController::class, 'approve'])->name('signups.approve');
     Route::post('/signups/{signup}/reject', [TenantSignupController::class, 'reject'])->name('signups.reject');
 
-    Route::resource('tenants', TenantRegistrationController::class)->only(['index', 'show']);
+    Route::resource('tenants', TenantRegistrationController::class)->only(['index', 'show', 'edit', 'update']);
+    Route::patch('/tenants/{tenant}/status', [TenantRegistrationController::class, 'toggleStatus'])->name('tenants.toggle-status');
 });
 
 // Tenant subdomain routes are defined in routes/tenant.php (loaded by TenancyServiceProvider).

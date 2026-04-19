@@ -16,7 +16,7 @@
         @if($user->membership)
         <div class="mt-16" style="font-size:14px;color:var(--text-muted);line-height:1.7;">
             <div><strong>Status:</strong> {{ strtoupper(str_replace('_',' ', $user->membership->status ?? '')) }}</div>
-            <div><strong>Training:</strong> {{ strtoupper(str_replace('_',' ', (string)($user->membership->destiny_training_level ?? ''))) }}</div>
+            <div><strong>Training:</strong> {{ strtoupper(str_replace('_',' ', $user->membership->destiny_training_level?->value ?? '')) }}</div>
             @if($user->membership->leader)
             <div><strong>Leader:</strong> {{ $user->membership->leader->first_name }} {{ $user->membership->leader->last_name }}</div>
             @endif

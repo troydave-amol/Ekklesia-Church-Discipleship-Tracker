@@ -15,14 +15,14 @@ class ProgramController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'name'        => ['required', 'string', 'max:100'],
             'program_key' => ['required', 'in:life_class,sol1,sol2,sol3'],
             'description' => ['nullable', 'string'],
         ]);
 
         Program::create(array_merge(
-            $request->validated(),
+            $data,
             ['church_id' => $request->user()->church_id ?? null]
         ));
 

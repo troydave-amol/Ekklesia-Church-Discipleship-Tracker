@@ -139,14 +139,18 @@
         <div class="card-body">
             <form method="POST" action="{{ route('programs.store') }}">
                 @csrf
+                <input type="hidden" name="program_key" id="programKeyInput" value="">
+                @if($errors->any())
+                <div class="alert alert-warning mb-16">{{ $errors->first() }}</div>
+                @endif
                 <div class="form-group">
                     <label class="field-label">Program Name</label>
-                    <select name="name" required>
+                    <select name="name" id="programNameSelect" required>
                         <option value="">Select program…</option>
-                        <option value="Life Class">Life Class</option>
-                        <option value="SOL 1">School of Leaders 1</option>
-                        <option value="SOL 2">School of Leaders 2</option>
-                        <option value="SOL 3">School of Leaders 3</option>
+                        <option value="Life Class" data-key="life_class">Life Class</option>
+                        <option value="SOL 1" data-key="sol1">School of Leaders 1</option>
+                        <option value="SOL 2" data-key="sol2">School of Leaders 2</option>
+                        <option value="SOL 3" data-key="sol3">School of Leaders 3</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -163,3 +167,17 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+// Auto-set program_key when the name dropdown changes
+document.getElementById('programNameSelect')?.addEventListener('change', function() {
+    var selected = this.options[this.selectedIndex];
+    document.getElementById('programKeyInput').value = selected.dataset.key || '';
+});
+// Auto-open modal if there were validation errors
+@if($errors->any())
+    document.getElementById('createProgramModal').style.display = 'flex';
+@endif
+</script>
+@endpush

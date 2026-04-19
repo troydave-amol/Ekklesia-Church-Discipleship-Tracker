@@ -17,6 +17,11 @@ class Devotional extends Model
         'verified_at'
     ];
 
+    protected $casts = [
+        'date'      => 'date',
+        'completed' => 'boolean',
+    ];
+
      protected static function booted(): void
     {
         static::addGlobalScope(new ChurchTenantScope());
@@ -25,6 +30,11 @@ class Devotional extends Model
     public function church()
     {
         return $this->belongsTo(Church::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function lesson()

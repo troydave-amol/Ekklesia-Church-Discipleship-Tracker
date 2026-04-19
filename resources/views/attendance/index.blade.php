@@ -150,7 +150,7 @@
                         <td><span style="font-size:13px;color:var(--text-muted);">{{ $d->membership->leader->first_name ?? '—' }}</span></td>
                         <td>
                             <span class="badge badge-blue" style="font-size:10px;">
-                                {{ strtoupper(str_replace('_',' ',$d->membership->destiny_training_level ?? '')) }}
+                                {{ strtoupper(str_replace('_',' ',$d->membership->destiny_training_level?->value ?? '')) }}
                             </span>
                         </td>
                         <td><span class="mono" style="font-size:12px;color:var(--text-muted);">{{ $d->last_attendance_date ? \Carbon\Carbon::parse($d->last_attendance_date)->format('M d') : '—' }}</span></td>
