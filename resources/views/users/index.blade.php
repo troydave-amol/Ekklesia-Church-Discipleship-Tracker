@@ -121,9 +121,12 @@
                                 </div>
                             </td>
                             <td>
-                                @php $levelColors = ['life_class'=>'badge-blue','sol1'=>'badge-purple','sol2'=>'badge-orange','sol3'=>'badge-green','graduate'=>'badge-gold']; @endphp
-                                <span class="badge {{ $levelColors[$d->membership->destiny_training_level ?? 'life_class'] ?? 'badge-blue' }}">
-                                    {{ strtoupper(str_replace('_',' ',$d->membership->destiny_training_level ?? 'Life Class')) }}
+                                @php
+                                    $levelColors = ['life_class'=>'badge-blue','sol1'=>'badge-purple','sol2'=>'badge-orange','sol3'=>'badge-green','graduate'=>'badge-gold'];
+                                    $lvl = $d->membership->destiny_training_level?->value ?? 'life_class';
+                                @endphp
+                                <span class="badge {{ $levelColors[$lvl] ?? 'badge-blue' }}">
+                                    {{ strtoupper(str_replace('_',' ',$lvl)) }}
                                 </span>
                             </td>
                             <td>
@@ -135,7 +138,7 @@
                                         <span style="font-size:13px;">{{ $d->membership->leader->first_name }} {{ $d->membership->leader->last_name }}</span>
                                     </div>
                                 @else
-                                    <button class="btn btn-ghost btn-sm" onclick="openAssignLeader({{ $d->id }})">Assign</button>
+                                    <a href="{{ route('users.edit', $d) }}" class="btn btn-ghost btn-sm">Assign</a>
                                 @endif
                             </td>
                             <td><span style="font-size:13px;color:var(--text-muted);">{{ $d->membership->satellite ?? '—' }}</span></td>

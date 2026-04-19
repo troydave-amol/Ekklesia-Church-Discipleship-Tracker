@@ -14,21 +14,29 @@ class CheckRole
             abort(403, 'Unauthorized');
         }
 
-        $userRole = (string) $user->role;
+        // Primary: database-driven role slug (preferred)
+        $dbSlug = $user->roleRecord?->slug;
+
+        // Fallback: legacy string column + normalized alias
+        $legacyRole = (string) $user->role;
         $normalized = $user->normalizedRole();
 
         foreach ($roles as $allowed) {
-            if ($userRole === $allowed || $normalized === $allowed) {
+            // Direct match on DB slug, legacy column, or normalized alias
+            if ($dbSlug === $allowed || $legacyRole === $allowed || $normalized === $allowed) {
                 return $next($request);
             }
-            // Synonyms accepted in route definitions
-            if ($allowed === 'pastor' && ($userRole === 'church_admin' || $normalized === 'church_admin')) {
+
+            // Synonym: "pastor" ↔ "church_admin"
+            if ($allowed === 'pastor' && ($dbSlug === 'church_admin' || $legacyRole === 'church_admin' || $normalized === 'church_admin')) {
                 return $next($request);
             }
-            if ($allowed === 'church_admin' && $userRole === 'pastor') {
+            if ($allowed === 'church_admin' && ($dbSlug === 'pastor' || $legacyRole === 'pastor')) {
                 return $next($request);
             }
-            if ($allowed === 'leader' && in_array($userRole, ['program_leader', 'cell_leader', 'leader'], true)) {
+
+            // Synonym: "leader" matches any leader variant
+            if ($allowed === 'leader' && in_array($dbSlug ?? $legacyRole, ['program_leader', 'cell_leader', 'leader'], true)) {
                 return $next($request);
             }
         }

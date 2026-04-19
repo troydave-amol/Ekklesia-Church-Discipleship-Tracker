@@ -42,6 +42,13 @@ class DevotionalController extends Controller
             if (! is_numeric($userId)) {
                 continue;
             }
+
+            // Policy: verify actor can manage this disciple's devotional
+            $targetUser = User::where('church_id', $churchId)->find((int) $userId);
+            if (! $targetUser || auth()->user()->cannot('manage', [Devotional::class, $targetUser])) {
+                continue; // silently skip unauthorized targets
+            }
+
             $completed = ($raw === '1' || $raw === 1 || $raw === true);
             $this->devotionalService->toggle(auth()->id(), (int) $userId, $churchId, $date, $completed);
         }
@@ -51,10 +58,16 @@ class DevotionalController extends Controller
 
     public function markComplete(StoreDevotionalRequest $request)
     {
+        $churchId   = auth()->user()->church_id;
+        $targetUser = User::where('church_id', $churchId)->findOrFail((int) $request->user_id);
+
+        // Policy: verify actor can manage this disciple's devotional
+        $this->authorize('manage', [Devotional::class, $targetUser]);
+
         $devotional = $this->devotionalService->toggle(
             actorId:      auth()->id(),
             targetUserId: (int) $request->user_id,
-            churchId:     auth()->user()->church_id,
+            churchId:     $churchId,
             date:         $request->date,
             completed:    (bool) $request->completed,
         );

@@ -92,6 +92,10 @@ class AttendanceController extends Controller
 
         $churchId = auth()->user()->church_id;
 
+        // Policy: verify the user can record attendance for this lesson
+        $lesson = Lesson::where('church_id', $churchId)->findOrFail($request->lesson_id);
+        $this->authorize('record', $lesson);
+
         // Map the checkbox array (attendance[user_id] = 1|0) to the format saveSheet expects
         $records = [];
         foreach ($request->input('attendance', []) as $userId => $value) {
