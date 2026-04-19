@@ -27,7 +27,7 @@ class TenantSignup extends Model
     protected function casts(): array
     {
         return [
-            'password' => 'hashed',
+            'password' => 'encrypted',
         ];
     }
 

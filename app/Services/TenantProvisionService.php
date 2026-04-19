@@ -10,6 +10,7 @@ use App\Models\TenantSignup;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\UserProfile;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
@@ -25,6 +26,9 @@ class TenantProvisionService
         if ($signup->status !== 'pending') {
             throw new \InvalidArgumentException('Signup is not pending approval.');
         }
+
+        // Decrypt the plain-text password before any state changes
+        $plainPassword = $signup->password;
 
         $dbName = 'church_' . str_replace('-', '_', $signup->subdomain);
 
@@ -43,12 +47,14 @@ class TenantProvisionService
             'domain' => $signup->subdomain,
         ]);
 
-        $tenant->run(function () use ($signup): void {
-            $this->createPastorAccountInTenantDatabase($signup);
+        $tenant->run(function () use ($signup, $plainPassword): void {
+            $this->createPastorAccountInTenantDatabase($signup, $plainPassword);
         });
 
         try {
-            Mail::to($tenant->email)->send(new TenantWelcomeMail($tenant));
+            Mail::to($tenant->email)->send(
+                new TenantWelcomeMail($tenant, $plainPassword)
+            );
         } catch (Throwable $e) {
             Log::warning('Welcome email failed after provision', [
                 'tenant_id' => $tenant->id,
@@ -67,7 +73,7 @@ class TenantProvisionService
     /**
      * Mirrors the structure created by AuthController::register so tenant login works with signup credentials.
      */
-    private function createPastorAccountInTenantDatabase(TenantSignup $signup): void
+    private function createPastorAccountInTenantDatabase(TenantSignup $signup, string $plainPassword): void
     {
         $church = Church::query()->create([
             'name'              => $signup->church_name,
@@ -78,8 +84,6 @@ class TenantProvisionService
 
         [$firstName, $lastName] = $this->splitPastorName($signup->pastor_name);
 
-        $passwordHash = $signup->getRawOriginal('password');
-
         $adminRoleId = Role::query()->where('slug', 'church_admin')->value('id');
 
         $user = User::query()->create([
@@ -87,7 +91,7 @@ class TenantProvisionService
             'first_name' => $firstName,
             'last_name'  => $lastName,
             'email'      => $signup->pastor_email,
-            'password'   => $passwordHash,
+            'password'   => Hash::make($plainPassword),
             'role'       => 'church_admin',
             'role_id'    => $adminRoleId,
         ]);
