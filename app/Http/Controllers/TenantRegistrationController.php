@@ -66,6 +66,29 @@ class TenantRegistrationController extends Controller
         return back()->with('success', "Tenant \"{$tenant->name}\" has been {$label}.");
     }
 
+    public function destroy(Tenant $tenant)
+    {
+        $name = $tenant->name;
+
+        try {
+            // Stancl fires TenantDeleted → drops the physical DB + removes domains
+            $tenant->delete();
+        } catch (\Throwable $e) {
+            // If the physical DB was already gone (orphaned record), force-delete the metadata
+            $tenant->domains()->delete();
+            $tenant->forceDelete();
+
+            \Illuminate\Support\Facades\Log::warning('Tenant deleted with orphaned DB cleanup', [
+                'tenant'  => $name,
+                'error'   => $e->getMessage(),
+            ]);
+        }
+
+        return redirect()
+            ->route('admin.tenants.index')
+            ->with('success', "Tenant \"{$name}\" has been permanently deleted.");
+    }
+
     public function checkSubdomain(Request $request): JsonResponse
     {
         $subdomain = strtolower(trim($request->input('subdomain', '')));

@@ -837,3 +837,61 @@ select.ca-input {
   gap: 10px;
   margin-top: 24px;
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   DANGER ZONE (Tenant Delete)
+═══════════════════════════════════════════════════════════ */
+.ca-danger-zone {
+  margin-top: 32px;
+  border: 1px solid var(--ca-red-dim);
+  border-radius: var(--ca-radius-lg);
+  overflow: hidden;
+  background: var(--ca-surface);
+}
+.ca-danger-zone-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 20px;
+  background: var(--ca-red-dim);
+  color: var(--ca-red);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .03em;
+  border-bottom: 1px solid var(--ca-red-dim);
+}
+.ca-danger-zone-body {
+  padding: 20px;
+}
+.ca-danger-zone-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.ca-danger-zone-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ca-ink);
+  margin-bottom: 4px;
+}
+.ca-danger-zone-desc {
+  font-size: 13px;
+  color: var(--ca-ink-4);
+  line-height: 1.5;
+  max-width: 480px;
+}
+.ca-cta-danger {
+  background: var(--ca-red);
+  color: #fff;
+  white-space: nowrap;
+  flex-shrink: 0;
+  width: auto;
+  padding: 10px 20px;
+}
+.ca-cta-danger:hover {
+  background: #9B2D27;
+  box-shadow: 0 3px 12px var(--ca-red-ring);
+  transform: translateY(-1px);
+}
