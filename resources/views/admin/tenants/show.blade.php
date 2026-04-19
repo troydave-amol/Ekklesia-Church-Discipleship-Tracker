@@ -104,4 +104,50 @@
         @endforelse
     </div>
 </div>
+
+{{-- ═══ DANGER ZONE ═══ --}}
+<div class="ca-danger-zone">
+    <div class="ca-danger-zone-head">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <span>Danger Zone</span>
+    </div>
+    <div class="ca-danger-zone-body">
+        <div class="ca-danger-zone-row">
+            <div>
+                <div class="ca-danger-zone-title">Delete this tenant</div>
+                <div class="ca-danger-zone-desc">
+                    Permanently removes <strong>{{ $tenant->name }}</strong>, its database, all associated domains, and every record within the workspace. This action cannot be undone.
+                </div>
+            </div>
+            <form method="POST" action="{{ route('admin.tenants.destroy', $tenant) }}" id="delete-tenant-form">
+                @csrf
+                @method('DELETE')
+                <button type="button" class="ca-cta ca-cta-danger" onclick="confirmDeleteTenant()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                        <line x1="10" y1="11" x2="10" y2="17"/>
+                        <line x1="14" y1="11" x2="14" y2="17"/>
+                    </svg>
+                    Delete Tenant
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDeleteTenant() {
+    const name = @json($tenant->name);
+    if (confirm(`Are you sure you want to permanently delete "${name}"?\n\nThis will destroy the tenant database and all associated data. This action CANNOT be undone.`)) {
+        if (confirm(`FINAL WARNING: You are about to delete "${name}" permanently.\n\nClick OK to proceed with deletion.`)) {
+            document.getElementById('delete-tenant-form').submit();
+        }
+    }
+}
+</script>
 @endsection
