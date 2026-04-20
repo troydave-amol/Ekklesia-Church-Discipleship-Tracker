@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Attendance;
+use App\Models\User;
 use App\QueryBuilders\AttendanceQueryBuilder;
 
 class AttendanceService
@@ -63,6 +64,35 @@ class AttendanceService
     public function list(int $churchId): \Illuminate\Pagination\LengthAwarePaginator
     {
         return $this->queryBuilder->forChurch($churchId)->latest()->paginate(20);
+    }
+
+    /**
+     * Return attendance listings scoped to the requesting user according to their role.
+     */
+    public function getForUser(User $user): \Illuminate\Pagination\LengthAwarePaginator
+    {
+        $churchId = $user->church_id;
+
+        if ($user->isChurchAdmin()) {
+            return $this->queryBuilder->forChurch($churchId)->latest()->paginate(20);
+        }
+
+        if ($user->isRestrictedLeader()) {
+            $discipleIds = \App\Models\ChurchMembership::where('leader_id', $user->id)
+                ->pluck('user_id')
+                ->toArray();
+
+            return Attendance::where('church_id', $churchId)
+                ->whereIn('user_id', $discipleIds)
+                ->latest()
+                ->paginate(20);
+        }
+
+        // Disciple — only their own records
+        return Attendance::where('church_id', $churchId)
+            ->where('user_id', $user->id)
+            ->latest()
+            ->paginate(20);
     }
 
     public function create(int $churchId, array $data): Attendance

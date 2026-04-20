@@ -42,96 +42,69 @@ class RolesAndPermissionsSeeder extends Seeder
             'updated_at' => now(),
         ]);
 
-        // Create permissions
-        $managePrograms = DB::connection('tenant')->table('permissions')->insertGetId([
-            'slug' => 'manage-programs',
-            'name' => 'Manage Programs',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // Create permissions (exact slugs required by access matrix)
+        $permissionSlugs = [
+            'manage-programs' => 'Manage Programs',
+            'manage-lessons' => 'Manage Lessons',
+            'view-all-attendance' => 'View All Attendance',
+            'view-all-devotionals' => 'View All Devotionals',
+            'manage-users' => 'Manage Users',
+            'manage-subscription' => 'Manage Subscription',
+            'create-lesson' => 'Create Lesson',
+            'edit-own-lesson' => 'Edit Own Lesson',
+            'manage-disciples' => 'Manage Disciples',
+            'view-programs' => 'View Programs',
+            'enroll-program' => 'Enroll Program',
+            'view-lessons' => 'View Lessons',
+            'update-own-attendance' => 'Update Own Attendance',
+            'update-own-devotional' => 'Update Own Devotional',
+        ];
 
-        $manageLessons = DB::connection('tenant')->table('permissions')->insertGetId([
-            'slug' => 'manage-lessons',
-            'name' => 'Manage Lessons',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $recordAttendance = DB::connection('tenant')->table('permissions')->insertGetId([
-            'slug' => 'record-attendance',
-            'name' => 'Record Attendance',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $viewReports = DB::connection('tenant')->table('permissions')->insertGetId([
-            'slug' => 'view-reports',
-            'name' => 'View Reports',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $manageUsers = DB::connection('tenant')->table('permissions')->insertGetId([
-            'slug' => 'manage-users',
-            'name' => 'Manage Users',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $manageSubscription = DB::connection('tenant')->table('permissions')->insertGetId([
-            'slug' => 'manage-subscription',
-            'name' => 'Manage Subscription',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        // Additional permissions for dashboard access
-        $dashboardView = DB::connection('tenant')->table('permissions')->insertGetId([
-            'slug' => 'dashboard-view',
-            'name' => 'View Dashboard',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $attendanceManage = DB::connection('tenant')->table('permissions')->insertGetId([
-            'slug' => 'attendance-manage',
-            'name' => 'Manage Attendance',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $permissionIds = [];
+        foreach ($permissionSlugs as $slug => $name) {
+            $permissionIds[$slug] = DB::connection('tenant')->table('permissions')->insertGetId([
+                'slug' => $slug,
+                'name' => $name,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
         // Assign permissions to roles
-        // church_admin gets all permissions
-        DB::connection('tenant')->table('permission_role')->insert([
-            ['role_id' => $churchAdmin, 'permission_id' => $managePrograms, 'created_at' => now(), 'updated_at' => now()],
-            ['role_id' => $churchAdmin, 'permission_id' => $manageLessons, 'created_at' => now(), 'updated_at' => now()],
-            ['role_id' => $churchAdmin, 'permission_id' => $recordAttendance, 'created_at' => now(), 'updated_at' => now()],
-            ['role_id' => $churchAdmin, 'permission_id' => $viewReports, 'created_at' => now(), 'updated_at' => now()],
-            ['role_id' => $churchAdmin, 'permission_id' => $manageUsers, 'created_at' => now(), 'updated_at' => now()],
-            ['role_id' => $churchAdmin, 'permission_id' => $manageSubscription, 'created_at' => now(), 'updated_at' => now()],
-            ['role_id' => $churchAdmin, 'permission_id' => $dashboardView, 'created_at' => now(), 'updated_at' => now()],
-            ['role_id' => $churchAdmin, 'permission_id' => $attendanceManage, 'created_at' => now(), 'updated_at' => now()],
-        ]);
+        // Assign permissions to roles according to access matrix
+        $assign = [];
 
-        // program_leader gets: manage-programs, manage-lessons, record-attendance, view-reports, attendance-manage
-        DB::connection('tenant')->table('permission_role')->insert([
-            ['role_id' => $programLeader, 'permission_id' => $managePrograms, 'created_at' => now(), 'updated_at' => now()],
-            ['role_id' => $programLeader, 'permission_id' => $manageLessons, 'created_at' => now(), 'updated_at' => now()],
-            ['role_id' => $programLeader, 'permission_id' => $recordAttendance, 'created_at' => now(), 'updated_at' => now()],
-            ['role_id' => $programLeader, 'permission_id' => $viewReports, 'created_at' => now(), 'updated_at' => now()],
-            ['role_id' => $programLeader, 'permission_id' => $dashboardView, 'created_at' => now(), 'updated_at' => now()],
-            ['role_id' => $programLeader, 'permission_id' => $attendanceManage, 'created_at' => now(), 'updated_at' => now()],
-        ]);
+        // church_admin (pastor) gets all permissions
+        foreach (array_keys($permissionSlugs) as $slug) {
+            $assign[] = ['role_id' => $churchAdmin, 'permission_id' => $permissionIds[$slug], 'created_at' => now(), 'updated_at' => now()];
+        }
 
-        // cell_leader gets: record-attendance
-        DB::connection('tenant')->table('permission_role')->insert([
-            ['role_id' => $cellLeader, 'permission_id' => $recordAttendance, 'created_at' => now(), 'updated_at' => now()],
-            ['role_id' => $cellLeader, 'permission_id' => $dashboardView, 'created_at' => now(), 'updated_at' => now()],
-        ]);
+        // program_leader
+        $programLeaderPerms = [
+            'create-lesson', 'edit-own-lesson', 'view-all-attendance', 'view-all-devotionals', 'manage-disciples', 'view-programs', 'view-lessons', 'enroll-program', 'update-own-attendance', 'update-own-devotional'
+        ];
+        foreach ($programLeaderPerms as $slug) {
+            if (isset($permissionIds[$slug])) {
+                $assign[] = ['role_id' => $programLeader, 'permission_id' => $permissionIds[$slug], 'created_at' => now(), 'updated_at' => now()];
+            }
+        }
 
-        // disciple gets: dashboard-view (for viewing own progress)
-        DB::connection('tenant')->table('permission_role')->insert([
-            ['role_id' => $disciple, 'permission_id' => $dashboardView, 'created_at' => now(), 'updated_at' => now()],
-        ]);
+        // cell_leader: limited permissions
+        $cellLeaderPerms = ['view-programs', 'view-lessons', 'update-own-attendance', 'update-own-devotional'];
+        foreach ($cellLeaderPerms as $slug) {
+            if (isset($permissionIds[$slug])) {
+                $assign[] = ['role_id' => $cellLeader, 'permission_id' => $permissionIds[$slug], 'created_at' => now(), 'updated_at' => now()];
+            }
+        }
+
+        // disciple
+        $disciplePerms = ['view-programs', 'enroll-program', 'view-lessons', 'update-own-attendance', 'update-own-devotional'];
+        foreach ($disciplePerms as $slug) {
+            if (isset($permissionIds[$slug])) {
+                $assign[] = ['role_id' => $disciple, 'permission_id' => $permissionIds[$slug], 'created_at' => now(), 'updated_at' => now()];
+            }
+        }
+
+        DB::connection('tenant')->table('permission_role')->insert($assign);
     }
 }

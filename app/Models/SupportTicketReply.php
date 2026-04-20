@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SupportTicketReply extends Model
 {
+    protected $connection = 'central';
     protected $fillable = [
         'support_ticket_id',
         'user_id',
