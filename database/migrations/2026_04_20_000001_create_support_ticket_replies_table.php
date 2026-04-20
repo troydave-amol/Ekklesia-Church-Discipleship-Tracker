@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('support_ticket_replies', function (Blueprint $table) {
             $table->id();
             $table->foreignId('support_ticket_id')->constrained()->onDelete('cascade');
-            $table->unsignedBigInteger('user_id');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->longText('message');
             $table->timestamps();
             
