@@ -18,6 +18,14 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // ── 0. Seed Roles & Permissions ────────────────────────────
+        $this->call(RolesAndPermissionsSeeder::class);
+
+        // Fetch role IDs for assignment
+        $churchAdminRole = \Illuminate\Support\Facades\DB::connection('tenant')->table('roles')->where('slug', 'church_admin')->first();
+        $programLeaderRole = \Illuminate\Support\Facades\DB::connection('tenant')->table('roles')->where('slug', 'program_leader')->first();
+        $discipleRole = \Illuminate\Support\Facades\DB::connection('tenant')->table('roles')->where('slug', 'disciple')->first();
+
         // ── 1. Church ──────────────────────────────────────────────
         $church = Church::create([
             'name'                => 'Grace Community Church',
@@ -34,6 +42,7 @@ class DatabaseSeeder extends Seeder
             'email'      => 'pastor@grace.com',
             'password'   => Hash::make('password'),
             'role'       => 'pastor',
+            'role_id'    => $churchAdminRole->id ?? null,
         ]);
         UserProfile::create(['user_id' => $pastor->id, 'gender' => 'male', 'city' => 'Davao City']);
         ChurchMembership::create([
@@ -58,6 +67,7 @@ class DatabaseSeeder extends Seeder
                 'email'      => $ld['email'],
                 'password'   => Hash::make('password'),
                 'role'       => 'leader',
+                'role_id'    => $programLeaderRole->id ?? null,
             ]);
             UserProfile::create(['user_id' => $leader->id]);
             ChurchMembership::create([
@@ -88,6 +98,7 @@ class DatabaseSeeder extends Seeder
                 'email'      => $dd['email'],
                 'password'   => Hash::make('password'),
                 'role'       => 'disciple',
+                'role_id'    => $discipleRole->id ?? null,
             ]);
             UserProfile::create(['user_id' => $disc->id]);
             ChurchMembership::create([

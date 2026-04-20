@@ -3,6 +3,7 @@
 .env
 .env.backup
 .env.production
+.env.*.local
 .phpactor.json
 .phpunit.result.cache
 /.fleet
@@ -18,10 +19,27 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/app/tenant_*
+/storage/logs/*.log
 /vendor
 .composer-cache/
 .npm-cache/
 composer.phar
 Homestead.json
 Homestead.yaml
+Thumbs.db
+
+# SQLite local tenant databases (development)
+*.sqlite
+*.sqlite3
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
 Thumbs.db
