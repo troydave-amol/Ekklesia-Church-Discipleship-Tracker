@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Devotional;
 use App\Models\User;
+use App\Models\ChurchMembership;
 
 class DevotionalService
 {
@@ -94,6 +95,25 @@ class DevotionalService
             ->where('completed', true)
             ->count();
         return (int) round($completed / $daysPassed * 100);
+    }
+
+    /**
+     * Get devotionals scoped to the requesting user according to their role.
+     */
+    public function getForUser(User $user, int $perPage = 20): \Illuminate\Pagination\LengthAwarePaginator
+    {
+        $churchId = $user->church_id;
+
+        if ($user->isChurchAdmin()) {
+            return Devotional::where('church_id', $churchId)->latest()->paginate($perPage);
+        }
+
+        if ($user->isRestrictedLeader()) {
+            $discipleIds = ChurchMembership::where('leader_id', $user->id)->pluck('user_id')->toArray();
+            return Devotional::where('church_id', $churchId)->whereIn('user_id', $discipleIds)->latest()->paginate($perPage);
+        }
+
+        return Devotional::where('church_id', $churchId)->where('user_id', $user->id)->latest()->paginate($perPage);
     }
 
     /**

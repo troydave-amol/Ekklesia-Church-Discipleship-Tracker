@@ -119,4 +119,26 @@ class AttendanceController extends Controller
             'program_id' => $request->program_id,
         ])->with('success', 'Attendance saved.');
     }
+
+    public function update(Request $request, int $id)
+    {
+        $request->validate([
+            'status' => ['required', 'in:present,absent'],
+        ]);
+
+        $attendance = Attendance::findOrFail($id);
+
+        if ($attendance->church_id !== auth()->user()->church_id) {
+            abort(403);
+        }
+
+        if ($attendance->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $attendance->status = $request->status;
+        $attendance->save();
+
+        return redirect()->back()->with('success', 'Attendance updated.');
+    }
 }

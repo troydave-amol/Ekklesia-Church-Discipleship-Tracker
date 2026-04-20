@@ -63,6 +63,24 @@ class LessonController extends Controller
 
     public function store(StoreLessonRequest $request)
     {
+        $user = $request->user();
+
+        // If actor is a program leader, ensure they are assigned to the program
+        if ($user->isLeader()) {
+            $program = Program::where('id', $request->program_id)->first();
+            if (! $program) {
+                abort(404);
+            }
+
+            $assigned = \App\Models\ChurchMembership::where('leader_id', $user->id)
+                ->where('destiny_training_level', $program->program_key)
+                ->exists();
+
+            if (! $assigned) {
+                abort(403, 'You are not assigned to this program.');
+            }
+        }
+
         Lesson::create(array_merge($request->validated(), ['church_id' => $request->user()->church_id]));
 
         return redirect()->route('lessons.index')->with('success', 'Lesson added.');
@@ -70,14 +88,38 @@ class LessonController extends Controller
 
     public function update(StoreLessonRequest $request, int $id)
     {
-        Lesson::findOrFail($id)->update($request->validated());
+        $lesson = Lesson::findOrFail($id);
+        $user = $request->user();
+
+        if ($user->isLeader()) {
+            // Leader may only edit lessons they created. If the lessons table does not
+            // have a creator column, deny edits by leaders to be safe.
+            if (isset($lesson->user_id) && $lesson->user_id === $user->id) {
+                $lesson->update($request->validated());
+            } else {
+                abort(403, 'You can only edit your own lessons.');
+            }
+        } else {
+            $lesson->update($request->validated());
+        }
 
         return redirect()->route('lessons.index')->with('success', 'Lesson updated.');
     }
 
     public function destroy(int $id)
     {
-        Lesson::findOrFail($id)->delete();
+        $lesson = Lesson::findOrFail($id);
+        $user = auth()->user();
+
+        if ($user->isLeader()) {
+            if (isset($lesson->user_id) && $lesson->user_id === $user->id) {
+                $lesson->delete();
+            } else {
+                abort(403, 'You can only delete your own lessons.');
+            }
+        } else {
+            $lesson->delete();
+        }
 
         return redirect()->route('lessons.index')->with('success', 'Lesson deleted.');
     }
