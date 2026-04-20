@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     * This migration MUST run on tenant databases only.
+     */
+    public function up(): void
+    {
+        // Guard: Prevent this migration from running on central database
+        if (DB::connection()->getDatabaseName() === config('database.connections.mysql.database')) {
+            throw new \RuntimeException(
+                'Tenant migration running on central DB. Aborting. This migration is tenant-only.'
+            );
+        }
+
+        Schema::create('{{ table }}', function (Blueprint $table) {
+            $table->id();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('{{ table }}');
+    }
+};
