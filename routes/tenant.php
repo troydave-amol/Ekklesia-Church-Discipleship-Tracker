@@ -13,6 +13,9 @@ use App\Http\Controllers\DevotionalController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SupportTicketController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SystemInfoController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -120,5 +123,28 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
         Route::get('/settings/church', [SettingsController::class, 'church'])->name('settings.church');
         Route::patch('/settings/church', [SettingsController::class, 'updateChurch'])->name('settings.church.update');
         Route::get('/settings/upgrade/{plan}', [SettingsController::class, 'upgrade'])->name('settings.upgrade');
+    });
+
+    // Support Tickets
+    Route::get('/support', [SupportTicketController::class, 'index'])->name('support.index');
+    Route::post('/support', [SupportTicketController::class, 'store'])->name('support.store');
+    Route::get('/support/{ticket}', [SupportTicketController::class, 'show'])->name('support.show');
+    Route::post('/support/{ticket}/reply', [SupportTicketController::class, 'reply'])->name('support.reply');
+    Route::patch('/support/{ticket}/status', [SupportTicketController::class, 'updateStatus'])->name('support.updateStatus');
+    Route::get('/support/admin', [SupportTicketController::class, 'adminIndex'])->middleware('role:church_admin')->name('support.admin');
+
+    // Announcements
+    Route::get('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'index'])->name('announcements.index');
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+
+    // System Info (Pastor only)
+    Route::middleware('role:church_admin')->group(function () {
+        Route::get('/system/info', [SystemInfoController::class, 'index'])->name('system.info');
+        Route::get('/system/migrations', [SystemInfoController::class, 'migrations'])->name('system.migrations');
+        Route::get('/system/changelog', [SystemInfoController::class, 'changelog'])->name('system.changelog');
     });
 });

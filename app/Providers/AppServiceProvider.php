@@ -12,8 +12,10 @@ use App\Services\ReportExportService;
 use App\Policies\DisciplePolicy;
 use App\Policies\AttendancePolicy;
 use App\Policies\DevotionalPolicy;
+use App\Policies\SupportTicketPolicy;
 use App\Models\User;
 use App\Models\Devotional;
+use App\Models\SupportTicket;
 use Illuminate\Support\Facades\Gate;
 use App\Services\TenantDatabaseManager;
 
@@ -49,6 +51,7 @@ class AppServiceProvider extends ServiceProvider
         // Register Policies
         Gate::policy(User::class, DisciplePolicy::class);
         Gate::policy(Devotional::class, DevotionalPolicy::class);
+        Gate::policy(SupportTicket::class, SupportTicketPolicy::class);
 
         Gate::define('manage-lessons', fn (User $user) => $user->isChurchAdmin());
         Gate::define('export-reports', fn (User $user) => $user->isChurchAdmin()

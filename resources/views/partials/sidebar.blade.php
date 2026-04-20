@@ -32,6 +32,16 @@
             'Analytics' => [
                 ['route' => 'reports.index',      'label' => 'Reports',     'icon' => 'chart'],
             ],
+            'Support' => [
+                ['route' => 'support.index',      'label' => 'Support',     'icon' => 'message'],
+                ['route' => 'support.admin',      'label' => 'All Tickets', 'icon' => 'inbox'],
+                ['route' => 'announcements.index', 'label' => 'Announcements', 'icon' => 'bell'],
+            ],
+            'System' => [
+                ['route' => 'system.info',        'label' => 'System Info',    'icon' => 'info'],
+                ['route' => 'system.migrations',  'label' => 'Migrations',     'icon' => 'database'],
+                ['route' => 'system.changelog',   'label' => 'Changelog',      'icon' => 'history'],
+            ],
             'Admin' => [
                 ['route' => 'settings.church',    'label' => 'Settings',    'icon' => 'settings'],
             ],
@@ -45,12 +55,20 @@
                 ['route' => 'devotionals.index',  'label' => 'Devotionals',  'icon' => 'heart'],
                 ['route' => 'users.disciples',    'label' => 'My Disciples', 'icon' => 'users'],
             ],
+            'Support' => [
+                ['route' => 'support.index',      'label' => 'Support',     'icon' => 'message'],
+                ['route' => 'announcements.index', 'label' => 'Announcements', 'icon' => 'bell'],
+            ],
         ],
         'disciple' => [
             'My Journey' => [
                 ['route' => 'tenant.dashboard',           'label' => 'Dashboard',     'icon' => 'home'],
                 ['route' => 'lessons.my',          'label' => 'My Lessons',    'icon' => 'book'],
                 ['route' => 'devotionals.mine',   'label' => 'Devotionals',  'icon' => 'heart'],
+            ],
+            'Support' => [
+                ['route' => 'support.index',      'label' => 'Support',     'icon' => 'message'],
+                ['route' => 'announcements.index', 'label' => 'Announcements', 'icon' => 'bell'],
             ],
         ],
     ];
