@@ -8,13 +8,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('support_ticket_replies', function (Blueprint $table) {
+        if (!Schema::hasTable('support_ticket_replies')) {
+            Schema::create('support_ticket_replies', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('support_ticket_id')->index();
-            $table->unsignedBigInteger('user_id')->index();
+            $table->unsignedBigInteger('support_ticket_id')->index()->nullable();
+            $table->unsignedBigInteger('user_id')->index()->nullable();
+            $table->unsignedBigInteger('admin_id')->index()->nullable();
             $table->text('message');
             $table->timestamps();
         });
+        }
     }
 
     public function down(): void

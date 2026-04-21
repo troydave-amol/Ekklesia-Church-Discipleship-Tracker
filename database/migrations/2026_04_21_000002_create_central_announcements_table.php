@@ -8,7 +8,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('announcements', function (Blueprint $table) {
+        if (!Schema::hasTable('announcements')) {
+            Schema::create('announcements', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->string('title');
@@ -17,6 +18,7 @@ return new class extends Migration
             $table->timestamp('published_at')->nullable();
             $table->timestamps();
         });
+        }
     }
 
     public function down(): void

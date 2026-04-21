@@ -4,6 +4,38 @@
 
 @section('content')
 
+{{-- Generate clean CSS for dynamic progress bars (computed entirely in PHP, output via JavaScript) --}}
+@php
+$dynamicCss = '';
+foreach($disciples as $d) {
+    $att = $d->attendance_rate ?? 0;
+    $dev = $d->devotional_rate ?? 0;
+    $ac = $att >= 80 ? 'var(--green)' : ($att >= 60 ? 'var(--orange)' : 'var(--red)');
+    $dc = $dev >= 80 ? 'var(--purple)' : ($dev >= 60 ? 'var(--orange)' : 'var(--red)');
+    $dynamicCss .= "#user-att-{$d->id} .progress-bar { width: {$att}%; background: {$ac}; } ";
+    $dynamicCss .= "#user-att-{$d->id} .rate-text { color: {$ac}; } ";
+    $dynamicCss .= "#user-dev-{$d->id} .progress-bar { width: {$dev}%; background: {$dc}; } ";
+    $dynamicCss .= "#user-dev-{$d->id} .rate-text { color: {$dc}; } ";
+}
+foreach($leaders as $idx => $leader) {
+    $lc_array = ['var(--gold)', 'var(--blue)', 'var(--purple)', 'var(--green)', 'var(--orange)'];
+    $lc = $lc_array[$idx % 5];
+    $latt = $leader->attendance_rate ?? 0;
+    $ldev = $leader->devotional_rate ?? 0;
+    $dynamicCss .= "#leader-{$leader->id} .leader-avatar { background: color-mix(in srgb, {$lc} 13%, transparent); border: 1.5px solid color-mix(in srgb, {$lc} 27%, transparent); color: {$lc}; } ";
+    $dynamicCss .= "#leader-{$leader->id} .att-bar .progress-bar { width: {$latt}%; } ";
+    $dynamicCss .= "#leader-{$leader->id} .dev-bar .progress-bar { width: {$ldev}%; } ";
+}
+@endphp
+
+@if($dynamicCss)
+<script>
+    const styleEl = document.createElement('style');
+    styleEl.textContent = `{{ addslashes($dynamicCss) }}`;
+    document.head.appendChild(styleEl);
+</script>
+@endif
+
 <div class="flex items-center justify-between mb-20">
     <div>
         <h1 class="page-title">{{ ($leaderScope ?? false) ? 'My disciples' : 'User Management' }}</h1>
@@ -142,18 +174,16 @@
                                 @endif
                             </td>
                             <td><span style="font-size:13px;color:var(--text-muted);">{{ $d->membership->satellite ?? '—' }}</span></td>
-                            <td>
-                                @php $att = $d->attendance_rate ?? 0; $ac = $att>=80?'var(--green)':($att>=60?'var(--orange)':'var(--red)'); @endphp
+                            <td id="user-att-{{ $d->id }}">
                                 <div class="flex items-center gap-8">
-                                    <div class="progress" style="flex:1;"><div class="progress-bar" style="width:{{ $att }}%;background:{{ $ac }};"></div></div>
-                                    <span class="mono" style="font-size:12px;color:{{ $ac }};">{{ $att }}%</span>
+                                    <div class="progress" style="flex:1;"><div class="progress-bar"></div></div>
+                                    <span class="mono rate-text" style="font-size:12px;">{{ $d->attendance_rate ?? 0 }}%</span>
                                 </div>
                             </td>
-                            <td>
-                                @php $dev = $d->devotional_rate ?? 0; $dc = $dev>=80?'var(--purple)':($dev>=60?'var(--orange)':'var(--red)'); @endphp
+                            <td id="user-dev-{{ $d->id }}">
                                 <div class="flex items-center gap-8">
-                                    <div class="progress" style="flex:1;"><div class="progress-bar" style="width:{{ $dev }}%;background:{{ $dc }};"></div></div>
-                                    <span class="mono" style="font-size:12px;color:{{ $dc }};">{{ $dev }}%</span>
+                                    <div class="progress" style="flex:1;"><div class="progress-bar"></div></div>
+                                    <span class="mono rate-text" style="font-size:12px;">{{ $d->devotional_rate ?? 0 }}%</span>
                                 </div>
                             </td>
                             <td>
@@ -196,10 +226,10 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:16px;">
             @forelse($leaders as $index => $leader)
             @php $lColors=['var(--gold)','var(--blue)','var(--purple)','var(--green)','var(--orange)']; $lc=$lColors[$index%5]; @endphp
-            <div class="card">
+            <div class="card" id="leader-{{ $leader->id }}">
                 <div class="card-body">
                     <div class="flex gap-12 mb-16">
-                        <div class="avatar avatar-lg" style="background:{{ $lc }}22;border:1.5px solid {{ $lc }}44;color:{{ $lc }};">
+                        <div class="avatar avatar-lg leader-avatar">
                             {{ strtoupper(substr($leader->first_name,0,1).substr($leader->last_name,0,1)) }}
                         </div>
                         <div>
@@ -218,14 +248,14 @@
                                 <span class="text-muted">Attendance Rate</span>
                                 <span class="mono" style="color:var(--green);">{{ $leader->attendance_rate ?? 0 }}%</span>
                             </div>
-                            <div class="progress"><div class="progress-bar" style="width:{{ $leader->attendance_rate ?? 0 }}%;background:var(--green);"></div></div>
+                            <div class="progress att-bar"><div class="progress-bar" style="background:var(--green);"></div></div>
                         </div>
                         <div>
                             <div class="flex justify-between" style="font-size:12px;margin-bottom:4px;">
                                 <span class="text-muted">Devotional Rate</span>
                                 <span class="mono" style="color:var(--purple);">{{ $leader->devotional_rate ?? 0 }}%</span>
                             </div>
-                            <div class="progress"><div class="progress-bar" style="width:{{ $leader->devotional_rate ?? 0 }}%;background:var(--purple);"></div></div>
+                            <div class="progress dev-bar"><div class="progress-bar" style="background:var(--purple);"></div></div>
                         </div>
                     </div>
                     <div class="flex gap-8">

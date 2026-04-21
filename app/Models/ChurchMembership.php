@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use App\Enums\DestinyLevel;
 
 class ChurchMembership extends Model
@@ -45,5 +46,19 @@ class ChurchMembership extends Model
     public function leader()
     {
         return $this->belongsTo(User::class, 'leader_id');
+    }
+
+    // ── Multi-tenancy Scope ────────────────────────────────────────
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Enforce church_id isolation for this tenant
+        static::addGlobalScope(function (Builder $query) {
+            if (tenant()) {
+                $query->where('church_id', tenant()->id);
+            }
+        });
     }
 }

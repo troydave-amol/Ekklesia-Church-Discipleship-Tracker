@@ -3,6 +3,31 @@
 @section('title', 'Changelog')
 
 @section('content')
+
+{{-- Generate clean CSS for timeline styling (computed entirely in PHP, output via JavaScript) --}}
+@php
+$changelogCss = '';
+if (!empty($changelogSections)) {
+    foreach ($changelogSections as $index => $section) {
+        $nodeBg = $section['version'] === 'Unreleased' ? '#6E7681' : '#D4A853';
+        $changelogCss .= ".timeline-node-{$index} { background: {$nodeBg}; } ";
+        
+        $badgeStyle = $section['version'] === 'Unreleased' 
+            ? 'border: 2px dashed #8B949E; color: #8B949E; background: transparent;'
+            : 'background: rgba(212, 168, 83, 0.1); color: #E8C47A;';
+        $changelogCss .= ".badge-{$index} { {$badgeStyle} } ";
+    }
+}
+@endphp
+
+@if($changelogCss)
+<script>
+    const styleEl = document.createElement('style');
+    styleEl.textContent = `{{ addslashes($changelogCss) }}`;
+    document.head.appendChild(styleEl);
+</script>
+@endif
+
 <div class="page-header" style="margin-bottom: 24px;">
     <h1 class="page-title">Changelog</h1>
 </div>
@@ -17,7 +42,7 @@
             <div style="margin-bottom: 32px; position: relative;">
                 <!-- Timeline Node -->
                 <div style="position: absolute; left: -4px; top: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                    <div style="width: 24px; height: 24px; border-radius: 50%; background: @if($section['version'] === 'Unreleased') #6E7681 @else #D4A853 @endif; border: 3px solid #0D1117; display: flex; align-items: center; justify-content: center;">
+                    <div class="timeline-node-{{ $index }}" style="width: 24px; height: 24px; border-radius: 50%; border: 3px solid #0D1117; display: flex; align-items: center; justify-content: center;">
                         <svg width="12" height="12" fill="white" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                         </svg>
@@ -27,7 +52,7 @@
                 <!-- Content -->
                 <div style="margin-left: 60px;">
                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                        <span style="display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; @if($section['version'] === 'Unreleased') border: 2px dashed #8B949E; color: #8B949E; background: transparent; @else background: rgba(212, 168, 83, 0.1); color: #E8C47A; @endif">
+                        <span class="badge-{{ $index }}" style="display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;">
                             {{ $section['version'] }}
                         </span>
                         @if($section['date'])
