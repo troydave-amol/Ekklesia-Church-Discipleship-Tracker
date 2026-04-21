@@ -1,6 +1,10 @@
 <?php
 
 use App\Http\Controllers\Admin\CentralDashboardController;
+use App\Http\Controllers\Admin\AdminAuthController;
+use App\Http\Controllers\Admin\AdminTicketController;
+use App\Http\Controllers\Admin\AdminAnnouncementController;
+use App\Http\Controllers\Admin\AdminRBACController;
 use App\Http\Controllers\Admin\TenantSignupController;
 use App\Http\Controllers\TenantRegistrationController;
 use Illuminate\Support\Facades\Route;
@@ -17,17 +21,45 @@ Route::get('/check-subdomain', [TenantRegistrationController::class, 'checkSubdo
 
 Route::get('/forgot-password', fn () => view('auth.forgot-password'))->name('password.request');
 
-// Central SaaS management (monitoring, approvals before domain + DB, tenant list)
+// ── Admin Authentication (public routes) ──────────────────────────────────────
 Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AdminAuthController::class, 'login'])->name('login.submit');
+    Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+});
+
+// ── Central SaaS Admin Management (protected) ──────────────────────────────────
+Route::middleware(['auth:admin', 'admin_auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', fn () => redirect()->route('admin.dashboard'));
     Route::get('/dashboard', CentralDashboardController::class)->name('dashboard');
 
+    // Tenant Management
     Route::get('/signups', [TenantSignupController::class, 'index'])->name('signups.index');
     Route::post('/signups/{signup}/approve', [TenantSignupController::class, 'approve'])->name('signups.approve');
     Route::post('/signups/{signup}/reject', [TenantSignupController::class, 'reject'])->name('signups.reject');
 
     Route::resource('tenants', TenantRegistrationController::class)->only(['index', 'show', 'edit', 'update', 'destroy']);
     Route::patch('/tenants/{tenant}/status', [TenantRegistrationController::class, 'toggleStatus'])->name('tenants.toggle-status');
+
+    // Support Tickets from Tenants
+    Route::resource('tickets', AdminTicketController::class)->only(['index', 'show']);
+    Route::post('/tickets/{ticket}/reply', [AdminTicketController::class, 'reply'])->name('tickets.reply');
+    Route::patch('/tickets/{ticket}/close', [AdminTicketController::class, 'close'])->name('tickets.close');
+
+    // Announcements to Tenants
+    Route::resource('announcements', AdminAnnouncementController::class);
+    Route::post('/announcements/{announcement}/publish', [AdminAnnouncementController::class, 'publish'])->name('announcements.publish');
+
+    // RBAC Management (superadmin only)
+    Route::middleware('admin_role:superadmin')->prefix('rbac')->name('rbac.')->group(function () {
+        Route::get('/tenants/{tenant}', [AdminRBACController::class, 'show'])->name('show');
+        Route::get('/tenants/{tenant}/roles', [AdminRBACController::class, 'editRoles'])->name('edit-roles');
+        Route::patch('/tenants/{tenant}/roles/{role}', [AdminRBACController::class, 'updateRolePermissions'])->name('update-permissions');
+        Route::get('/tenants/{tenant}/audit', [AdminRBACController::class, 'auditLog'])->name('audit-log');
+    });
+
+    // Admin User Management (superadmin only)
+    Route::middleware('admin_role:superadmin')->resource('users', AdminAuthController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
 });
 
 // Tenant subdomain routes are defined in routes/tenant.php (loaded by TenancyServiceProvider).

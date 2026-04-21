@@ -11,7 +11,7 @@ class CentralDashboardController extends Controller
 {
     public function __invoke(): View
     {
-        $pendingSignups = TenantSignup::pending()->count();
+        $pendingSignups = TenantSignup::where('status', 'pending')->count();
         $activeTenants = Tenant::where('status', 'active')->count();
         $totalTenants = Tenant::count();
 

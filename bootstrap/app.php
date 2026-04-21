@@ -19,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission'    => \App\Http\Middleware\CheckPermission::class,
             'church.tenant' => \App\Http\Middleware\EnsureChurchTenant::class,
             'subscription'  => \App\Http\Middleware\CheckSubscriptionLimit::class,
+            'admin_auth'    => \App\Http\Middleware\AdminAuthenticate::class,
+            'admin_role'    => \App\Http\Middleware\AdminRole::class,
         ]);
 
     })
