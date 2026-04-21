@@ -46,14 +46,16 @@ There are four core roles implemented:
 - Manage only assigned disciples
 - Record attendance
 - Record devotionals
-- Track disciple progress
+- Track disciple progress (devotional and attendance)
 - View limited dashboard (leader scope only)
+- Checks devotional progress and attendance per disciple under them
 
 ### Disciple permissions
 - View lessons (only within their church and assigned program)
 - Mark devotional complete (daily)
 - View personal progress
 - Update own profile
+- Update their devotional progress
 
 Permission enforcement rules:
 - Leaders must only access disciples where the disciple is assigned to them (via leader_id).
@@ -145,7 +147,7 @@ Use these core tables and fields (names should match unless the stack forces a s
 - baptized_at
 - leader_id (FK to users.id)
 - satellite
-- destiny_training_level (life_class, sol1, sol2, sol3, graduate)
+- programs (life_class, sol1, sol2, sol3, graduate)
 
 5. programs
 - id
