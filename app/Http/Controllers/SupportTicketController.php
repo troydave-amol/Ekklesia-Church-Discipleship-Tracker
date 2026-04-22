@@ -38,9 +38,12 @@ class SupportTicketController extends Controller
             'message' => 'required|string|max:5000',
         ]);
 
+        $user = auth()->user();
         $ticket = SupportTicket::create([
             'tenant_id' => tenant('id'),
-            'user_id' => auth()->id(),
+            'user_id' => $user->id,
+            'author_name' => trim($user->first_name . ' ' . $user->last_name),
+            'author_email' => $user->email,
             'subject' => $validated['subject'],
             'priority' => $validated['priority'],
             'status' => 'open',

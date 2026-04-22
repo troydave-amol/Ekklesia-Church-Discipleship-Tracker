@@ -16,7 +16,7 @@
         @foreach($notifications as $notification)
             @php
                 $data = $notification->data;
-                $icon = $data['type'] === 'ticket' ? 'ticket' : 'bell';
+                $icon = ($data['type'] ?? '') === 'ticket' ? 'ticket' : 'bell';
             @endphp
             <a href="{{ $data['url'] ?? '#' }}" style="display: flex; gap: 12px; padding: 16px; background: white; border: 1px solid #E5E7EB; border-radius: 8px; text-decoration: none; color: inherit; transition: all 0.2s;">
                 <div style="flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: @if($icon === 'ticket') #9CA3AF @else #3B82F6 @endif; margin-top: 6px;"></div>

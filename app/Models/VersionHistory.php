@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class VersionHistory extends Model
 {
     protected $table = 'central_version_history';
+    const UPDATED_AT = null;
 
     protected $fillable = [
         'entity_type',

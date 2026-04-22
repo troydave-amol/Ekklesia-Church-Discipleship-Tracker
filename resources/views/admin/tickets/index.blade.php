@@ -41,8 +41,8 @@
                 <tr>
                     <td class="ca-table-strong">{{ $t->subject }}</td>
                     <td>
-                        <div class="ca-table-strong">{{ $t->tenant->name ?? 'Unknown' }}</div>
-                        <div class="ca-table-email">{{ $t->email ?? 'No email' }}</div>
+                        <div class="ca-table-strong">{{ $t->tenant->name ?? 'Unknown Church' }}</div>
+                        <div class="ca-table-email">{{ $t->author_name ?? 'Unknown' }} · {{ $t->author_email ?? 'No email' }}</div>
                     </td>
                     <td>
                         <span class="ca-badge ca-badge-{{ strtolower($t->priority ?? 'medium') }}">

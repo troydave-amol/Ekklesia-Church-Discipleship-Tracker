@@ -887,6 +887,77 @@ select.ca-input {
   margin-top: 24px;
 }
 
+/* Form fields — unified design-system classes */
+.ca-form-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--ca-ink-4);
+  margin-bottom: 6px;
+}
+.ca-form-input {
+  width: 100%;
+  height: 40px;
+  background: var(--ca-surface-dim);
+  border: 1px solid var(--ca-border-strong);
+  border-radius: 8px;
+  color: var(--ca-ink);
+  font-family: var(--ca-font-body);
+  font-size: 13.5px;
+  padding: 0 14px;
+  outline: none;
+  transition: border-color var(--ca-dur), box-shadow var(--ca-dur);
+}
+.ca-form-input:focus {
+  border-color: var(--ca-gold);
+  box-shadow: 0 0 0 3px var(--ca-gold-ring);
+}
+.ca-form-textarea {
+  height: auto;
+  padding: 12px 14px;
+  resize: vertical;
+  line-height: 1.55;
+}
+.ca-form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239B9188' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 36px;
+  cursor: pointer;
+}
+.ca-form-hint {
+  display: block;
+  font-size: 11.5px;
+  color: var(--ca-ink-4);
+  margin-top: 5px;
+}
+.ca-form-error {
+  display: block;
+  font-size: 12px;
+  color: var(--ca-red);
+  margin-top: 4px;
+  font-weight: 500;
+}
+.ca-form-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ca-ink-2);
+}
+.ca-form-check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--ca-gold);
+  cursor: pointer;
+}
+
 
 /* ═══════════════════════════════════════════════════════════
    DANGER ZONE (Tenant Delete)
