@@ -40,9 +40,7 @@ class BroadcastAnnouncementJob implements ShouldQueue
 
                 // Determine target users based on audience
                 $users = match ($announcement->audience) {
-                    'admins' => User::whereHas('role', function ($q) {
-                        $q->whereIn('slug', ['church_admin', 'pastor']);
-                    })->get(),
+                    'admins' => User::whereIn('role', ['church_admin', 'pastor'])->get(),
                     'tenants' => User::all(),
                     default => User::all(), // 'all'
                 };
