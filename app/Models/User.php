@@ -5,15 +5,30 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, MustVerifyEmailTrait;
 
-    protected $connection = 'tenant';
+    /**
+     * Use the tenant connection only when tenancy is initialized.
+     * Otherwise fall back to the default connection (useful for central auth tests).
+     */
+    protected $connection = null;
+
+    public function getConnectionName(): ?string
+    {
+        if (function_exists('tenancy') && tenancy()->initialized) {
+            return 'tenant';
+        }
+
+        return $this->connection;
+    }
 
     protected $fillable = [
         'church_id',

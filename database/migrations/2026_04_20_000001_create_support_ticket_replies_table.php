@@ -8,16 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('support_ticket_replies', function (Blueprint $table) {
+        if (!Schema::hasTable('support_ticket_replies')) {
+            Schema::create('support_ticket_replies', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('support_ticket_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('support_ticket_id')->nullable()->constrained('support_tickets')->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->onDelete('cascade');
             $table->longText('message');
             $table->timestamps();
             
             $table->index('support_ticket_id');
             $table->index('user_id');
         });
+        }
     }
 
     public function down(): void

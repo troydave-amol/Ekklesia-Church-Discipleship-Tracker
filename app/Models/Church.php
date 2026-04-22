@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class Church extends Model
 {
@@ -35,5 +36,19 @@ class Church extends Model
     public function isActive(): bool
     {
         return (bool) $this->is_active;
+    }
+
+    // ── Multi-tenancy Scope ────────────────────────────────────────
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Restrict to current tenant's church
+        static::addGlobalScope(function (Builder $query) {
+            if (tenant()) {
+                $query->where('id', tenant()->id);
+            }
+        });
     }
 }

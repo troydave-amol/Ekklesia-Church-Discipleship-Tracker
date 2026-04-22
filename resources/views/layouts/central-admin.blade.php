@@ -55,6 +55,40 @@
                     Tenants
                 </a>
             </div>
+
+            <div class="ca-nav-group">
+                <div class="ca-nav-label">Support & Content</div>
+                <a href="{{ route('admin.tickets.index') }}"
+                   class="ca-nav-link {{ request()->routeIs('admin.tickets.*') ? 'active' : '' }}">
+                    <svg class="ca-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                    </svg>
+                    Support Tickets
+                </a>
+                <a href="{{ route('admin.announcements.index') }}"
+                   class="ca-nav-link {{ request()->routeIs('admin.announcements.*') ? 'active' : '' }}">
+                    <svg class="ca-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                        <line x1="9" y1="10" x2="15" y2="10"/>
+                        <line x1="9" y1="14" x2="15" y2="14"/>
+                    </svg>
+                    Announcements
+                </a>
+            </div>
+
+            <div class="ca-nav-group">
+                <div class="ca-nav-label">Administration</div>
+                <a href="{{ route('admin.users.index') }}"
+                   class="ca-nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                    <svg class="ca-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 010 7.75"/>
+                    </svg>
+                    Admin Staff
+                </a>
+            </div>
         </nav>
 
         <div class="ca-sidebar-foot">

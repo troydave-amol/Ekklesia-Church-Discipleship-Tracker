@@ -8,7 +8,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('support_tickets', function (Blueprint $table) {
+        if (!Schema::hasTable('support_tickets')) {
+            Schema::create('support_tickets', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('tenant_id')->index();
             $table->unsignedBigInteger('user_id')->index();
@@ -18,6 +19,7 @@ return new class extends Migration
             $table->text('message');
             $table->timestamps();
         });
+        }
     }
 
     public function down(): void
