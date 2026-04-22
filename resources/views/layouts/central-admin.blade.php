@@ -100,6 +100,17 @@
                 </svg>
                 Public Site
             </a>
+            <form method="POST" action="{{ route('admin.logout') }}" class="ca-logout-form">
+                @csrf
+                <button type="submit" class="ca-logout-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Sign Out
+                </button>
+            </form>
         </div>
 
     </aside>
@@ -112,6 +123,15 @@
                 <span class="ca-topbar-title">@yield('topbar-title', 'Dashboard')</span>
             </div>
             <div class="ca-topbar-right">
+                <span class="ca-topbar-user">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    {{ auth('admin')->user()->name }}
+                    <span class="ca-topbar-role">{{ ucfirst(auth('admin')->user()->role) }}</span>
+                </span>
+                <span class="ca-topbar-divider"></span>
                 {{ now()->format('l, M j') }}
             </div>
         </header>

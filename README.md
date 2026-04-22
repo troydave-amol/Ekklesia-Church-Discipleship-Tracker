@@ -41,6 +41,73 @@ A multi-tenant SaaS platform enabling churches to track and manage disciple prog
 
 ---
 
+## Central Admin Dashboard Setup
+
+After initial setup, you need to create a super admin user to access the central control plane at `/admin/login`.
+
+### Creating Your First Admin User
+
+**Option 1: Using Artisan Command (Recommended)**
+```bash
+php artisan app:create-admin
+```
+This will prompt you for:
+- Admin name
+- Admin email
+- Admin password
+
+**Option 2: Using Flags**
+```bash
+php artisan app:create-admin --name="John Doe" --email="admin@church.local" --password="secure-password"
+```
+
+**Option 3: Seeding (Fresh Installation)**
+```bash
+php artisan db:seed --class=AdminSeeder
+```
+This creates a default super admin:
+- Email: `admin@church.local`
+- Password: `admin@123` (⚠️ Change immediately!)
+
+### Accessing the Admin Dashboard
+
+1. Navigate to: `http://your-domain.local/admin/login`
+2. Log in with your admin credentials
+3. You'll see the central control plane with:
+   - Tenant management
+   - Support ticket handling
+   - System announcements
+   - Admin user management
+
+### Initial Configuration Tasks
+
+After logging in:
+1. ✅ Create additional admin users (Admin Staff section)
+2. ✅ Approve pending tenant signups (Approvals section)
+3. ✅ Configure system announcements (if needed)
+4. ✅ Monitor support tickets
+
+---
+
+## Asset Pipeline
+
+The project uses **Vite** for asset bundling. CSS is split per-page for optimization:
+
+| File | Usage | Rebuilt |
+|------|-------|---------|
+| `auth.css` | Admin & tenant login pages | `npm run dev` |
+| `admin.css` | Central admin dashboard | `npm run dev` |
+| `app.css` | Tenant application (empty) | `npm run dev` |
+| `base.css` | Shared utility styles | `npm run dev` |
+
+To rebuild assets:
+```bash
+npm run dev    # Development (watch mode)
+npm run build  # Production (minified)
+```
+
+---
+
 ## Architecture
 
 | Database | Tables |
@@ -126,6 +193,47 @@ For issues, feature requests, or questions:
 ## License
 
 MIT License — see LICENSE file for details
+
+---
+
+## Troubleshooting
+
+### Admin Login Issues
+
+**Problem: 404 Error at `/admin/login`**
+- ✅ Verify routes: `php artisan route:list | grep admin`
+- ✅ Clear cache: `php artisan route:cache && php artisan config:cache`
+- ✅ Check `.env` for correct `APP_URL`
+
+**Problem: Login fails with valid credentials**
+- ✅ Verify admin user exists: `php artisan tinker` then `AdminUser::active()->first()`
+- ✅ Check default admin created: `php artisan db:seed --class=AdminSeeder`
+- ✅ Verify password is hashed: `AdminUser::where('email', 'admin@church.local')->first()->password`
+
+**Problem: Login page has no CSS styling**
+- ✅ Rebuild assets: `npm run dev` (wait for compilation)
+- ✅ Check Vite manifest: `ls -la public/build/manifest.json`
+- ✅ Clear browser cache: Ctrl+Shift+Delete (Chrome) or Cmd+Shift+Delete (Safari)
+- ✅ Verify `auth.css` is included: Check Vite config for `resources/css/auth.css`
+
+### Asset Pipeline Issues
+
+**Problem: Styles not appearing on dashboard**
+- ✅ Verify admin.css is built: `npm run dev`
+- ✅ Check assets in public/build folder: `ls public/build/assets/`
+- ✅ Inspect network tab in browser DevTools (check for 404 on CSS files)
+
+**Problem: JavaScript not working**
+- ✅ Verify Vite is running: Check terminal for `http://localhost:5173`
+- ✅ Restart Vite: Stop `npm run dev`, then start again
+- ✅ Clear node_modules: `rm -rf node_modules && npm install`
+
+### Database Issues
+
+**Problem: Admin user creation fails**
+- ✅ Verify database connection: `php artisan db:show`
+- ✅ Check migration status: `php artisan migrate:status`
+- ✅ Verify table exists: `php artisan tinker` then `DB::table('admin_users')->count()`
 
 ---
 

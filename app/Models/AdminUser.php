@@ -60,6 +60,6 @@ class AdminUser extends Authenticatable
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('status', 'active');
     }
 }

@@ -1,0 +1,54 @@
+/* ═══════════════════════════════════════════════════════════
+   auth.css — Authentication Pages (Login) Styles
+   Includes Tailwind CSS directives for utility-first styling
+═══════════════════════════════════════════════════════════ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Admin Auth Specific Overrides */
+:root {
+    --tw-color-blue-50: #eff6ff;
+    --tw-color-blue-600: #2563eb;
+    --tw-color-blue-700: #1d4ed8;
+    --tw-color-gray-600: #4b5563;
+    --tw-color-gray-900: #111827;
+    --tw-color-red-50: #fef2f2;
+    --tw-color-red-500: #ef4444;
+    --tw-color-red-700: #b91c1c;
+}
+
+body {
+    @apply antialiased;
+}
+
+/* Auth Card Styling */
+.auth-card {
+    @apply bg-white rounded-lg shadow-xl p-8;
+}
+
+.auth-form-group {
+    @apply space-y-4;
+}
+
+.auth-input {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+}
+
+.auth-label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+}
+
+.auth-button {
+    @apply w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition duration-200 ease-in-out;
+}
+
+.auth-error {
+    @apply text-red-500 text-xs mt-1;
+}
+
+.auth-error-alert {
+    @apply mb-4 p-4 bg-red-50 border border-red-200 rounded-lg;
+    @apply text-red-700 text-sm;
+}
