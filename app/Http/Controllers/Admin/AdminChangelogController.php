@@ -53,7 +53,7 @@ class AdminChangelogController extends Controller
         $announcement = Announcement::create([
             'title'        => $title,
             'body'         => $validated['notes'],
-            'audience'     => 'tenants',
+            'audience'     => 'admins',
             'created_by'   => auth('admin')->id(),
             'published_at' => now(),
         ]);

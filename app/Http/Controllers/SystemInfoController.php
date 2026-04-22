@@ -2,16 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Announcement;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Symfony\Component\Process\Process;
 
 class SystemInfoController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('role:church_admin');
-    }
 
     public function index()
     {
@@ -40,19 +37,26 @@ class SystemInfoController extends Controller
         return view('system.changelog', compact('changelogSections'));
     }
 
+    /**
+     * Get the list of version strings that Central Admin has broadcast.
+     */
+    private function getPushedVersions(): array
+    {
+        return Announcement::on('central')
+            ->where('title', 'like', 'Release v%')
+            ->whereNotNull('published_at')
+            ->pluck('title')
+            ->map(fn($t) => str_ireplace('release v', '', $t))
+            ->toArray();
+    }
+
     private function getLatestReleaseDate()
     {
-        $path = base_path('CHANGELOG.md');
-        
-        if (!File::exists($path)) {
-            return null;
-        }
+        // Use the filtered changelog to find the most recent pushed release date
+        $sections = $this->parseChangelog(1);
 
-        $contents = File::get($path);
-        
-        // Find first version line (e.g., ## [0.1.0] - 2026-01-15)
-        if (preg_match('/##\s+\[[^\]]+\]\s+-\s+(\d{4}-\d{2}-\d{2})/', $contents, $matches)) {
-            return $matches[1];
+        if (!empty($sections) && !empty($sections[0]['date'])) {
+            return $sections[0]['date'];
         }
 
         return null;
@@ -61,12 +65,13 @@ class SystemInfoController extends Controller
     private function parseChangelog($limit = null)
     {
         $path = base_path('CHANGELOG.md');
-        
+
         if (!File::exists($path)) {
             return [];
         }
 
         $contents = File::get($path);
+        $pushedVersions = $this->getPushedVersions();
         $sections = [];
         $count = 0;
 
@@ -83,7 +88,12 @@ class SystemInfoController extends Controller
             if (preg_match('/\[([^\]]+)\]\s+-\s+(\d{4}-\d{2}-\d{2})|(\[Unreleased\])/', $versionContent, $versionMatch)) {
                 $version = $versionMatch[1] ?? 'Unreleased';
                 $date = $versionMatch[2] ?? null;
-                
+
+                // Only show versions that have been officially pushed by central admin
+                if (!in_array($version, $pushedVersions)) {
+                    continue;
+                }
+
                 // Extract sections
                 $entries = [
                     'Added' => [],
