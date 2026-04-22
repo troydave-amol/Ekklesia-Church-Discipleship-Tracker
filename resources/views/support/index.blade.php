@@ -77,7 +77,7 @@
                         <th>Subject</th>
                         <th style="width: 120px;">Status</th>
                         <th style="width: 100px;">Priority</th>
-                        @if(auth()->user()->role->slug === 'church_admin')
+                        @if(auth()->user()->isChurchAdmin())
                             <th style="width: 150px;">Submitted by</th>
                         @endif
                         <th style="width: 120px;">Created</th>
@@ -117,8 +117,8 @@
                                     {{ ucfirst($ticket->priority) }}
                                 </span>
                             </td>
-                            @if(auth()->user()->role->slug === 'church_admin')
-                                <td>{{ $ticket->user->name }}</td>
+                            @if(auth()->user()->isChurchAdmin())
+                                <td>{{ $ticket->author_name ?? 'Unknown' }}</td>
                             @endif
                             <td style="color: #8B949E;">{{ $ticket->created_at->diffForHumans() }}</td>
                         </tr>

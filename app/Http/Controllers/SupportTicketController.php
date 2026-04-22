@@ -14,7 +14,7 @@ class SupportTicketController extends Controller
     {
         $user = auth()->user();
         
-        if ($user->role->slug === 'church_admin') {
+        if ($user->isChurchAdmin()) {
             $tickets = SupportTicket::where('tenant_id', tenant('id'))
                 ->with('user')
                 ->latest()

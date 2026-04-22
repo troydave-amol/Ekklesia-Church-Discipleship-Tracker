@@ -95,12 +95,12 @@
                 @enderror
             </div>
             <div style="display:flex;gap:8px;">
-                <button type="submit" class="ca-btn ca-btn-primary">Send Reply</button>
-                <form action="{{ route('admin.tickets.close', $ticket) }}" method="POST" style="margin:0;" onsubmit="return confirm('Close this ticket?')">
-                    @csrf @method('PATCH')
-                    <button type="submit" class="ca-btn ca-btn-ghost" style="color:#dc2626;">Close Ticket</button>
-                </form>
+                <button type="submit" class="ca-btn ca-btn-approve">Send Reply</button>
             </div>
+        </form>
+        <form action="{{ route('admin.tickets.close', $ticket) }}" method="POST" style="margin-top:12px;" onsubmit="return confirm('Close this ticket?')">
+            @csrf @method('PATCH')
+            <button type="submit" class="ca-btn ca-btn-reject">Close Ticket</button>
         </form>
     </div>
 </div>
