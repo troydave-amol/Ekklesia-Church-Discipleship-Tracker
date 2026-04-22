@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateDiscipleRequest;
+use App\Notifications\DiscipleAssigned;
 use App\Services\AttendanceService;
 use App\Services\DevotionalService;
 use App\Services\ProgramEnrollmentService;
@@ -129,7 +130,14 @@ class DiscipleController extends Controller
             return back()->with('error', 'Disciple limit reached. Please upgrade your plan.');
         }
 
-        $this->enrollmentService->enroll(auth()->user()->church_id, $request->validated());
+        $disciple = $this->enrollmentService->enroll(auth()->user()->church_id, $request->validated());
+
+        // Notify the assigned leader
+        $leaderId = $request->validated('leader_id');
+        if ($leaderId) {
+            $leader = User::find($leaderId);
+            $leader?->notify(new DiscipleAssigned($disciple, auth()->user()));
+        }
 
         return redirect()->route('users.index')->with('success', 'Member added.');
     }
@@ -167,6 +175,10 @@ class DiscipleController extends Controller
         $newRole = $data['role'] ?? null;
         unset($data['password'], $data['role']);
 
+        // Track leader change before update
+        $oldLeaderId = $User->membership?->leader_id;
+        $newLeaderId = $request->input('leader_id');
+
         $attrs = [
             'first_name' => $data['first_name'],
             'last_name'  => $data['last_name'],
@@ -188,6 +200,12 @@ class DiscipleController extends Controller
         $User->membership()->update($request->only([
             'leader_id', 'status', 'destiny_training_level', 'satellite', 'joined_at', 'baptized_at',
         ]));
+
+        // Notify new leader if leader was changed
+        if ($newLeaderId && $newLeaderId != $oldLeaderId) {
+            $newLeader = User::find($newLeaderId);
+            $newLeader?->notify(new DiscipleAssigned($User, auth()->user()));
+        }
 
         if ($newRole) {
             $roleId = Role::query()->where('slug', $newRole)->value('id');

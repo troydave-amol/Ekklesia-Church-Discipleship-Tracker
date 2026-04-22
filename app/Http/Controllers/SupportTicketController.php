@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\SupportTicket;
 use App\Models\SupportTicketReply;
+use App\Models\User;
+use App\Notifications\SupportTicketReplied;
 use Illuminate\Http\Request;
 
 class SupportTicketController extends Controller
@@ -70,6 +72,12 @@ class SupportTicketController extends Controller
             'user_id' => auth()->id(),
             'message' => $validated['message'],
         ]);
+
+        // Notify the ticket creator (unless they are the one replying)
+        $ticketOwner = User::find($ticket->user_id);
+        if ($ticketOwner && $ticketOwner->id !== auth()->id()) {
+            $ticketOwner->notify(new SupportTicketReplied($ticket, auth()->user()));
+        }
 
         return back()->with('success', 'Reply sent successfully.');
     }

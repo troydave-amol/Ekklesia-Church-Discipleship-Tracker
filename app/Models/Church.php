@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
 
 class Church extends Model
 {
@@ -38,17 +37,8 @@ class Church extends Model
         return (bool) $this->is_active;
     }
 
-    // ── Multi-tenancy Scope ────────────────────────────────────────
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        // Restrict to current tenant's church
-        static::addGlobalScope(function (Builder $query) {
-            if (tenant()) {
-                $query->where('id', tenant()->id);
-            }
-        });
-    }
+    // ── Multi-tenancy Note ─────────────────────────────────────
+    // Each tenant database is fully isolated (one church per DB).
+    // No global scope is needed here — stancl/tenancy handles
+    // database-level isolation automatically.
 }
