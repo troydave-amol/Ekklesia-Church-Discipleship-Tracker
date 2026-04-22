@@ -65,6 +65,25 @@ class AdminTicketController extends Controller
             $ticket->update(['status' => 'in_progress']);
         }
 
+        // Notify the tenant user who submitted the ticket
+        try {
+            $tenant = \App\Models\Tenant::find($ticket->tenant_id);
+            if ($tenant) {
+                tenancy()->initialize($tenant);
+
+                $ticketOwner = \App\Models\User::find($ticket->user_id);
+                if ($ticketOwner) {
+                    $adminName = auth('admin')->user()->name ?? 'Central Support';
+                    $ticketOwner->notify(new \App\Notifications\SupportTicketReplied($ticket, $adminName));
+                }
+
+                tenancy()->end();
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Failed to notify tenant user for ticket #{$ticket->id}: {$e->getMessage()}");
+            try { tenancy()->end(); } catch (\Throwable $ignored) {}
+        }
+
         \App\Models\VersionHistory::logChange(
             'support_ticket',
             $ticket->id,

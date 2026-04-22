@@ -79,7 +79,8 @@ class SupportTicketController extends Controller
         // Notify the ticket creator (unless they are the one replying)
         $ticketOwner = User::find($ticket->user_id);
         if ($ticketOwner && $ticketOwner->id !== auth()->id()) {
-            $ticketOwner->notify(new SupportTicketReplied($ticket, auth()->user()));
+            $replierName = trim(auth()->user()->first_name . ' ' . auth()->user()->last_name);
+            $ticketOwner->notify(new SupportTicketReplied($ticket, $replierName));
         }
 
         return back()->with('success', 'Reply sent successfully.');

@@ -3,7 +3,6 @@
 namespace App\Notifications;
 
 use App\Models\SupportTicket;
-use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
@@ -13,7 +12,7 @@ class SupportTicketReplied extends Notification
 
     public function __construct(
         private SupportTicket $ticket,
-        private User $repliedBy,
+        private string $replierName,
     ) {}
 
     public function via(object $notifiable): array
@@ -23,13 +22,11 @@ class SupportTicketReplied extends Notification
 
     public function toDatabase(object $notifiable): array
     {
-        $name = $this->repliedBy->first_name . ' ' . $this->repliedBy->last_name;
-
         return [
             'title'   => 'Ticket Reply',
-            'message' => "{$name} replied to \"{$this->ticket->subject}\".",
+            'message' => "{$this->replierName} replied to \"{$this->ticket->subject}\".",
             'icon'    => 'message-circle',
-            'url'     => route('support.show', $this->ticket->id),
+            'url'     => "/support/{$this->ticket->id}",
         ];
     }
 }
