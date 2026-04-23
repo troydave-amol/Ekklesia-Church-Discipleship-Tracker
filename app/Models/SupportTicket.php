@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Tenant;
 
 class SupportTicket extends Model
 {
@@ -12,6 +13,8 @@ class SupportTicket extends Model
     protected $fillable = [
         'tenant_id',
         'user_id',
+        'author_name',
+        'author_email',
         'subject',
         'priority',
         'status',
@@ -26,6 +29,11 @@ class SupportTicket extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
     }
 
     public function replies(): HasMany

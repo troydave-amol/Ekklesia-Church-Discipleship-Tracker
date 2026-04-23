@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\SupportTicket;
 use App\Models\SupportTicketReply;
+use App\Models\User;
+use App\Notifications\SupportTicketReplied;
 use Illuminate\Http\Request;
 
 class SupportTicketController extends Controller
@@ -12,7 +14,7 @@ class SupportTicketController extends Controller
     {
         $user = auth()->user();
         
-        if ($user->role->slug === 'church_admin') {
+        if ($user->isChurchAdmin()) {
             $tickets = SupportTicket::where('tenant_id', tenant('id'))
                 ->with('user')
                 ->latest()
@@ -36,9 +38,12 @@ class SupportTicketController extends Controller
             'message' => 'required|string|max:5000',
         ]);
 
+        $user = auth()->user();
         $ticket = SupportTicket::create([
             'tenant_id' => tenant('id'),
-            'user_id' => auth()->id(),
+            'user_id' => $user->id,
+            'author_name' => trim($user->first_name . ' ' . $user->last_name),
+            'author_email' => $user->email,
             'subject' => $validated['subject'],
             'priority' => $validated['priority'],
             'status' => 'open',
@@ -70,6 +75,13 @@ class SupportTicketController extends Controller
             'user_id' => auth()->id(),
             'message' => $validated['message'],
         ]);
+
+        // Notify the ticket creator (unless they are the one replying)
+        $ticketOwner = User::find($ticket->user_id);
+        if ($ticketOwner && $ticketOwner->id !== auth()->id()) {
+            $replierName = trim(auth()->user()->first_name . ' ' . auth()->user()->last_name);
+            $ticketOwner->notify(new SupportTicketReplied($ticket, $replierName));
+        }
 
         return back()->with('success', 'Reply sent successfully.');
     }

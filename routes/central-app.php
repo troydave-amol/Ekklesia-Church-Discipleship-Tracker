@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CentralDashboardController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminTicketController;
 use App\Http\Controllers\Admin\AdminAnnouncementController;
+use App\Http\Controllers\Admin\AdminChangelogController;
 use App\Http\Controllers\Admin\AdminRBACController;
 use App\Http\Controllers\Admin\TenantSignupController;
 use App\Http\Controllers\TenantRegistrationController;
@@ -49,6 +50,10 @@ Route::middleware(['auth:admin', 'admin_auth'])->prefix('admin')->name('admin.')
     // Announcements to Tenants
     Route::resource('announcements', AdminAnnouncementController::class);
     Route::post('/announcements/{announcement}/publish', [AdminAnnouncementController::class, 'publish'])->name('announcements.publish');
+
+    // System Changelog
+    Route::get('/changelog', [AdminChangelogController::class, 'index'])->name('changelog.index');
+    Route::post('/changelog/broadcast', [AdminChangelogController::class, 'broadcast'])->name('changelog.broadcast');
 
     // RBAC Management (superadmin only)
     Route::middleware('admin_role:superadmin')->prefix('rbac')->name('rbac.')->group(function () {

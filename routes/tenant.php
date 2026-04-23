@@ -137,10 +137,10 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
     // Support Tickets
     Route::get('/support', [SupportTicketController::class, 'index'])->name('support.index');
     Route::post('/support', [SupportTicketController::class, 'store'])->name('support.store');
+    Route::get('/support/admin', [SupportTicketController::class, 'adminIndex'])->middleware('role:church_admin')->name('support.admin');
     Route::get('/support/{ticket}', [SupportTicketController::class, 'show'])->name('support.show');
     Route::post('/support/{ticket}/reply', [SupportTicketController::class, 'reply'])->name('support.reply');
     Route::patch('/support/{ticket}/status', [SupportTicketController::class, 'updateStatus'])->name('support.updateStatus');
-    Route::get('/support/admin', [SupportTicketController::class, 'adminIndex'])->middleware('role:church_admin')->name('support.admin');
 
     // Announcements
     Route::get('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'index'])->name('announcements.index');

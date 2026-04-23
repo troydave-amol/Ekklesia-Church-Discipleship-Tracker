@@ -11,6 +11,7 @@ class SupportTicketReply extends Model
     protected $fillable = [
         'support_ticket_id',
         'user_id',
+        'admin_id',
         'message',
     ];
 
@@ -27,5 +28,18 @@ class SupportTicketReply extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function admin(): BelongsTo
+    {
+        return $this->belongsTo(AdminUser::class, 'admin_id');
+    }
+
+    /**
+     * Whether this reply was made by a central admin.
+     */
+    public function isAdminReply(): bool
+    {
+        return !is_null($this->admin_id);
     }
 }

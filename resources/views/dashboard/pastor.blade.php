@@ -178,9 +178,9 @@
                             </div>
                         </div>
                     </td>
-                    <td><span style="font-size:13px;color:var(--text-muted);">{{ $disciple->membership->destinyLevel() ?? '—' }}</span></td>
+                    <td><span style="font-size:13px;color:var(--text-muted);">{{ $disciple->membership?->destinyLevel() ?? '—' }}</span></td>
                     <td>
-                        @if($disciple->membership->leader)
+                        @if($disciple->membership?->leader)
                             <span style="font-size:13px;">{{ $disciple->membership->leader->first_name }} {{ $disciple->membership->leader->last_name }}</span>
                         @else
                             <span style="color:var(--text-dim);">Unassigned</span>
@@ -205,8 +205,8 @@
                         </div>
                     </td>
                     <td>
-                        <span class="badge {{ $disciple->membership->status === 'active' ? 'badge-green' : 'badge-red' }}">
-                            {{ strtoupper($disciple->membership->status) }}
+                        <span class="badge {{ ($disciple->membership?->status ?? 'inactive') === 'active' ? 'badge-green' : 'badge-red' }}">
+                            {{ strtoupper($disciple->membership?->status ?? 'inactive') }}
                         </span>
                     </td>
                     <td>

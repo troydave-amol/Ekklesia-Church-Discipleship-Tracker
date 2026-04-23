@@ -4,11 +4,13 @@
 @section('topbar-title', 'Announcements')
 
 @section('content')
-<div class="ca-page-head">
-    <h1 class="ca-page-title">System Announcements</h1>
-    <p class="ca-page-desc">Broadcast messages to admins and tenants. Create, edit, and track delivery.</p>
-    <a href="{{ route('admin.announcements.create') }}" class="ca-btn ca-btn-primary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<div class="ca-page-head" style="display:flex;align-items:flex-start;justify-content:space-between;">
+    <div>
+        <h1 class="ca-page-title">System Announcements</h1>
+        <p class="ca-page-desc">Broadcast messages to admins and tenants. Create, edit, and track delivery.</p>
+    </div>
+    <a href="{{ route('admin.announcements.create') }}" class="ca-btn ca-btn-approve">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
         New Announcement
@@ -40,7 +42,7 @@
                                 default => ucfirst($a->audience ?? 'all')
                             };
                         @endphp
-                        <span class="ca-badge">{{ $audienceLabel }}</span>
+                        <span class="ca-pill ca-pill-inactive">{{ $audienceLabel }}</span>
                     </td>
                     <td>
                         @if($a->published_at)

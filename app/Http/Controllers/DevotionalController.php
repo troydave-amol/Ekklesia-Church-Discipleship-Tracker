@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreDevotionalRequest;
+use App\Notifications\DevotionalCompleted;
 use App\Services\DevotionalService;
 use App\Models\Devotional;
 use App\Models\User;
@@ -71,6 +72,14 @@ class DevotionalController extends Controller
             date:         $request->date,
             completed:    (bool) $request->completed,
         );
+
+        // Notify the leader when a disciple completes a devotional
+        if ($devotional->completed && $targetUser->membership?->leader_id) {
+            $leader = User::find($targetUser->membership->leader_id);
+            if ($leader && $leader->id !== auth()->id()) {
+                $leader->notify(new DevotionalCompleted($targetUser, $request->date));
+            }
+        }
 
         return response()->json(['success' => true, 'completed' => $devotional->completed]);
     }

@@ -24,7 +24,8 @@ class AdminTicketController extends Controller
         if ($request->has('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('subject', 'like', "%{$request->search}%")
-                  ->orWhere('email', 'like', "%{$request->search}%");
+                  ->orWhere('author_name', 'like', "%{$request->search}%")
+                  ->orWhere('author_email', 'like', "%{$request->search}%");
             });
         }
 
@@ -51,18 +52,36 @@ class AdminTicketController extends Controller
     public function reply(Request $request, SupportTicket $ticket): RedirectResponse
     {
         $validated = $request->validate([
-            'body' => 'required|string|min:5',
+            'message' => 'required|string|min:5',
         ]);
 
         $ticket->replies()->create([
-            'body' => $validated['body'],
-            'replied_by' => 'admin:' . auth('admin')->id(),
-            'created_at' => now(),
+            'message' => $validated['message'],
+            'admin_id' => auth('admin')->id(),
         ]);
 
-        // Mark as responded if pending
+        // Mark as in_progress if still open
         if ($ticket->status === 'open') {
-            $ticket->update(['status' => 'responded']);
+            $ticket->update(['status' => 'in_progress']);
+        }
+
+        // Notify the tenant user who submitted the ticket
+        try {
+            $tenant = \App\Models\Tenant::find($ticket->tenant_id);
+            if ($tenant) {
+                tenancy()->initialize($tenant);
+
+                $ticketOwner = \App\Models\User::find($ticket->user_id);
+                if ($ticketOwner) {
+                    $adminName = auth('admin')->user()->name ?? 'Central Support';
+                    $ticketOwner->notify(new \App\Notifications\SupportTicketReplied($ticket, $adminName));
+                }
+
+                tenancy()->end();
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Failed to notify tenant user for ticket #{$ticket->id}: {$e->getMessage()}");
+            try { tenancy()->end(); } catch (\Throwable $ignored) {}
         }
 
         \App\Models\VersionHistory::logChange(
@@ -72,7 +91,7 @@ class AdminTicketController extends Controller
             'updated',
             "Admin replied to ticket: {$ticket->subject}",
             ['status' => 'open'],
-            ['status' => 'responded']
+            ['status' => 'in_progress']
         );
 
         return back()->with('success', 'Reply sent.');

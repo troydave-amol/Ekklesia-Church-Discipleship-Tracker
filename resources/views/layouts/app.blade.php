@@ -465,6 +465,24 @@ document.querySelectorAll('.alert').forEach(el => {
 
 // CSRF for fetch
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+// Notification Dropdown
+const notifTrigger = document.getElementById('notifTrigger');
+const notifDropdown = document.getElementById('notifDropdown');
+const notifWrapper = document.getElementById('notifDropdownWrapper');
+
+if (notifTrigger && notifDropdown) {
+    notifTrigger.addEventListener('click', (e) => {
+        const isOpen = notifDropdown.style.display === 'flex';
+        notifDropdown.style.display = isOpen ? 'none' : 'flex';
+        e.stopPropagation();
+    });
+    document.addEventListener('click', (e) => {
+        if (!notifWrapper.contains(e.target)) {
+            notifDropdown.style.display = 'none';
+        }
+    });
+}
 </script>
 
 @stack('scripts')

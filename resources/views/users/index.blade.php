@@ -155,14 +155,14 @@ foreach($leaders as $idx => $leader) {
                             <td>
                                 @php
                                     $levelColors = ['life_class'=>'badge-blue','sol1'=>'badge-purple','sol2'=>'badge-orange','sol3'=>'badge-green','graduate'=>'badge-gold'];
-                                    $lvl = $d->membership->destiny_training_level?->value ?? 'life_class';
+                                    $lvl = $d->membership?->destiny_training_level?->value ?? 'life_class';
                                 @endphp
                                 <span class="badge {{ $levelColors[$lvl] ?? 'badge-blue' }}">
                                     {{ strtoupper(str_replace('_',' ',$lvl)) }}
                                 </span>
                             </td>
                             <td>
-                                @if($d->membership->leader)
+                                @if($d->membership?->leader)
                                     <div class="flex items-center gap-8">
                                         <div class="avatar avatar-sm" style="background:rgba(88,166,255,.15);border:1.5px solid rgba(88,166,255,.3);color:var(--blue);font-size:10px;">
                                             {{ strtoupper(substr($d->membership->leader->first_name,0,1).substr($d->membership->leader->last_name,0,1)) }}
@@ -173,7 +173,7 @@ foreach($leaders as $idx => $leader) {
                                     <a href="{{ route('users.edit', $d) }}" class="btn btn-ghost btn-sm">Assign</a>
                                 @endif
                             </td>
-                            <td><span style="font-size:13px;color:var(--text-muted);">{{ $d->membership->satellite ?? '—' }}</span></td>
+                            <td><span style="font-size:13px;color:var(--text-muted);">{{ $d->membership?->satellite ?? '—' }}</span></td>
                             <td id="user-att-{{ $d->id }}">
                                 <div class="flex items-center gap-8">
                                     <div class="progress" style="flex:1;"><div class="progress-bar"></div></div>
@@ -187,8 +187,8 @@ foreach($leaders as $idx => $leader) {
                                 </div>
                             </td>
                             <td>
-                                <span class="badge {{ match($d->membership->status??'inactive'){ 'active'=>'badge-green','visitor'=>'badge-blue','new_member'=>'badge-purple',default=>'badge-red' } }}">
-                                    {{ strtoupper(str_replace('_',' ',$d->membership->status ?? 'inactive')) }}
+                                <span class="badge {{ match($d->membership?->status??'inactive'){ 'active'=>'badge-green','visitor'=>'badge-blue','new_member'=>'badge-purple',default=>'badge-red' } }}">
+                                    {{ strtoupper(str_replace('_',' ',$d->membership?->status ?? 'inactive')) }}
                                 </span>
                             </td>
                             @unless($leaderScope ?? false)

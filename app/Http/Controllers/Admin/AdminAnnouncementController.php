@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\BroadcastAnnouncementJob;
 use App\Models\Announcement;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -58,8 +59,13 @@ class AdminAnnouncementController extends Controller
             $announcement->toArray()
         );
 
+        // Dispatch broadcast if publishing immediately
+        if (!empty($validated['publish_now'])) {
+            BroadcastAnnouncementJob::dispatch($announcement->id);
+        }
+
         return redirect()->route('admin.announcements.index')
-            ->with('success', 'Announcement created' . ($validated['publish_now'] ? ' and published.' : '.'));
+            ->with('success', 'Announcement created' . (!empty($validated['publish_now']) ? ' and published.' : '.'));
     }
 
     /**
@@ -103,6 +109,9 @@ class AdminAnnouncementController extends Controller
     public function publish(Announcement $announcement): RedirectResponse
     {
         $announcement->update(['published_at' => now()]);
+
+        // Dispatch broadcast to all tenants
+        BroadcastAnnouncementJob::dispatch($announcement->id);
 
         \App\Models\VersionHistory::logChange(
             'announcement',
