@@ -132,6 +132,10 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
         Route::get('/settings/church', [SettingsController::class, 'church'])->name('settings.church');
         Route::patch('/settings/church', [SettingsController::class, 'updateChurch'])->name('settings.church.update');
         Route::get('/settings/upgrade/{plan}', [SettingsController::class, 'upgrade'])->name('settings.upgrade');
+
+        // Appearance / White-labeling
+        Route::get('/settings/appearance', [\App\Http\Controllers\AppearanceController::class, 'edit'])->name('settings.appearance');
+        Route::put('/settings/appearance', [\App\Http\Controllers\AppearanceController::class, 'update'])->name('settings.appearance.update');
     });
 
     // Support Tickets
