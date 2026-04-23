@@ -26,6 +26,12 @@
             </svg>
             Edit Tenant
         </a>
+        <a href="{{ route('admin.rbac.show', $tenant) }}" class="ca-btn ca-cta-ghost" style="gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3m0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22"/>
+            </svg>
+            Manage RBAC
+        </a>
         <form method="POST" action="{{ route('admin.tenants.toggle-status', $tenant) }}" class="ca-inline">
             @csrf
             @method('PATCH')
