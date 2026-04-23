@@ -52,7 +52,7 @@ class SystemChangelogController extends Controller
 
         $tenantId = tenancy()->tenant->getTenantKey();
 
-        TenantReleaseAcknowledgment::on('central')->updateOrCreate(
+        TenantReleaseAcknowledgment::updateOrCreate(
             [
                 'version_history_id' => $id,
                 'tenant_id'          => $tenantId,

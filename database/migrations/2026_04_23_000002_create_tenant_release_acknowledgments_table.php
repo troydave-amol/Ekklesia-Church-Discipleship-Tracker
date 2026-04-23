@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamp('acknowledged_at');
             $table->timestamps();
 
-            $table->unique(['version_history_id', 'tenant_id']);
+            $table->unique(['version_history_id', 'tenant_id'], 'tenant_release_ack_unique');
         });
     }
 
