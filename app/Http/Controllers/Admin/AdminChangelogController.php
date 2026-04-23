@@ -3,129 +3,173 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\BroadcastAnnouncementJob;
-use App\Models\Announcement;
+use App\Models\Tenant;
+use App\Models\TenantReleaseAcknowledgment;
+use App\Models\VersionHistory;
+use App\Notifications\SystemUpdateAvailable;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
 
 class AdminChangelogController extends Controller
 {
     /**
-     * Display parsed changelog with broadcast controls.
+     * List all product releases with acknowledgment stats.
      */
     public function index(): View
     {
-        $sections = $this->parseChangelog();
+        $releases = VersionHistory::with('acknowledgments')
+            ->orderByDesc('published_at')
+            ->orderByDesc('created_at')
+            ->paginate(15);
 
-        // Check which versions have already been broadcast
-        $broadcastedTitles = Announcement::where('title', 'like', 'Release v%')
-            ->whereNotNull('published_at')
-            ->pluck('title')
-            ->map(fn($t) => strtolower($t))
-            ->toArray();
+        $totalTenants  = Tenant::count();
+        $latestRelease = VersionHistory::published()->latestFirst()->first();
 
-        return view('admin.changelog.index', compact('sections', 'broadcastedTitles'));
+        $totalReleases  = VersionHistory::count();
+        $publishedCount = VersionHistory::where('status', 'published')->count();
+        $draftCount     = VersionHistory::where('status', 'draft')->count();
+        $pushedCount    = VersionHistory::whereNotNull('pushed_at')->count();
+
+        return view('admin.changelog.index', compact(
+            'releases',
+            'totalTenants',
+            'latestRelease',
+            'totalReleases',
+            'publishedCount',
+            'draftCount',
+            'pushedCount',
+        ));
     }
 
     /**
-     * Broadcast a specific changelog version to all tenants as an Announcement.
+     * Show create form for a new release draft.
      */
-    public function broadcast(Request $request): RedirectResponse
+    public function create(): View
+    {
+        return view('admin.changelog.create');
+    }
+
+    /**
+     * Store a new release as draft.
+     */
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'version' => 'required|string|max:50',
-            'notes'   => 'required|string',
+            'version'      => 'required|string|max:20|unique:central.version_history,version',
+            'title'        => 'required|string|max:150',
+            'release_notes'=> 'required|string',
+            'features'     => 'nullable|array',
+            'features.*'   => 'string|max:200',
+            'bug_fixes'    => 'nullable|array',
+            'bug_fixes.*'  => 'string|max:200',
+            'is_major'     => 'boolean',
         ]);
 
-        $title = "Release v{$validated['version']}";
+        // Filter out empty entries from dynamic lists
+        $validated['features']  = array_values(array_filter($validated['features']  ?? []));
+        $validated['bug_fixes'] = array_values(array_filter($validated['bug_fixes'] ?? []));
+        $validated['is_major']  = $request->boolean('is_major');
+        $validated['status']    = 'draft';
 
-        // Prevent duplicate broadcasts
-        $existing = Announcement::where('title', $title)
-            ->whereNotNull('published_at')
-            ->first();
+        VersionHistory::create($validated);
 
-        if ($existing) {
-            return back()->with('error', "Version {$validated['version']} has already been broadcast.");
-        }
-
-        $announcement = Announcement::create([
-            'title'        => $title,
-            'body'         => $validated['notes'],
-            'audience'     => 'admins',
-            'created_by'   => auth('admin')->id(),
-            'published_at' => now(),
-        ]);
-
-        BroadcastAnnouncementJob::dispatch($announcement->id);
-
-        \App\Models\VersionHistory::logChange(
-            'announcement',
-            $announcement->id,
-            auth('admin')->id(),
-            'created',
-            "Broadcast changelog release: {$title}"
-        );
-
-        return back()->with('success', "Version {$validated['version']} broadcast to all tenants.");
+        return redirect()
+            ->route('admin.changelog.index')
+            ->with('success', "Release v{$validated['version']} saved as draft.");
     }
 
     /**
-     * Parse the CHANGELOG.md file into structured sections.
-     * Reuses the same logic from SystemInfoController.
+     * Publish a draft release (AJAX).
      */
-    private function parseChangelog(): array
+    public function publish(int $id): JsonResponse
     {
-        $path = base_path('CHANGELOG.md');
+        $release = VersionHistory::findOrFail($id);
 
-        if (!File::exists($path)) {
-            return [];
+        if ($release->status === 'published') {
+            return response()->json(['success' => false, 'message' => 'Already published.'], 422);
         }
 
-        $contents = File::get($path);
-        $sections = [];
+        $release->status       = 'published';
+        $release->published_at = now();
+        $release->save();
 
-        // Split by version headers
-        $versions = preg_split('/^##\s+/m', $contents);
-        array_shift($versions); // Remove content before first version
+        return response()->json([
+            'success' => true,
+            'message' => "v{$release->version} published.",
+        ]);
+    }
 
-        foreach ($versions as $versionContent) {
-            // Extract version and date
-            if (preg_match('/\[([^\]]+)\]\s+-\s+(\d{4}-\d{2}-\d{2})|\[(Unreleased)\]/', $versionContent, $versionMatch)) {
-                $version = $versionMatch[1] ?: ($versionMatch[3] ?? 'Unreleased');
-                $date = $versionMatch[2] ?? null;
+    /**
+     * Broadcast a published release to all tenant church_admins (AJAX).
+     */
+    public function broadcast(int $id): JsonResponse
+    {
+        $release = VersionHistory::findOrFail($id);
 
-                // Extract sections (Added, Changed, Fixed, Removed)
-                $entries = [
-                    'Added'   => [],
-                    'Changed' => [],
-                    'Fixed'   => [],
-                    'Removed' => [],
-                ];
+        if ($release->status !== 'published') {
+            return response()->json(['success' => false, 'message' => 'Release must be published first.'], 422);
+        }
 
-                foreach ($entries as $section => $placeholder) {
-                    $pattern = '/###\s+' . $section . '\s*\n(.*?)(?=###\s+|$)/s';
-                    if (preg_match($pattern, $versionContent, $matches)) {
-                        $lines = array_filter(
-                            array_map('trim', explode("\n", $matches[1])),
-                            fn($line) => !empty($line) && $line[0] === '-'
-                        );
-                        $entries[$section] = array_map(
-                            fn($line) => ltrim($line, '- '),
-                            $lines
-                        );
-                    }
+        $tenants      = Tenant::all();
+        $tenantCount  = $tenants->count();
+
+        foreach ($tenants as $tenant) {
+            tenancy()->initialize($tenant);
+
+            try {
+                $admins = User::whereIn('role', ['church_admin', 'pastor'])->get();
+                foreach ($admins as $admin) {
+                    $admin->notify(new SystemUpdateAvailable($release));
                 }
-
-                $sections[] = [
-                    'version' => $version,
-                    'date'    => $date,
-                    'entries' => array_filter($entries),
-                ];
+            } finally {
+                tenancy()->end();
             }
         }
 
-        return $sections;
+        $release->pushed_at = now();
+        $release->pushed_by = auth()->guard('admin')->id();
+        $release->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Pushed to {$tenantCount} tenants.",
+            'tenant_count' => $tenantCount,
+        ]);
+    }
+
+    /**
+     * Show per-tenant acknowledgment status for a release.
+     */
+    public function tenantStatus(int $id): View
+    {
+        $release = VersionHistory::with('acknowledgments')->findOrFail($id);
+        $tenants = Tenant::all();
+
+        $acknowledgedTenantIds = $release->acknowledgments
+            ->pluck('tenant_id')
+            ->flip();
+
+        $tenantsWithStatus = $tenants->map(function ($tenant) use ($acknowledgedTenantIds, $release) {
+            $ack = $release->acknowledgments
+                ->firstWhere('tenant_id', $tenant->id);
+            return [
+                'tenant'          => $tenant,
+                'acknowledged'    => $ack !== null,
+                'acknowledged_at' => $ack?->acknowledged_at,
+            ];
+        });
+
+        $acknowledgedCount = $tenantsWithStatus->where('acknowledged', true)->count();
+        $pendingCount      = $tenantsWithStatus->where('acknowledged', false)->count();
+
+        return view('admin.changelog.tenants', compact(
+            'release',
+            'tenantsWithStatus',
+            'acknowledgedCount',
+            'pendingCount',
+        ));
     }
 }

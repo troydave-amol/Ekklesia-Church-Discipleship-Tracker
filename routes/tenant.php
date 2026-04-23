@@ -16,6 +16,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SystemInfoController;
+use App\Http\Controllers\SystemChangelogController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -150,10 +151,14 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
 
-    // System Info (Pastor only)
+    // System Info (church_admin only)
     Route::middleware('role:church_admin')->group(function () {
-        Route::get('/system/info', [SystemInfoController::class, 'index'])->name('system.info');
-        Route::get('/system/migrations', [SystemInfoController::class, 'migrations'])->name('system.migrations');
-        Route::get('/system/changelog', [SystemInfoController::class, 'changelog'])->name('system.changelog');
+        Route::get('/system/info',        [SystemInfoController::class, 'index'])->name('system.info');
+        Route::get('/system/migrations',  [SystemInfoController::class, 'migrations'])->name('system.migrations');
+
+        // Product release changelog (now DB-driven via SystemChangelogController)
+        Route::get('/system/changelog',   [SystemChangelogController::class, 'index'])->name('system.changelog');
+        Route::post('/system/changelog/{id}/acknowledge', [SystemChangelogController::class, 'acknowledge'])
+             ->name('system.changelog.acknowledge');
     });
 });
