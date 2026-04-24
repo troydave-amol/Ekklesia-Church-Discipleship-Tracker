@@ -27,6 +27,7 @@ class UserFactory extends Factory
         $last = fake()->lastName();
 
         return [
+            'role_id' => null,
             'first_name' => $first,
             'last_name' => $last,
             'email' => fake()->unique()->safeEmail(),

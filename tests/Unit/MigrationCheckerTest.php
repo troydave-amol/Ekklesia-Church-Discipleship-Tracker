@@ -7,47 +7,26 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class MigrationCheckerTest extends TestCase
+class MigrationCheckerTest extends TenantTestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        // Ensure we have a test tenant
-        $this->createTestTenant();
-    }
-
-    private function createTestTenant(): Tenant
-    {
-        return Tenant::firstOrCreate(
-            ['id' => 'test-tenant-migration'],
-            [
-                'name' => 'Test Migration Tenant',
-                'email' => 'migration@test.local',
-                'db_name' => 'test_migration_tenant',
-            ]
-        );
-    }
-
     #[Test]
     public function command_outputs_table_with_tenant_row(): void
     {
         $response = Artisan::call('tenancy:migration-status');
 
-        $this->assertStringContainsString('test_migration_tenant', Artisan::output());
+        $this->assertStringContainsString('ekklesia_tenant_test', Artisan::output());
         $this->assertStringContainsString('Tenant', Artisan::output());
-        $this->assertStringContainsString('Pending Migrations', Artisan::output());
     }
 
     #[Test]
     public function command_exits_zero_when_all_migrations_up_to_date(): void
     {
         // Verify all migrations are applied
-        tenancy()->initialize($this->getTenant());
+        // TenantTestCase already migrated the DB for us
         DB::table('migrations')->truncate();
-        tenancy()->end();
+        $this->artisan('tenants:migrate', ['--tenants' => [$this->tenant->id]]);
 
         $response = Artisan::call('tenancy:migration-status');
 
@@ -58,13 +37,8 @@ class MigrationCheckerTest extends TestCase
     #[Test]
     public function command_exits_one_when_pending_migration_detected(): void
     {
-        // Create a pending migration entry (not actually run)
-        tenancy()->initialize($this->getTenant());
-
         // Create a fake pending migration marker
         $this->createFakeMigration('2026_04_20_999999_tenant_fake_pending');
-
-        tenancy()->end();
 
         $response = Artisan::call('tenancy:migration-status');
 

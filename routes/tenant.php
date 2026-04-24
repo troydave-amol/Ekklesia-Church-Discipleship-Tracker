@@ -17,6 +17,14 @@ use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SystemInfoController;
 use App\Http\Controllers\SystemChangelogController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Auth\ConfirmablePasswordController;
+use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use App\Http\Controllers\Auth\EmailVerificationPromptController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\VerifyEmailController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -26,6 +34,12 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
+
+// Password Reset routes (Breeze-compatible, backed by Auth controllers)
+Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
+Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
+Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
+Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.store');
 
 Route::middleware(['auth', 'church.tenant'])->group(function () {
 
@@ -123,17 +137,26 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
         Route::post('/devotionals/self', [DevotionalController::class, 'markComplete'])->name('devotionals.complete');
     });
 
-    Route::get('/lessons', [LessonController::class, 'index'])->name('lessons.index');
-    Route::get('lessons/{lesson}', [LessonController::class, 'show'])->name('lessons.show');
+    // Profile routes
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('/settings/church', [SettingsController::class, 'church'])->name('settings.church');
-    Route::patch('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password');
+    // Password update
+    Route::put('/password', [PasswordController::class, 'update'])->name('password.update');
 
-    Route::middleware('role:church_admin,pastor')->group(function () {
-        Route::get('/settings/church', [SettingsController::class, 'church'])->name('settings.church');
-        Route::patch('/settings/church', [SettingsController::class, 'updateChurch'])->name('settings.church.update');
-        Route::get('/settings/upgrade/{plan}', [SettingsController::class, 'upgrade'])->name('settings.upgrade');
-    });
+    // Email verification
+    Route::get('/verify-email', [EmailVerificationPromptController::class, '__invoke'])->name('verification.notice');
+    Route::get('/verify-email/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+    Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
+
+    // Confirm password
+    Route::get('/confirm-password', [ConfirmablePasswordController::class, 'show'])->name('password.confirm');
+    Route::post('/confirm-password', [ConfirmablePasswordController::class, 'store']);
 
     // Support Tickets
     Route::get('/support', [SupportTicketController::class, 'index'])->name('support.index');

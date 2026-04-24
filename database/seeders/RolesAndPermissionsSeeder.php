@@ -14,33 +14,29 @@ class RolesAndPermissionsSeeder extends Seeder
     public function run(): void
     {
         // Create roles
-        $churchAdmin = DB::connection('tenant')->table('roles')->insertGetId([
-            'slug' => 'church_admin',
-            'name' => 'Church Administrator',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $churchAdmin = DB::connection('tenant')->table('roles')->updateOrInsert(
+            ['slug' => 'church_admin'],
+            ['name' => 'Church Administrator', 'created_at' => now(), 'updated_at' => now()]
+        );
+        $churchAdmin = DB::connection('tenant')->table('roles')->where('slug', 'church_admin')->value('id');
 
-        $programLeader = DB::connection('tenant')->table('roles')->insertGetId([
-            'slug' => 'program_leader',
-            'name' => 'Program Leader',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $programLeader = DB::connection('tenant')->table('roles')->updateOrInsert(
+            ['slug' => 'program_leader'],
+            ['name' => 'Program Leader', 'created_at' => now(), 'updated_at' => now()]
+        );
+        $programLeader = DB::connection('tenant')->table('roles')->where('slug', 'program_leader')->value('id');
 
-        $cellLeader = DB::connection('tenant')->table('roles')->insertGetId([
-            'slug' => 'cell_leader',
-            'name' => 'Cell Leader',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $cellLeader = DB::connection('tenant')->table('roles')->updateOrInsert(
+            ['slug' => 'cell_leader'],
+            ['name' => 'Cell Leader', 'created_at' => now(), 'updated_at' => now()]
+        );
+        $cellLeader = DB::connection('tenant')->table('roles')->where('slug', 'cell_leader')->value('id');
 
-        $disciple = DB::connection('tenant')->table('roles')->insertGetId([
-            'slug' => 'disciple',
-            'name' => 'Disciple',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $disciple = DB::connection('tenant')->table('roles')->updateOrInsert(
+            ['slug' => 'disciple'],
+            ['name' => 'Disciple', 'created_at' => now(), 'updated_at' => now()]
+        );
+        $disciple = DB::connection('tenant')->table('roles')->where('slug', 'disciple')->value('id');
 
         // Create permissions (exact slugs required by access matrix)
         $permissionSlugs = [
@@ -62,12 +58,11 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $permissionIds = [];
         foreach ($permissionSlugs as $slug => $name) {
-            $permissionIds[$slug] = DB::connection('tenant')->table('permissions')->insertGetId([
-                'slug' => $slug,
-                'name' => $name,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            DB::connection('tenant')->table('permissions')->updateOrInsert(
+                ['slug' => $slug],
+                ['name' => $name, 'created_at' => now(), 'updated_at' => now()]
+            );
+            $permissionIds[$slug] = DB::connection('tenant')->table('permissions')->where('slug', $slug)->value('id');
         }
 
         // Assign permissions to roles
@@ -76,7 +71,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // church_admin (pastor) gets all permissions
         foreach (array_keys($permissionSlugs) as $slug) {
-            $assign[] = ['role_id' => $churchAdmin, 'permission_id' => $permissionIds[$slug], 'created_at' => now(), 'updated_at' => now()];
+            $assign[] = ['role_id' => $churchAdmin, 'permission_id' => $permissionIds[$slug]];
         }
 
         // program_leader
@@ -85,7 +80,7 @@ class RolesAndPermissionsSeeder extends Seeder
         ];
         foreach ($programLeaderPerms as $slug) {
             if (isset($permissionIds[$slug])) {
-                $assign[] = ['role_id' => $programLeader, 'permission_id' => $permissionIds[$slug], 'created_at' => now(), 'updated_at' => now()];
+                $assign[] = ['role_id' => $programLeader, 'permission_id' => $permissionIds[$slug]];
             }
         }
 
@@ -93,7 +88,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $cellLeaderPerms = ['view-programs', 'view-lessons', 'update-own-attendance', 'update-own-devotional'];
         foreach ($cellLeaderPerms as $slug) {
             if (isset($permissionIds[$slug])) {
-                $assign[] = ['role_id' => $cellLeader, 'permission_id' => $permissionIds[$slug], 'created_at' => now(), 'updated_at' => now()];
+                $assign[] = ['role_id' => $cellLeader, 'permission_id' => $permissionIds[$slug]];
             }
         }
 
@@ -101,10 +96,12 @@ class RolesAndPermissionsSeeder extends Seeder
         $disciplePerms = ['view-programs', 'enroll-program', 'view-lessons', 'update-own-attendance', 'update-own-devotional'];
         foreach ($disciplePerms as $slug) {
             if (isset($permissionIds[$slug])) {
-                $assign[] = ['role_id' => $disciple, 'permission_id' => $permissionIds[$slug], 'created_at' => now(), 'updated_at' => now()];
+                $assign[] = ['role_id' => $disciple, 'permission_id' => $permissionIds[$slug]];
             }
         }
 
-        DB::connection('tenant')->table('permission_role')->insert($assign);
+        foreach ($assign as $row) {
+            DB::connection('tenant')->table('permission_role')->updateOrInsert($row, $row);
+        }
     }
 }
