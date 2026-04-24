@@ -9,18 +9,25 @@ use App\Jobs\ScaffoldFeatureJob;
 use App\Models\FeatureUpdate;
 use App\Models\Tenant;
 use App\Models\TenantFeatureInstallation;
+use App\Models\VersionHistory;
 use Illuminate\Http\Request;
 
 class FeatureUpdateController extends Controller
 {
     /**
-     * List all feature updates, newest first.
+     * List all feature updates and app versions, newest first.
      */
     public function index()
     {
-        $featureUpdates = FeatureUpdate::orderByDesc('created_at')->get();
+        $featureUpdates = FeatureUpdate::withCount([
+            'installations as installed_count' => function ($query) {
+                $query->where('status', 'installed');
+            }
+        ])->orderByDesc('created_at')->get();
+        $versionHistories = VersionHistory::withCount('acknowledgments')->orderByDesc('created_at')->get();
+        $totalTenants = Tenant::active()->count();
 
-        return view('admin.feature-updates.index', compact('featureUpdates'));
+        return view('admin.feature-updates.index', compact('featureUpdates', 'versionHistories', 'totalTenants'));
     }
 
     /**
@@ -42,12 +49,29 @@ class FeatureUpdateController extends Controller
             'version'     => ['required', 'string', 'max:50'],
             'description' => ['nullable', 'string'],
             'type'        => ['required', 'in:feature,patch,data'],
+            'fields'      => ['nullable', 'array'],
+            'fields.*.name' => ['required', 'string'],
+            'fields.*.type' => ['required', 'string'],
+            'fields.*.nullable' => ['nullable', 'boolean'],
+            'scaffold'    => ['nullable', 'array'],
+            'seed_count'  => ['nullable', 'integer', 'min:1', 'max:500'],
         ]);
 
-        $featureUpdate = FeatureUpdate::create(array_merge($validated, [
-            'status'  => 'draft',
-            'payload' => [],
-        ]));
+        $payload = [
+            'fields'     => $validated['fields'] ?? [],
+            'scaffold'   => $validated['scaffold'] ?? [],
+            'seed_count' => $validated['seed_count'] ?? 50,
+        ];
+
+        $featureUpdate = FeatureUpdate::create([
+            'name'        => $validated['name'],
+            'slug'        => $validated['slug'],
+            'version'     => $validated['version'],
+            'description' => $validated['description'],
+            'type'        => $validated['type'],
+            'status'      => 'draft',
+            'payload'     => $payload,
+        ]);
 
         ScaffoldFeatureJob::dispatch($featureUpdate);
 
@@ -63,7 +87,60 @@ class FeatureUpdateController extends Controller
     {
         $featureUpdate->load('installations.tenant');
 
-        return view('admin.feature-updates.show', compact('featureUpdate'));
+        $payload = $featureUpdate->payload ?? [];
+        $model   = $payload['model'] ?? null;
+        $migFile = $payload['migration_file'] ?? null;
+
+        $files = [];
+        if ($model) {
+            $files = [
+                [
+                    'label' => "database/migrations/tenant/{$migFile}.php",
+                    'path'  => database_path("migrations/tenant/{$migFile}.php"),
+                    'key'   => 'migration',
+                ],
+                [
+                    'label' => "app/Models/{$model}.php",
+                    'path'  => app_path("Models/{$model}.php"),
+                    'key'   => 'model',
+                ],
+                [
+                    'label' => "database/factories/{$model}Factory.php",
+                    'path'  => database_path("factories/{$model}Factory.php"),
+                    'key'   => 'factory',
+                ],
+                [
+                    'label' => "database/seeders/{$model}Seeder.php",
+                    'path'  => database_path("seeders/{$model}Seeder.php"),
+                    'key'   => 'seeder',
+                ],
+                [
+                    'label' => "app/Http/Controllers/{$model}Controller.php",
+                    'path'  => app_path("Http/Controllers/{$model}Controller.php"),
+                    'key'   => 'controller',
+                ],
+                [
+                    'label' => "app/Http/Requests/{$model}Request.php",
+                    'path'  => app_path("Http/Requests/{$model}Request.php"),
+                    'key'   => 'request',
+                ],
+            ];
+
+            foreach ($files as &$f) {
+                $f['exists'] = \Illuminate\Support\Facades\File::exists($f['path']);
+            }
+        }
+
+        return view('admin.feature-updates.show', compact('featureUpdate', 'files'));
+    }
+
+    /**
+     * Show a list of all tenants with RBAC management links.
+     */
+    public function rbac()
+    {
+        $tenants = \App\Models\Tenant::orderBy('name')->get();
+        return view('admin.feature-updates.rbac', compact('tenants'));
     }
 
     /**

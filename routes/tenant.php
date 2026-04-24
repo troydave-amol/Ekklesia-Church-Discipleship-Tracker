@@ -197,7 +197,6 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
     // System Info (church_admin only)
     Route::middleware('role:church_admin')->group(function () {
         Route::get('/system/info',        [SystemInfoController::class, 'index'])->name('system.info');
-        Route::get('/system/migrations',  [SystemInfoController::class, 'migrations'])->name('system.migrations');
 
         // Product release changelog (now DB-driven via SystemChangelogController)
         Route::get('/system/changelog',   [SystemChangelogController::class, 'index'])->name('system.changelog');

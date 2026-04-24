@@ -33,9 +33,8 @@
         <div class="ca-form-group">
             <label class="ca-label">Role</label>
             <select name="role" class="ca-select" required>
-                <option value="super_admin" {{ old('role', $admin->role) === 'super_admin' ? 'selected' : '' }}>Super Admin (Full Access)</option>
-                <option value="admin" {{ old('role', $admin->role) === 'admin' ? 'selected' : '' }}>Admin (Manage Tenants)</option>
-                <option value="support" {{ old('role', $admin->role) === 'support' ? 'selected' : '' }}>Support (Tickets Only)</option>
+                <option value="superadmin" {{ old('role', $admin->role) === 'superadmin' ? 'selected' : '' }}>Super Admin (Full Access)</option>
+                <option value="manager" {{ old('role', $admin->role) === 'manager' ? 'selected' : '' }}>Manager (Manage Tenants)</option>
                 <option value="viewer" {{ old('role', $admin->role) === 'viewer' ? 'selected' : '' }}>Viewer (Read-Only)</option>
             </select>
             @error('role')
@@ -45,11 +44,11 @@
 
         <div class="ca-form-group">
             <label class="ca-label">Status</label>
-            <select name="status" class="ca-select" required>
-                <option value="active" {{ old('status', $admin->status) === 'active' ? 'selected' : '' }}>Active</option>
-                <option value="inactive" {{ old('status', $admin->status) === 'inactive' ? 'selected' : '' }}>Inactive</option>
+            <select name="is_active" class="ca-select" required>
+                <option value="1" {{ old('is_active', $admin->is_active) ? 'selected' : '' }}>Active</option>
+                <option value="0" {{ !old('is_active', $admin->is_active) ? 'selected' : '' }}>Inactive</option>
             </select>
-            @error('status')
+            @error('is_active')
                 <span class="ca-error">{{ $message }}</span>
             @enderror
         </div>

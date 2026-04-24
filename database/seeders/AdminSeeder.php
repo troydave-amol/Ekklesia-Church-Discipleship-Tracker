@@ -20,8 +20,8 @@ class AdminSeeder extends Seeder
     public function run(): void
     {
         // Check if a super_admin already exists
-        $superAdminExists = AdminUser::where('role', 'super_admin')
-            ->where('status', 'active')
+        $superAdminExists = AdminUser::where('role', 'superadmin')
+            ->where('is_active', true)
             ->exists();
 
         if ($superAdminExists) {
@@ -34,8 +34,8 @@ class AdminSeeder extends Seeder
             'name' => 'System Administrator',
             'email' => 'admin@church.local',
             'password' => Hash::make('admin@123'),
-            'role' => 'super_admin',
-            'status' => 'active',
+            'role' => 'superadmin',
+            'is_active' => true,
         ]);
 
         $this->command->info("Super admin user created successfully!");

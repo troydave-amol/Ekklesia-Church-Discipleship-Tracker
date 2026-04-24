@@ -38,10 +38,9 @@
                 ['route' => 'announcements.index', 'label' => 'Announcements', 'icon' => 'bell'],
             ],
             'System' => [
-                ['route' => 'system.info',        'label' => 'System Info',    'icon' => 'info'],
-                ['route' => 'system.migrations',  'label' => 'Migrations',     'icon' => 'database'],
-                ['route' => 'system.changelog',   'label' => "What's New",     'icon' => 'history', 'unread' => true],
-                ['route' => 'system.updates',     'label' => 'Updates',        'icon' => 'download', 'pending_updates' => true],
+                ['route' => 'system.info',      'label' => 'System Info', 'icon' => 'info'],
+                ['route' => 'system.changelog',  'label' => "What's New",  'icon' => 'history', 'unread' => true],
+                ['route' => 'system.updates',    'label' => 'Updates',     'icon' => 'download', 'pending_updates' => true],
             ],
             'Admin' => [
                 ['route' => 'settings.church',    'label' => 'Settings',    'icon' => 'settings'],

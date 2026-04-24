@@ -74,22 +74,26 @@
                     </svg>
                     Announcements
                 </a>
-                <a href="{{ route('admin.changelog.index') }}"
-                   class="ca-nav-link {{ request()->routeIs('admin.changelog.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.feature-updates.index') }}"
+                   class="ca-nav-link {{ request()->routeIs('admin.feature-updates.*') ? 'active' : '' }}">
                     <svg class="ca-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/>
                         <line x1="7" y1="7" x2="7.01" y2="7"/>
                     </svg>
                     Product Releases
                 </a>
-                <a href="{{ route('admin.feature-updates.index') }}"
-                   class="ca-nav-link {{ request()->routeIs('admin.feature-updates.*') ? 'active' : '' }}">
+            </div>
+
+            <div class="ca-nav-group">
+                <div class="ca-nav-label">Feature Updates</div>
+                <a href="{{ route('admin.feature-updates.rbac') }}"
+                   class="ca-nav-link {{ request()->routeIs('admin.feature-updates.rbac') ? 'active' : '' }}">
                     <svg class="ca-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0022 16z"/>
-                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-                        <line x1="12" y1="22.08" x2="12" y2="12"/>
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0110 0v4"></path>
                     </svg>
-                    Feature Updates
+                    RBAC Management
+                    <span style="display:block;font-size:10px;color:var(--ca-ink-4);font-weight:normal;margin-left:auto;">Per tenant</span>
                 </a>
             </div>
 

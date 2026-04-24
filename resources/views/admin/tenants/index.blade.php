@@ -4,9 +4,15 @@
 @section('topbar-title', 'Tenants')
 
 @section('content')
-<div class="ca-page-head">
-    <h1 class="ca-page-title">Provisioned Tenants</h1>
-    <p class="ca-page-desc">Churches with an active subdomain and database — their workspaces are live.</p>
+<div class="ca-page-head" style="display:flex;align-items:flex-start;justify-content:space-between;">
+    <div>
+        <h1 class="ca-page-title">Provisioned Tenants</h1>
+        <p class="ca-page-desc">Churches with an active subdomain and database — their workspaces are live.</p>
+    </div>
+    <a href="{{ route('admin.tenants.create') }}" class="ca-btn ca-btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Tenant
+    </a>
 </div>
 
 <div class="ca-table-card">
