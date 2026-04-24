@@ -18,6 +18,13 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        try {
+            \Illuminate\Support\Facades\DB::connection('tenant')->getPdo();
+        } catch (\Exception $e) {
+            $this->command->warn('Tenant connection not configured. Skipping tenant database seeder.');
+            return;
+        }
+
         // ── 0. Seed Roles & Permissions ────────────────────────────
         $this->call(RolesAndPermissionsSeeder::class);
 
