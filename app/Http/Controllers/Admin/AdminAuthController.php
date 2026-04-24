@@ -116,19 +116,19 @@ class AdminAuthController extends Controller
     /**
      * Show edit admin form (superadmin only)
      */
-    public function edit(AdminUser $admin): View
+    public function edit(AdminUser $user): View
     {
         if (!auth('admin')->user()?->canManageAdmins()) {
             abort(403, 'Unauthorized action.');
         }
 
-        return view('admin.users.edit', compact('admin'));
+        return view('admin.users.edit', ['admin' => $user]);
     }
 
     /**
      * Update admin user (superadmin only)
      */
-    public function update(Request $request, AdminUser $admin): RedirectResponse
+    public function update(Request $request, AdminUser $user): RedirectResponse
     {
         if (!auth('admin')->user()?->canManageAdmins()) {
             abort(403, 'Unauthorized action.');
@@ -136,23 +136,23 @@ class AdminAuthController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:admin_users,email,' . $admin->id,
+            'email' => 'required|email|unique:admin_users,email,' . $user->id,
             'role' => 'required|in:super_admin,admin,support,viewer',
             'status' => 'required|in:active,inactive',
         ]);
 
-        $oldValues = $admin->toArray();
-        $admin->update($validated);
+        $oldValues = $user->toArray();
+        $user->update($validated);
 
-        // Log version history
+        // Log audit trail
         \App\Models\AdminAuditLog::logChange(
             'admin_user',
-            $admin->id,
+            $user->id,
             auth('admin')->id(),
             'updated',
-            "Updated admin user: {$admin->name}",
+            "Updated admin user: {$user->name}",
             $oldValues,
-            $admin->toArray()
+            $user->toArray()
         );
 
         return redirect()->route('admin.users.index')->with('success', 'Admin updated.');
@@ -161,18 +161,18 @@ class AdminAuthController extends Controller
     /**
      * Delete admin user (superadmin only)
      */
-    public function destroy(AdminUser $admin): RedirectResponse
+    public function destroy(AdminUser $user): RedirectResponse
     {
         if (!auth('admin')->user()?->canManageAdmins()) {
             abort(403, 'Unauthorized action.');
         }
 
-        $name = $admin->name;
-        $admin->delete();
+        $name = $user->name;
+        $user->delete();
 
         \App\Models\AdminAuditLog::logChange(
             'admin_user',
-            $admin->id,
+            $user->id,
             auth('admin')->id(),
             'deleted',
             "Deleted admin user: {$name}"
