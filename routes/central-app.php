@@ -42,6 +42,8 @@ Route::middleware(['auth:admin', 'admin_auth'])->prefix('admin')->name('admin.')
     Route::post('/signups/{signup}/reject', [TenantSignupController::class, 'reject'])->name('signups.reject');
 
     Route::resource('tenants', TenantRegistrationController::class)->only(['index', 'show', 'edit', 'update', 'destroy']);
+    Route::get('/tenants/create',  [TenantRegistrationController::class, 'adminCreate'])->name('tenants.create');
+    Route::post('/tenants/create', [TenantRegistrationController::class, 'adminStore'])->name('tenants.admin-store');
     Route::patch('/tenants/{tenant}/status', [TenantRegistrationController::class, 'toggleStatus'])->name('tenants.toggle-status');
 
     // Support Tickets from Tenants
@@ -74,12 +76,13 @@ Route::middleware(['auth:admin', 'admin_auth'])->prefix('admin')->name('admin.')
 
     // Feature Deployment Pipeline
     Route::prefix('feature-updates')->name('feature-updates.')->group(function () {
-        Route::get('/', [FeatureUpdateController::class, 'index'])->name('index');
-        Route::get('/create', [FeatureUpdateController::class, 'create'])->name('create');
-        Route::post('/', [FeatureUpdateController::class, 'store'])->name('store');
-        Route::get('/{featureUpdate}', [FeatureUpdateController::class, 'show'])->name('show');
-        Route::post('/{featureUpdate}/publish', [FeatureUpdateController::class, 'publish'])->name('publish');
-        Route::post('/{featureUpdate}/seed', [FeatureUpdateController::class, 'seed'])->name('seed');
+        Route::get('/',                          [FeatureUpdateController::class, 'index'])->name('index');
+        Route::get('/create',                    [FeatureUpdateController::class, 'create'])->name('create');
+        Route::post('/',                         [FeatureUpdateController::class, 'store'])->name('store');
+        Route::get('/rbac',                      [FeatureUpdateController::class, 'rbac'])->name('rbac');
+        Route::get('/{featureUpdate}',           [FeatureUpdateController::class, 'show'])->name('show');
+        Route::post('/{featureUpdate}/publish',  [FeatureUpdateController::class, 'publish'])->name('publish');
+        Route::post('/{featureUpdate}/seed',     [FeatureUpdateController::class, 'seed'])->name('seed');
     });
 });
 

@@ -19,17 +19,6 @@ class SystemInfoController extends Controller
         return view('system.info', compact('version', 'latestRelease', 'changelogSections'));
     }
 
-    public function migrations()
-    {
-        $output = '';
-        Artisan::call('tenancy:migration-status', [], $output);
-
-        $rows = $this->parseMigrationOutput($output);
-        $pendingCount = collect($rows)->where('status', 'Pending')->count();
-
-        return view('system.migrations', compact('rows', 'pendingCount', 'output'));
-    }
-
     public function changelog()
     {
         $changelogSections = $this->parseChangelog(null);

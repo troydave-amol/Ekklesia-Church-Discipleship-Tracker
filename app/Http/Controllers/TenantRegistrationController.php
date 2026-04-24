@@ -173,4 +173,91 @@ class TenantRegistrationController extends Controller
 
         return null;
     }
+
+    // ── Admin-initiated tenant provisioning ───────────────────────────────────
+
+    public function adminCreate(): \Illuminate\View\View
+    {
+        return view('admin.tenants.create');
+    }
+
+    public function adminStore(\Illuminate\Http\Request $request)
+    {
+        $validated = $request->validate([
+            'church_name'       => ['required', 'string', 'max:255'],
+            'subdomain'         => [
+                'required', 'string', 'min:3', 'max:32',
+                'regex:/^[a-z0-9][a-z0-9\-]*[a-z0-9]$/',
+                \Illuminate\Validation\Rule::unique('tenants', 'subdomain'),
+            ],
+            'admin_email'       => ['required', 'email', 'max:255'],
+            'admin_name'        => ['required', 'string', 'max:255'],
+            'subscription_plan' => ['required', 'in:free,basic,standard,premium'],
+        ], [
+            'subdomain.regex'  => 'Only lowercase letters, numbers, and hyphens allowed.',
+            'subdomain.unique' => 'This subdomain is already taken.',
+        ]);
+
+        try {
+            $subdomain = $validated['subdomain'];
+            $dbName    = 'church_' . str_replace('-', '_', $subdomain);
+
+            // 1. Create Tenant record
+            $tenant = Tenant::create([
+                'name'              => $validated['church_name'],
+                'email'             => $validated['admin_email'],
+                'subdomain'         => $subdomain,
+                'db_name'           => $dbName,
+                'status'            => 'active',
+                'subscription_plan' => $validated['subscription_plan'],
+                'activated_at'      => now(),
+            ]);
+
+            // 2. Create Domain
+            $tenant->domains()->create([
+                'domain' => $subdomain . '.' . config('app.domain', 'localhost'),
+            ]);
+
+            // 3. Run tenant migrations
+            \Illuminate\Support\Facades\Artisan::call('tenancy:migrate', [
+                '--tenants' => [$tenant->id],
+                '--force'   => true,
+            ]);
+
+            // 4. Initialize tenancy, create church_admin user, seed
+            tenancy()->initialize($tenant);
+
+            try {
+                $role = \App\Models\Role::where('slug', 'church_admin')->first();
+
+                \App\Models\User::create([
+                    'first_name' => \Illuminate\Support\Str::before($validated['admin_name'], ' '),
+                    'last_name'  => \Illuminate\Support\Str::after($validated['admin_name'], ' ') ?: null,
+                    'email'      => $validated['admin_email'],
+                    'password'   => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(12)),
+                    'role_id'    => $role?->id,
+                ]);
+
+                \Illuminate\Support\Facades\Artisan::call('db:seed', [
+                    '--class' => 'RolesAndPermissionsSeeder',
+                    '--force' => true,
+                ]);
+            } finally {
+                tenancy()->end();
+            }
+
+            return redirect()
+                ->route('admin.tenants.index')
+                ->with('success', "Tenant \"{$validated['church_name']}\" provisioned successfully.");
+
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Admin tenant provisioning failed', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Provisioning failed: ' . $e->getMessage());
+        }
+    }
 }

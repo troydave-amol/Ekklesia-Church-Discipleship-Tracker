@@ -1,56 +1,100 @@
 @extends('layouts.central-admin')
 
-@section('title', 'Feature Updates')
-@section('topbar-title', 'Feature Updates')
+@section('title', 'Product Releases')
+@section('topbar-title', 'Product Releases')
 
 @section('content')
 <div class="ca-page-head" style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;">
     <div>
-        <h1 class="ca-page-title">Feature Deployment Pipeline</h1>
-        <p class="ca-page-desc">Scaffold new features, publish them, and push updates to all tenants.</p>
+        <h1 class="ca-page-title">Product Releases & Feature Packages</h1>
+        <p class="ca-page-desc">Manage core application versions and dynamic feature scaffolding for tenants.</p>
     </div>
-    <a href="{{ route('admin.feature-updates.create') }}" class="ca-btn ca-btn-primary">
+</div>
+
+{{-- ── SECTION A: Application Versions ─────────────────────────────────────── --}}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <h2 style="font-size:16px;font-weight:600;color:var(--ca-ink-1);margin:0;">Application Versions</h2>
+    <a href="{{ route('admin.changelog.create') }}" class="ca-btn ca-btn-primary">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        New Feature
+        New Version
     </a>
 </div>
 
-{{-- Stats Row --}}
-@php
-    $totalFeatures   = $featureUpdates->count();
-    $publishedCount  = $featureUpdates->where('status', 'published')->count();
-    $draftCount      = $featureUpdates->where('status', 'draft')->count();
-    $failedCount     = $featureUpdates->where('status', 'scaffold_failed')->count();
-@endphp
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
-    @foreach([
-        ['label' => 'Total Features',  'value' => $totalFeatures,   'color' => 'var(--ca-ink-2)'],
-        ['label' => 'Published',       'value' => $publishedCount,  'color' => 'var(--ca-sage)'],
-        ['label' => 'Drafts',          'value' => $draftCount,      'color' => 'var(--ca-amber)'],
-        ['label' => 'Failed',          'value' => $failedCount,     'color' => 'var(--ca-red, #e74c3c)'],
-    ] as $stat)
-    <div class="ca-card" style="padding:18px 20px;">
-        <div style="font-size:11px;font-weight:600;color:var(--ca-ink-4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">{{ $stat['label'] }}</div>
-        <div style="font-size:28px;font-weight:700;color:{{ $stat['color'] }};font-family:'DM Mono',monospace;line-height:1;">{{ $stat['value'] }}</div>
-    </div>
-    @endforeach
+<div class="ca-card" style="margin-bottom:40px;">
+    @if($versionHistories->isEmpty())
+        <div style="text-align:center;padding:56px 24px;">
+            <div style="font-size:14px;font-weight:500;color:var(--ca-ink-3);">No application versions yet</div>
+        </div>
+    @else
+        <div class="ca-table-wrap">
+            <table class="ca-table">
+                <thead>
+                    <tr>
+                        <th>Version</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Pushed At</th>
+                        <th>Tenants Acknowledged</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($versionHistories as $version)
+                    <tr>
+                        <td><span class="ca-pill" style="background:var(--ca-surface-dim);color:var(--ca-ink-3);">v{{ $version->version }}</span></td>
+                        <td style="font-weight:500;color:var(--ca-ink-2);">{{ $version->title }}</td>
+                        <td>
+                            @if($version->status === 'published')
+                                <span class="ca-pill ca-pill-ok"><span class="ca-pill-dot"></span> Published</span>
+                            @else
+                                <span class="ca-pill ca-pill-pending"><span class="ca-pill-dot"></span> Draft</span>
+                            @endif
+                        </td>
+                        <td class="ca-table-muted">{{ $version->pushed_at ? $version->pushed_at->format('M d, Y H:i') : 'Not pushed' }}</td>
+                        <td>{{ $version->acknowledgments_count }} / {{ $totalTenants }}</td>
+                        <td>
+                            <div style="display:flex;gap:8px;">
+                                @if($version->status === 'draft')
+                                    <form action="{{ route('admin.changelog.publish', $version) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="ca-btn" style="font-size:12px;padding:5px 12px;background:var(--ca-sage);color:white;border:none;">Publish</button>
+                                    </form>
+                                @endif
+                                
+                                @if($version->status === 'published' && !$version->pushed_at)
+                                    <form action="{{ route('admin.changelog.broadcast', $version) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="ca-btn" style="font-size:12px;padding:5px 12px;background:var(--ca-blue);color:white;border:none;">Push to Tenants</button>
+                                    </form>
+                                @endif
+
+                                <a href="{{ route('admin.changelog.tenants', $version) }}" class="ca-btn" style="font-size:12px;padding:5px 12px;background:var(--ca-surface-dim);color:var(--ca-ink-3);">
+                                    Acknowledgments
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
 </div>
 
-{{-- Features Table --}}
-<div class="ca-card">
-    <div class="ca-card-head" style="padding:14px 20px;">
-        <span class="ca-card-title">All Feature Updates</span>
-    </div>
+{{-- ── SECTION B: Feature Packages ─────────────────────────────────────────── --}}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <h2 style="font-size:16px;font-weight:600;color:var(--ca-ink-1);margin:0;">Feature Packages</h2>
+    <a href="{{ route('admin.feature-updates.create') }}" class="ca-btn ca-btn-primary" style="background:var(--ca-ink-1);color:white;border:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Feature Package
+    </a>
+</div>
 
+<div class="ca-card">
     @if($featureUpdates->isEmpty())
         <div style="text-align:center;padding:56px 24px;">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--ca-ink-4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;">
-                <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0022 16z"/>
-                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-                <line x1="12" y1="22.08" x2="12" y2="12"/>
-            </svg>
-            <div style="font-size:14px;font-weight:500;color:var(--ca-ink-3);">No features yet</div>
-            <div style="font-size:12.5px;color:var(--ca-ink-4);margin-top:4px;">Create your first feature using the "New Feature" button above.</div>
+            <div style="font-size:14px;font-weight:500;color:var(--ca-ink-3);">No feature packages yet</div>
+            <div style="font-size:12.5px;color:var(--ca-ink-4);margin-top:4px;">Create your first feature package using the button above.</div>
         </div>
     @else
         <div class="ca-table-wrap">
@@ -62,7 +106,7 @@
                         <th>Version</th>
                         <th>Type</th>
                         <th>Status</th>
-                        <th>Published</th>
+                        <th>Tenants Installed</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -88,11 +132,19 @@
                                 <span class="ca-pill">{{ ucfirst($feature->status) }}</span>
                             @endif
                         </td>
-                        <td class="ca-table-muted">{{ $feature->published_at?->format('M d, Y') ?? '—' }}</td>
+                        <td>{{ $feature->installed_count ?? 0 }} / {{ $totalTenants }}</td>
                         <td>
-                            <a href="{{ route('admin.feature-updates.show', $feature) }}" class="ca-btn" style="font-size:12px;padding:5px 12px;background:var(--ca-surface-dim);color:var(--ca-ink-3);">
-                                View
-                            </a>
+                            <div style="display:flex;gap:8px;">
+                                <a href="{{ route('admin.feature-updates.show', $feature) }}" class="ca-btn" style="font-size:12px;padding:5px 12px;background:var(--ca-surface-dim);color:var(--ca-ink-3);">
+                                    View
+                                </a>
+                                @if($feature->status === 'draft' || $feature->status === 'scaffold_failed')
+                                    <form action="{{ route('admin.feature-updates.publish', $feature) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="ca-btn" style="font-size:12px;padding:5px 12px;background:var(--ca-sage);color:white;border:none;">Publish</button>
+                                    </form>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                     @endforeach
