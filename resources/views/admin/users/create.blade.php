@@ -33,9 +33,8 @@
             <label class="ca-label">Role</label>
             <select name="role" class="ca-select" required>
                 <option value="">Select role...</option>
-                <option value="super_admin" {{ old('role') === 'super_admin' ? 'selected' : '' }}>Super Admin (Full Access)</option>
-                <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin (Manage Tenants)</option>
-                <option value="support" {{ old('role') === 'support' ? 'selected' : '' }}>Support (Tickets Only)</option>
+                <option value="superadmin" {{ old('role') === 'superadmin' ? 'selected' : '' }}>Super Admin (Full Access)</option>
+                <option value="manager" {{ old('role') === 'manager' ? 'selected' : '' }}>Manager (Manage Tenants)</option>
                 <option value="viewer" {{ old('role') === 'viewer' ? 'selected' : '' }}>Viewer (Read-Only)</option>
             </select>
             @error('role')

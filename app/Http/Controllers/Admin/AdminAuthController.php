@@ -89,7 +89,7 @@ class AdminAuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:admin_users,email',
             'password' => 'required|min:8|confirmed',
-            'role' => 'required|in:super_admin,admin,support,viewer',
+            'role' => 'required|in:superadmin,manager,viewer',
         ]);
 
         $admin = AdminUser::create([
@@ -137,8 +137,8 @@ class AdminAuthController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:admin_users,email,' . $user->id,
-            'role' => 'required|in:super_admin,admin,support,viewer',
-            'status' => 'required|in:active,inactive',
+            'role' => 'required|in:superadmin,manager,viewer',
+            'is_active' => 'required|boolean',
         ]);
 
         $oldValues = $user->toArray();
