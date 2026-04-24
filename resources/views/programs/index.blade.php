@@ -117,11 +117,15 @@
         <div style="padding:64px;text-align:center;color:var(--text-muted);">
             @include('partials.icon',['name'=>'cross','size'=>40,'color'=>'var(--border)'])
             <div style="font-size:16px;margin-top:16px;margin-bottom:8px;color:var(--text);">No programs created yet</div>
+            @can('manage-programs')
             <p style="font-size:13px;margin-bottom:20px;">Create your first destiny training program to get started.</p>
             <button class="btn btn-primary" onclick="document.getElementById('createProgramModal').style.display='flex'">
                 @include('partials.icon',['name'=>'plus','size'=>14])
                 Create First Program
             </button>
+            @else
+            <p style="font-size:13px;">Programs will appear here once created by your church administrator.</p>
+            @endcan
         </div>
     </div>
     @endforelse
