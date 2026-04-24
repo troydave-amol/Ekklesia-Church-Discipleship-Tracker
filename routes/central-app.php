@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminTicketController;
 use App\Http\Controllers\Admin\AdminAnnouncementController;
 use App\Http\Controllers\Admin\AdminChangelogController;
+use App\Http\Controllers\SystemChangelogController;
 use App\Http\Controllers\Admin\AdminRBACController;
 use App\Http\Controllers\Admin\TenantSignupController;
 use App\Http\Controllers\TenantRegistrationController;
@@ -51,12 +52,16 @@ Route::middleware(['auth:admin', 'admin_auth'])->prefix('admin')->name('admin.')
     Route::resource('announcements', AdminAnnouncementController::class);
     Route::post('/announcements/{announcement}/publish', [AdminAnnouncementController::class, 'publish'])->name('announcements.publish');
 
-    // System Changelog
-    Route::get('/changelog', [AdminChangelogController::class, 'index'])->name('changelog.index');
-    Route::post('/changelog/broadcast', [AdminChangelogController::class, 'broadcast'])->name('changelog.broadcast');
+    // Product Releases (version changelog)
+    Route::get('/changelog',                   [AdminChangelogController::class, 'index'])->name('changelog.index');
+    Route::get('/changelog/create',            [AdminChangelogController::class, 'create'])->name('changelog.create');
+    Route::post('/changelog',                  [AdminChangelogController::class, 'store'])->name('changelog.store');
+    Route::post('/changelog/{id}/publish',     [AdminChangelogController::class, 'publish'])->name('changelog.publish');
+    Route::post('/changelog/{id}/broadcast',   [AdminChangelogController::class, 'broadcast'])->name('changelog.broadcast');
+    Route::get('/changelog/{id}/tenants',      [AdminChangelogController::class, 'tenantStatus'])->name('changelog.tenants');
 
     // RBAC Management (superadmin only)
-    Route::middleware('admin_role:superadmin')->prefix('rbac')->name('rbac.')->group(function () {
+    Route::middleware('admin_role:super_admin')->prefix('rbac')->name('rbac.')->group(function () {
         Route::get('/tenants/{tenant}', [AdminRBACController::class, 'show'])->name('show');
         Route::get('/tenants/{tenant}/roles', [AdminRBACController::class, 'editRoles'])->name('edit-roles');
         Route::patch('/tenants/{tenant}/roles/{role}', [AdminRBACController::class, 'updateRolePermissions'])->name('update-permissions');
@@ -64,7 +69,7 @@ Route::middleware(['auth:admin', 'admin_auth'])->prefix('admin')->name('admin.')
     });
 
     // Admin User Management (superadmin only)
-    Route::middleware('admin_role:superadmin')->resource('users', AdminAuthController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::middleware('admin_role:super_admin')->resource('users', AdminAuthController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
 });
 
 // Tenant subdomain routes are defined in routes/tenant.php (loaded by TenancyServiceProvider).

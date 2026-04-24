@@ -40,6 +40,9 @@
             --topbar-h:     56px;
             --radius:       10px;
             --radius-lg:    14px;
+
+            /* ── Tenant-specific brand color (database-driven) ── */
+            --tenant-primary: {{ auth()->check() && auth()->user()->church ? auth()->user()->church->brand_color : '#D4A853' }};
         }
 
         html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 1.5; }
@@ -82,7 +85,7 @@
         }
         .brand-icon {
             width: 36px; height: 36px; border-radius: 10px;
-            background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+            background: linear-gradient(135deg, color-mix(in srgb, var(--tenant-primary) 40%, #000), var(--tenant-primary));
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
             animation: glow 4s ease-in-out infinite;
@@ -120,7 +123,7 @@
         }
         .nav-item svg { flex-shrink: 0; }
         .nav-item:hover { background: var(--surface-hover); color: var(--text); }
-        .nav-item.active { background: rgba(212,168,83,.1); color: var(--gold-light); font-weight: 500; border-left-color: var(--gold); }
+        .nav-item.active { background: color-mix(in srgb, var(--tenant-primary) 10%, transparent); color: var(--tenant-primary); font-weight: 500; border-left-color: var(--tenant-primary); }
         .nav-item .badge-count { margin-left: auto; font-size: 10px; background: var(--red); color: #fff; border-radius: 10px; padding: 1px 6px; font-family: 'DM Mono', monospace; }
 
         .sidebar-user {
@@ -200,10 +203,10 @@
         .btn-sm { padding: 0 14px; font-size: 12px; border-radius: 6px; height: 32px; }
         .btn-icon { padding: 0; width: 32px; height: 32px; border-radius: 6px; }
 
-        .btn-primary { background: linear-gradient(135deg, var(--gold), var(--gold-light)); color: #0D1117; font-weight: 600; }
-        .btn-primary:hover { box-shadow: 0 4px 16px rgba(212,168,83,.4); }
-        .btn-secondary { background: transparent; color: var(--gold); border: 1px solid var(--gold-dim); }
-        .btn-secondary:hover { background: rgba(212,168,83,.08); }
+        .btn-primary { background: linear-gradient(135deg, var(--tenant-primary), color-mix(in srgb, var(--tenant-primary) 80%, #fff)); color: #0D1117; font-weight: 600; }
+        .btn-primary:hover { box-shadow: 0 4px 16px color-mix(in srgb, var(--tenant-primary) 40%, transparent); }
+        .btn-secondary { background: transparent; color: var(--tenant-primary); border: 1px solid color-mix(in srgb, var(--tenant-primary) 40%, transparent); }
+        .btn-secondary:hover { background: color-mix(in srgb, var(--tenant-primary) 8%, transparent); }
         .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
         .btn-ghost:hover { color: var(--text); border-color: var(--text-muted); }
         .btn-danger { background: transparent; color: var(--red); border: 1px solid rgba(248,81,73,.3); }
@@ -390,6 +393,56 @@
 
         {{-- Topbar --}}
         @include('partials.topbar')
+
+        {{-- Global release banner: shows whenever there is an unacknowledged published release --}}
+        @php
+            try {
+                $__latestUnacked = \App\Models\VersionHistory::on('central')
+                    ->published()
+                    ->whereDoesntHave('acknowledgments', fn ($q) =>
+                        $q->where('tenant_id', tenancy()->tenant?->getTenantKey())
+                    )
+                    ->latestFirst()
+                    ->first();
+            } catch (\Throwable $e) {
+                $__latestUnacked = null;
+            }
+        @endphp
+        @if(!empty($__latestUnacked))
+        <div
+            x-data="{ show: true }"
+            x-show="show"
+            x-transition:leave="transition ease-in duration-300"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 24px 0;padding:11px 18px;background:linear-gradient(90deg,#1e1b4b,#312e81);border-bottom:1px solid rgba(99,102,241,.3);flex-shrink:0;"
+        >
+            <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
+                <span style="font-size:16px;flex-shrink:0;">🎉</span>
+                <span style="font-size:13px;color:#c7d2fe;">
+                    <strong style="color:#e0e7ff;">v{{ $__latestUnacked->version }}</strong> is available —
+                    <span style="color:rgba(199,210,254,.8);">{{ Str::limit($__latestUnacked->title, 60) }}</span>
+                </span>
+                <a href="{{ route('system.changelog') }}"
+                   style="flex-shrink:0;font-size:12.5px;font-weight:600;color:#818cf8;white-space:nowrap;">
+                    See what's new →
+                </a>
+            </div>
+            <button
+                @click="
+                    fetch('{{ route('system.changelog.acknowledge', $__latestUnacked->id) }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    }).then(() => { show = false; });
+                "
+                style="flex-shrink:0;background:transparent;border:none;color:rgba(165,180,252,.7);font-size:18px;cursor:pointer;line-height:1;padding:2px 4px;"
+                title="Dismiss"
+            >✕</button>
+        </div>
+        @endif
 
         {{-- Flash messages --}}
         <div style="padding: 0 24px;">

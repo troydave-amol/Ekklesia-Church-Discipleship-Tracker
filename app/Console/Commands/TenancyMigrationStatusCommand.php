@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Stancl\Tenancy\Tenant;
+use App\Models\Tenant;
 
 class TenancyMigrationStatusCommand extends Command
 {
