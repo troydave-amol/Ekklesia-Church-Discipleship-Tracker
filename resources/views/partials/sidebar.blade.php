@@ -40,7 +40,7 @@
             'System' => [
                 ['route' => 'system.info',        'label' => 'System Info',    'icon' => 'info'],
                 ['route' => 'system.migrations',  'label' => 'Migrations',     'icon' => 'database'],
-                ['route' => 'system.changelog',   'label' => 'Changelog',      'icon' => 'history'],
+                ['route' => 'system.changelog',   'label' => "What's New",     'icon' => 'history', 'unread' => true],
             ],
             'Admin' => [
                 ['route' => 'settings.church',    'label' => 'Settings',    'icon' => 'settings'],
@@ -87,6 +87,23 @@
         $roleLabel = 'Disciple';
         $roleColor = '#BC8CFF';
     }
+    // Compute unread releases for the "What's New" dot
+    $__unreadCount = 0;
+    if ($navFor('church_admin')) {
+        try {
+            $__tenantId = tenancy()->tenant?->getTenantKey();
+            if ($__tenantId) {
+                $__unreadCount = \App\Models\VersionHistory::on('central')
+                    ->published()
+                    ->whereDoesntHave('acknowledgments', fn ($q) =>
+                        $q->where('tenant_id', $__tenantId)
+                    )
+                    ->count();
+            }
+        } catch (\Throwable) {
+            $__unreadCount = 0;
+        }
+    }
 @endphp
 
 <aside class="sidebar" id="sidebar">
@@ -125,7 +142,9 @@
                 <a href="{{ $href }}" class="nav-item {{ $isActive ? 'active' : '' }}">
                     @include('partials.icon', ['name' => $item['icon'], 'size' => 17, 'color' => $isActive ? (auth()->user()->church->brand_color ?? '#D4A853') : '#8B949E'])
                     <span>{{ $item['label'] }}</span>
-                    @if(isset($item['badge']))
+                    @if(isset($item['unread']) && $item['unread'] && $__unreadCount > 0)
+                        <span style="margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;animation:pulse 2s ease-in-out infinite;"></span>
+                    @elseif(isset($item['badge']))
                         <span class="badge-count">{{ $item['badge'] }}</span>
                     @endif
                 </a>

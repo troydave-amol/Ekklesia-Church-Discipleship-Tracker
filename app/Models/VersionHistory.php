@@ -3,56 +3,69 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Product release model (central DB, version_history table).
+ *
+ * NOTE: The old audit-log model (central_version_history) has been superseded.
+ * Any audit logging should use a dedicated AuditLog model or Laravel Auditing package.
+ */
 class VersionHistory extends Model
 {
-    protected $table = 'central_version_history';
-    const UPDATED_AT = null;
+    protected $connection = 'central';
+
+    protected $table = 'version_history';
 
     protected $fillable = [
-        'entity_type',
-        'entity_id',
-        'changed_by',
-        'change_description',
-        'old_values',
-        'new_values',
-        'action',
+        'version',
+        'title',
+        'release_notes',
+        'features',
+        'bug_fixes',
+        'is_major',
+        'status',
+        'published_at',
+        'pushed_at',
+        'pushed_by',
     ];
 
     protected $casts = [
-        'old_values' => 'json',
-        'new_values' => 'json',
-        'created_at' => 'datetime',
+        'features'     => 'array',
+        'bug_fixes'    => 'array',
+        'is_major'     => 'boolean',
+        'published_at' => 'datetime',
+        'pushed_at'    => 'datetime',
     ];
 
-    public function changedByAdmin(): BelongsTo
+    // ── Scopes ────────────────────────────────────────────────────
+
+    public function scopePublished($query)
     {
-        return $this->belongsTo(AdminUser::class, 'changed_by');
+        return $query->where('status', 'published');
     }
 
-    public function scopeForEntity($query, string $entityType, int $entityId)
+    public function scopeLatestFirst($query)
     {
-        return $query->where('entity_type', $entityType)->where('entity_id', $entityId);
+        return $query->orderByDesc('published_at');
     }
 
-    public static function logChange(
-        string $entityType,
-        int $entityId,
-        ?int $changedBy,
-        string $action,
-        string $description,
-        ?array $oldValues = null,
-        ?array $newValues = null
-    ): self {
-        return static::create([
-            'entity_type' => $entityType,
-            'entity_id' => $entityId,
-            'changed_by' => $changedBy,
-            'action' => $action,
-            'change_description' => $description,
-            'old_values' => $oldValues,
-            'new_values' => $newValues,
-        ]);
+    // ── Accessors ─────────────────────────────────────────────────
+
+    public function isPushed(): bool
+    {
+        return $this->pushed_at !== null;
+    }
+
+    public function isDraft(): bool
+    {
+        return $this->status === 'draft';
+    }
+
+    // ── Relationships ─────────────────────────────────────────────
+
+    public function acknowledgments(): HasMany
+    {
+        return $this->hasMany(TenantReleaseAcknowledgment::class, 'version_history_id');
     }
 }

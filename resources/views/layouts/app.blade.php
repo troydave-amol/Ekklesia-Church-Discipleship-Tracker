@@ -394,6 +394,56 @@
         {{-- Topbar --}}
         @include('partials.topbar')
 
+        {{-- Global release banner: shows whenever there is an unacknowledged published release --}}
+        @php
+            try {
+                $__latestUnacked = \App\Models\VersionHistory::on('central')
+                    ->published()
+                    ->whereDoesntHave('acknowledgments', fn ($q) =>
+                        $q->where('tenant_id', tenancy()->tenant?->getTenantKey())
+                    )
+                    ->latestFirst()
+                    ->first();
+            } catch (\Throwable $e) {
+                $__latestUnacked = null;
+            }
+        @endphp
+        @if(!empty($__latestUnacked))
+        <div
+            x-data="{ show: true }"
+            x-show="show"
+            x-transition:leave="transition ease-in duration-300"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 24px 0;padding:11px 18px;background:linear-gradient(90deg,#1e1b4b,#312e81);border-bottom:1px solid rgba(99,102,241,.3);flex-shrink:0;"
+        >
+            <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
+                <span style="font-size:16px;flex-shrink:0;">🎉</span>
+                <span style="font-size:13px;color:#c7d2fe;">
+                    <strong style="color:#e0e7ff;">v{{ $__latestUnacked->version }}</strong> is available —
+                    <span style="color:rgba(199,210,254,.8);">{{ Str::limit($__latestUnacked->title, 60) }}</span>
+                </span>
+                <a href="{{ route('system.changelog') }}"
+                   style="flex-shrink:0;font-size:12.5px;font-weight:600;color:#818cf8;white-space:nowrap;">
+                    See what's new →
+                </a>
+            </div>
+            <button
+                @click="
+                    fetch('{{ route('system.changelog.acknowledge', $__latestUnacked->id) }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    }).then(() => { show = false; });
+                "
+                style="flex-shrink:0;background:transparent;border:none;color:rgba(165,180,252,.7);font-size:18px;cursor:pointer;line-height:1;padding:2px 4px;"
+                title="Dismiss"
+            >✕</button>
+        </div>
+        @endif
+
         {{-- Flash messages --}}
         <div style="padding: 0 24px;">
             @if(session('success'))

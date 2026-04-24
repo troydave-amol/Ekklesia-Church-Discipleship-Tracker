@@ -8,8 +8,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('support_ticket_replies')) {
-            Schema::create('support_ticket_replies', function (Blueprint $table) {
+        if (!Schema::connection('central')->hasTable('support_ticket_replies')) {
+            Schema::connection('central')->create('support_ticket_replies', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('support_ticket_id')->index()->nullable();
             $table->unsignedBigInteger('user_id')->index()->nullable();
