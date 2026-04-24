@@ -394,18 +394,21 @@
         {{-- Topbar --}}
         @include('partials.topbar')
 
-        {{-- Global release banner: shows whenever there is an unacknowledged published release --}}
+        {{-- Global release banner: shows whenever there is an unacknowledged published release (church_admin only) --}}
         @php
-            try {
-                $__latestUnacked = \App\Models\VersionHistory::on('central')
-                    ->published()
-                    ->whereDoesntHave('acknowledgments', fn ($q) =>
-                        $q->where('tenant_id', tenancy()->tenant?->getTenantKey())
-                    )
-                    ->latestFirst()
-                    ->first();
-            } catch (\Throwable $e) {
-                $__latestUnacked = null;
+            $__latestUnacked = null;
+            if (auth()->user()?->isChurchAdmin()) {
+                try {
+                    $__latestUnacked = \App\Models\VersionHistory::on('central')
+                        ->published()
+                        ->whereDoesntHave('acknowledgments', fn ($q) =>
+                            $q->where('tenant_id', tenancy()->tenant?->getTenantKey())
+                        )
+                        ->latestFirst()
+                        ->first();
+                } catch (\Throwable $e) {
+                    $__latestUnacked = null;
+                }
             }
         @endphp
         @if(!empty($__latestUnacked))

@@ -246,4 +246,52 @@ class DevotionalController extends Controller
 
         return $map;
     }
+
+    /**
+     * Update a devotional record.
+     * church_admin can update any record; disciple can only update own.
+     */
+    public function update(Request $request, int $id)
+    {
+        $request->validate([
+            'completed' => ['required', 'boolean'],
+        ]);
+
+        $devotional = Devotional::withoutGlobalScopes()->findOrFail($id);
+        $user = auth()->user();
+
+        if ($devotional->church_id !== $user->church_id) {
+            abort(403);
+        }
+
+        // Disciples can only update their own records
+        if ($user->isDisciple() && $devotional->user_id !== $user->id) {
+            abort(403, 'You can only update your own devotional records.');
+        }
+
+        $devotional->completed = $request->boolean('completed');
+        $devotional->save();
+
+        return redirect()->back()->with('success', 'Devotional updated.');
+    }
+
+    /**
+     * Delete a devotional record (church_admin only — enforced by route middleware).
+     */
+    public function destroy(int $id)
+    {
+        if (! auth()->user()->isChurchAdmin()) {
+            abort(403);
+        }
+
+        $devotional = Devotional::withoutGlobalScopes()->findOrFail($id);
+
+        if ($devotional->church_id !== auth()->user()->church_id) {
+            abort(403);
+        }
+
+        $devotional->delete();
+
+        return redirect()->back()->with('success', 'Devotional record deleted.');
+    }
 }

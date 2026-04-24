@@ -10,50 +10,48 @@ class RolesAndPermissionsSeeder extends Seeder
     /**
      * Run the database seeds.
      * This seeder runs on the tenant connection.
+     *
+     * Required permission slugs (14 total — hyphenated only):
+     * manage-programs, manage-lessons, view-all-attendance, view-all-devotionals,
+     * manage-users, manage-subscription, create-lesson, edit-own-lesson,
+     * manage-disciples, view-programs, enroll-program, view-lessons,
+     * update-own-attendance, update-own-devotional
      */
     public function run(): void
     {
-        // Create roles
-        $churchAdmin = DB::connection('tenant')->table('roles')->updateOrInsert(
-            ['slug' => 'church_admin'],
-            ['name' => 'Church Administrator', 'created_at' => now(), 'updated_at' => now()]
-        );
-        $churchAdmin = DB::connection('tenant')->table('roles')->where('slug', 'church_admin')->value('id');
+        // ── Create roles ───────────────────────────────────────────────────
+        $roleDefinitions = [
+            'church_admin'   => 'Church Administrator',
+            'program_leader' => 'Program Leader',
+            'cell_leader'    => 'Cell Leader',
+            'disciple'       => 'Disciple',
+        ];
 
-        $programLeader = DB::connection('tenant')->table('roles')->updateOrInsert(
-            ['slug' => 'program_leader'],
-            ['name' => 'Program Leader', 'created_at' => now(), 'updated_at' => now()]
-        );
-        $programLeader = DB::connection('tenant')->table('roles')->where('slug', 'program_leader')->value('id');
+        $roleIds = [];
+        foreach ($roleDefinitions as $slug => $name) {
+            DB::connection('tenant')->table('roles')->updateOrInsert(
+                ['slug' => $slug],
+                ['name' => $name, 'created_at' => now(), 'updated_at' => now()]
+            );
+            $roleIds[$slug] = DB::connection('tenant')->table('roles')->where('slug', $slug)->value('id');
+        }
 
-        $cellLeader = DB::connection('tenant')->table('roles')->updateOrInsert(
-            ['slug' => 'cell_leader'],
-            ['name' => 'Cell Leader', 'created_at' => now(), 'updated_at' => now()]
-        );
-        $cellLeader = DB::connection('tenant')->table('roles')->where('slug', 'cell_leader')->value('id');
-
-        $disciple = DB::connection('tenant')->table('roles')->updateOrInsert(
-            ['slug' => 'disciple'],
-            ['name' => 'Disciple', 'created_at' => now(), 'updated_at' => now()]
-        );
-        $disciple = DB::connection('tenant')->table('roles')->where('slug', 'disciple')->value('id');
-
-        // Create permissions (exact slugs required by access matrix)
+        // ── Create all 14 required permissions ─────────────────────────────
         $permissionSlugs = [
-            'manage-programs' => 'Manage Programs',
-            'manage-lessons' => 'Manage Lessons',
-            'view-all-attendance' => 'View All Attendance',
+            'manage-programs'      => 'Manage Programs',
+            'manage-lessons'       => 'Manage Lessons',
+            'view-all-attendance'  => 'View All Attendance',
             'view-all-devotionals' => 'View All Devotionals',
-            'manage-users' => 'Manage Users',
-            'manage-subscription' => 'Manage Subscription',
-            'create-lesson' => 'Create Lesson',
-            'edit-own-lesson' => 'Edit Own Lesson',
-            'manage-disciples' => 'Manage Disciples',
-            'view-programs' => 'View Programs',
-            'enroll-program' => 'Enroll Program',
-            'view-lessons' => 'View Lessons',
-            'update-own-attendance' => 'Update Own Attendance',
-            'update-own-devotional' => 'Update Own Devotional',
+            'manage-users'         => 'Manage Users',
+            'manage-subscription'  => 'Manage Subscription',
+            'create-lesson'        => 'Create Lesson',
+            'edit-own-lesson'      => 'Edit Own Lesson',
+            'manage-disciples'     => 'Manage Disciples',
+            'view-programs'        => 'View Programs',
+            'enroll-program'       => 'Enroll Program',
+            'view-lessons'         => 'View Lessons',
+            'update-own-attendance'  => 'Update Own Attendance',
+            'update-own-devotional'  => 'Update Own Devotional',
         ];
 
         $permissionIds = [];
@@ -65,43 +63,65 @@ class RolesAndPermissionsSeeder extends Seeder
             $permissionIds[$slug] = DB::connection('tenant')->table('permissions')->where('slug', $slug)->value('id');
         }
 
-        // Assign permissions to roles
-        // Assign permissions to roles according to access matrix
-        $assign = [];
+        // ── Role → Permission assignments (EXACT per access matrix) ────────
 
-        // church_admin (pastor) gets all permissions
-        foreach (array_keys($permissionSlugs) as $slug) {
-            $assign[] = ['role_id' => $churchAdmin, 'permission_id' => $permissionIds[$slug]];
-        }
+        // church_admin (pastor) → ALL 14 slugs
+        $churchAdminPerms = array_keys($permissionSlugs);
 
-        // program_leader
+        // program_leader → EXACTLY 8 slugs
         $programLeaderPerms = [
-            'create-lesson', 'edit-own-lesson', 'view-all-attendance', 'view-all-devotionals', 'manage-disciples', 'view-programs', 'view-lessons', 'enroll-program', 'update-own-attendance', 'update-own-devotional'
+            'manage-lessons',
+            'view-all-attendance',
+            'view-all-devotionals',
+            'create-lesson',
+            'edit-own-lesson',
+            'manage-disciples',
+            'view-programs',
+            'view-lessons',
         ];
-        foreach ($programLeaderPerms as $slug) {
-            if (isset($permissionIds[$slug])) {
-                $assign[] = ['role_id' => $programLeader, 'permission_id' => $permissionIds[$slug]];
-            }
-        }
 
-        // cell_leader: limited permissions
-        $cellLeaderPerms = ['view-programs', 'view-lessons', 'update-own-attendance', 'update-own-devotional'];
-        foreach ($cellLeaderPerms as $slug) {
-            if (isset($permissionIds[$slug])) {
-                $assign[] = ['role_id' => $cellLeader, 'permission_id' => $permissionIds[$slug]];
-            }
-        }
+        // cell_leader → EXACTLY 4 slugs
+        $cellLeaderPerms = [
+            'view-programs',
+            'view-lessons',
+            'view-all-attendance',
+            'view-all-devotionals',
+        ];
 
-        // disciple
-        $disciplePerms = ['view-programs', 'enroll-program', 'view-lessons', 'update-own-attendance', 'update-own-devotional'];
-        foreach ($disciplePerms as $slug) {
-            if (isset($permissionIds[$slug])) {
-                $assign[] = ['role_id' => $disciple, 'permission_id' => $permissionIds[$slug]];
-            }
-        }
+        // disciple → EXACTLY 5 slugs
+        $disciplePerms = [
+            'view-programs',
+            'enroll-program',
+            'view-lessons',
+            'update-own-attendance',
+            'update-own-devotional',
+        ];
 
-        foreach ($assign as $row) {
-            DB::connection('tenant')->table('permission_role')->updateOrInsert($row, $row);
+        $assignments = [
+            'church_admin'   => $churchAdminPerms,
+            'program_leader' => $programLeaderPerms,
+            'cell_leader'    => $cellLeaderPerms,
+            'disciple'       => $disciplePerms,
+        ];
+
+        // Clear existing assignments and re-seed for idempotency
+        foreach ($assignments as $roleSlug => $perms) {
+            $roleId = $roleIds[$roleSlug];
+
+            // Remove any stale/incorrect assignments for this role
+            DB::connection('tenant')->table('permission_role')
+                ->where('role_id', $roleId)
+                ->delete();
+
+            // Insert the correct assignments
+            foreach ($perms as $permSlug) {
+                if (isset($permissionIds[$permSlug])) {
+                    DB::connection('tenant')->table('permission_role')->insert([
+                        'role_id'       => $roleId,
+                        'permission_id' => $permissionIds[$permSlug],
+                    ]);
+                }
+            }
         }
     }
 }

@@ -132,7 +132,8 @@ class AttendanceController extends Controller
             abort(403);
         }
 
-        if ($attendance->user_id !== auth()->id()) {
+        // church_admin can update any record; disciples can only update their own
+        if (! auth()->user()->isChurchAdmin() && $attendance->user_id !== auth()->id()) {
             abort(403);
         }
 
@@ -140,5 +141,25 @@ class AttendanceController extends Controller
         $attendance->save();
 
         return redirect()->back()->with('success', 'Attendance updated.');
+    }
+
+    /**
+     * Delete an attendance record (church_admin only — enforced by route middleware).
+     */
+    public function destroy(int $id)
+    {
+        if (! auth()->user()->isChurchAdmin()) {
+            abort(403);
+        }
+
+        $attendance = Attendance::findOrFail($id);
+
+        if ($attendance->church_id !== auth()->user()->church_id) {
+            abort(403);
+        }
+
+        $attendance->delete();
+
+        return redirect()->back()->with('success', 'Attendance record deleted.');
     }
 }
