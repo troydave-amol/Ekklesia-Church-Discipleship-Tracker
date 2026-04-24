@@ -18,7 +18,7 @@ class AdminUser extends Authenticatable
         'email',
         'password',
         'role',
-        'status',
+        'is_active',
         'last_login_at',
     ];
 
@@ -30,12 +30,12 @@ class AdminUser extends Authenticatable
 
     public function isSuperAdmin(): bool
     {
-        return $this->role === 'super_admin';
+        return $this->role === 'superadmin';
     }
 
     public function isManager(): bool
     {
-        return in_array($this->role, ['super_admin', 'admin']);
+        return in_array($this->role, ['superadmin', 'manager']);
     }
 
     public function canManageTenants(): bool
@@ -60,6 +60,6 @@ class AdminUser extends Authenticatable
 
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('is_active', true);
     }
 }
