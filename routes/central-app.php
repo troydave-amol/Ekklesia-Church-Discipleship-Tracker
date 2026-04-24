@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AdminAnnouncementController;
 use App\Http\Controllers\Admin\AdminChangelogController;
 use App\Http\Controllers\SystemChangelogController;
 use App\Http\Controllers\Admin\AdminRBACController;
+use App\Http\Controllers\Admin\FeatureUpdateController;
 use App\Http\Controllers\Admin\TenantSignupController;
 use App\Http\Controllers\TenantRegistrationController;
 use Illuminate\Support\Facades\Route;
@@ -70,6 +71,16 @@ Route::middleware(['auth:admin', 'admin_auth'])->prefix('admin')->name('admin.')
 
     // Admin User Management (superadmin only)
     Route::middleware('admin_role:super_admin')->resource('users', AdminAuthController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+
+    // Feature Deployment Pipeline
+    Route::prefix('feature-updates')->name('feature-updates.')->group(function () {
+        Route::get('/', [FeatureUpdateController::class, 'index'])->name('index');
+        Route::get('/create', [FeatureUpdateController::class, 'create'])->name('create');
+        Route::post('/', [FeatureUpdateController::class, 'store'])->name('store');
+        Route::get('/{featureUpdate}', [FeatureUpdateController::class, 'show'])->name('show');
+        Route::post('/{featureUpdate}/publish', [FeatureUpdateController::class, 'publish'])->name('publish');
+        Route::post('/{featureUpdate}/seed', [FeatureUpdateController::class, 'seed'])->name('seed');
+    });
 });
 
 // Tenant subdomain routes are defined in routes/tenant.php (loaded by TenancyServiceProvider).

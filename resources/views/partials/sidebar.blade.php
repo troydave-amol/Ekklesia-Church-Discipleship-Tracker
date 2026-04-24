@@ -41,6 +41,7 @@
                 ['route' => 'system.info',        'label' => 'System Info',    'icon' => 'info'],
                 ['route' => 'system.migrations',  'label' => 'Migrations',     'icon' => 'database'],
                 ['route' => 'system.changelog',   'label' => "What's New",     'icon' => 'history', 'unread' => true],
+                ['route' => 'system.updates',     'label' => 'Updates',        'icon' => 'download', 'pending_updates' => true],
             ],
             'Admin' => [
                 ['route' => 'settings.church',    'label' => 'Settings',    'icon' => 'settings'],
@@ -96,6 +97,24 @@
             $__unreadCount = 0;
         }
     }
+
+    // Compute pending feature updates for the "Updates" dot
+    $__pendingUpdatesCount = 0;
+    if ($navFor('church_admin')) {
+        try {
+            $__tenantIdForUpdates = tenancy()->tenant?->getTenantKey();
+            if ($__tenantIdForUpdates) {
+                $__pendingUpdatesCount = \App\Models\FeatureUpdate::on('central')
+                    ->published()
+                    ->whereDoesntHave('installations', fn ($q) =>
+                        $q->where('tenant_id', $__tenantIdForUpdates)->where('status', 'installed')
+                    )
+                    ->count();
+            }
+        } catch (\Throwable) {
+            $__pendingUpdatesCount = 0;
+        }
+    }
 @endphp
 
 <aside class="sidebar" id="sidebar">
@@ -136,6 +155,11 @@
                     <span>{{ $item['label'] }}</span>
                     @if(isset($item['unread']) && $item['unread'] && $__unreadCount > 0)
                         <span style="margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;animation:pulse 2s ease-in-out infinite;"></span>
+                    @elseif(isset($item['pending_updates']) && $item['pending_updates'] && $__pendingUpdatesCount > 0)
+                        <span style="margin-left:auto;display:flex;align-items:center;gap:4px;">
+                            <span style="width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0;animation:pulse 2s ease-in-out infinite;"></span>
+                            <span style="font-size:11px;font-weight:600;color:var(--gold);">{{ $__pendingUpdatesCount }}</span>
+                        </span>
                     @elseif(isset($item['badge']))
                         <span class="badge-count">{{ $item['badge'] }}</span>
                     @endif

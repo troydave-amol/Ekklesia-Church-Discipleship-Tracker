@@ -203,5 +203,10 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
         Route::get('/system/changelog',   [SystemChangelogController::class, 'index'])->name('system.changelog');
         Route::post('/system/changelog/{id}/acknowledge', [SystemChangelogController::class, 'acknowledge'])
              ->name('system.changelog.acknowledge');
+
+        // Feature Updates — tenant-facing install flow
+        Route::get('/system/updates', [SystemChangelogController::class, 'updates'])->name('system.updates');
+        Route::post('/system/updates/{featureUpdate}/install', [SystemChangelogController::class, 'install'])
+             ->name('system.updates.install');
     });
 });
