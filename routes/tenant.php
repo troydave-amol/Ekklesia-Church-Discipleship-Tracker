@@ -145,7 +145,6 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
     // Password update
     Route::put('/password', [PasswordController::class, 'update'])->name('password.update');
 
-<<<<<<< HEAD
     // Email verification
     Route::get('/verify-email', [EmailVerificationPromptController::class, '__invoke'])->name('verification.notice');
     Route::get('/verify-email/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
@@ -158,7 +157,7 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
     // Confirm password
     Route::get('/confirm-password', [ConfirmablePasswordController::class, 'show'])->name('password.confirm');
     Route::post('/confirm-password', [ConfirmablePasswordController::class, 'store']);
-=======
+
     Route::middleware('role:church_admin,pastor')->group(function () {
         Route::get('/settings/church', [SettingsController::class, 'church'])->name('settings.church');
         Route::patch('/settings/church', [SettingsController::class, 'updateChurch'])->name('settings.church.update');
@@ -168,7 +167,6 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
         Route::get('/settings/appearance', [\App\Http\Controllers\AppearanceController::class, 'edit'])->name('settings.appearance');
         Route::put('/settings/appearance', [\App\Http\Controllers\AppearanceController::class, 'update'])->name('settings.appearance.update');
     });
->>>>>>> 457e519db4921dfdfd1d9e2c5e09d25095a19d8e
 
     // Support Tickets
     Route::get('/support', [SupportTicketController::class, 'index'])->name('support.index');
