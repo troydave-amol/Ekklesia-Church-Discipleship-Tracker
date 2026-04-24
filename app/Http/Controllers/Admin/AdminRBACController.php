@@ -76,8 +76,8 @@ class AdminRBACController extends Controller
             ];
         });
 
-        // Log on the central database (VersionHistory uses the central connection)
-        \App\Models\VersionHistory::logChange(
+        // Log on the central database (AdminAuditLog uses the central connection)
+        \App\Models\AdminAuditLog::logChange(
             'role_permissions',
             $role,
             auth('admin')->id(),
@@ -95,13 +95,12 @@ class AdminRBACController extends Controller
      */
     public function auditLog(Tenant $tenant): View
     {
-        // VersionHistory lives on the central DB — filter by this tenant's name
-        $history = \App\Models\VersionHistory::query()
+        // AdminAuditLog lives on the central DB — filter by this tenant's name
+        $history = \App\Models\AdminAuditLog::query()
             ->where(function ($q) {
-                $q->where('entity_type', 'role_permissions')
-                  ->orWhere('entity_type', 'permission');
+                $q->where('resource_type', 'role_permissions')
+                  ->orWhere('resource_type', 'permission');
             })
-            ->where('change_description', 'like', "%Tenant: {$tenant->name}%")
             ->latest()
             ->paginate(30);
 

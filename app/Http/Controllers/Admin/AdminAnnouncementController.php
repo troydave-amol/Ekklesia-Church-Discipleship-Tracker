@@ -49,7 +49,7 @@ class AdminAnnouncementController extends Controller
             'published_at' => $validated['publish_now'] ? now() : null,
         ]);
 
-        \App\Models\VersionHistory::logChange(
+        \App\Models\AdminAuditLog::logChange(
             'announcement',
             $announcement->id,
             auth('admin')->id(),
@@ -90,7 +90,7 @@ class AdminAnnouncementController extends Controller
         $oldValues = $announcement->toArray();
         $announcement->update($validated);
 
-        \App\Models\VersionHistory::logChange(
+        \App\Models\AdminAuditLog::logChange(
             'announcement',
             $announcement->id,
             auth('admin')->id(),
@@ -113,7 +113,7 @@ class AdminAnnouncementController extends Controller
         // Dispatch broadcast to all tenants
         BroadcastAnnouncementJob::dispatch($announcement->id);
 
-        \App\Models\VersionHistory::logChange(
+        \App\Models\AdminAuditLog::logChange(
             'announcement',
             $announcement->id,
             auth('admin')->id(),
@@ -132,7 +132,7 @@ class AdminAnnouncementController extends Controller
         $title = $announcement->title;
         $announcement->delete();
 
-        \App\Models\VersionHistory::logChange(
+        \App\Models\AdminAuditLog::logChange(
             'announcement',
             $announcement->id,
             auth('admin')->id(),

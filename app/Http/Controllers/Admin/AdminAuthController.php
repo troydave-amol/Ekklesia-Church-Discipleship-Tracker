@@ -100,7 +100,7 @@ class AdminAuthController extends Controller
         ]);
 
         // Log version history
-        \App\Models\VersionHistory::logChange(
+        \App\Models\AdminAuditLog::logChange(
             'admin_user',
             $admin->id,
             auth('admin')->id(),
@@ -145,7 +145,7 @@ class AdminAuthController extends Controller
         $admin->update($validated);
 
         // Log version history
-        \App\Models\VersionHistory::logChange(
+        \App\Models\AdminAuditLog::logChange(
             'admin_user',
             $admin->id,
             auth('admin')->id(),
@@ -170,7 +170,7 @@ class AdminAuthController extends Controller
         $name = $admin->name;
         $admin->delete();
 
-        \App\Models\VersionHistory::logChange(
+        \App\Models\AdminAuditLog::logChange(
             'admin_user',
             $admin->id,
             auth('admin')->id(),
