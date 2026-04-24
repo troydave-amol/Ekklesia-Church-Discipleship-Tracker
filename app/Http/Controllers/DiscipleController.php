@@ -125,9 +125,22 @@ class DiscipleController extends Controller
     public function store(UpdateDiscipleRequest $request)
     {
         $subscription = app(SubscriptionService::class);
+        $churchId     = auth()->user()->church_id;
+        $newRole      = $request->input('role', 'disciple');
 
-        if (! $subscription->isAllowed(auth()->user()->church, 'add_disciple')) {
-            return back()->with('error', 'Disciple limit reached. Please upgrade your plan.');
+        // Check plan limits based on the role being created
+        if ($newRole === 'disciple') {
+            $currentCount = User::where('church_id', $churchId)->where('role', 'disciple')->count();
+            if (! $subscription->checkLimit('max_disciples', $currentCount)) {
+                return back()->withErrors(['limit' => 'Disciple limit reached for your plan. Upgrade to add more.']);
+            }
+        } elseif (in_array($newRole, ['program_leader', 'cell_leader'])) {
+            $currentCount = User::where('church_id', $churchId)
+                ->whereIn('role', ['program_leader', 'cell_leader'])
+                ->count();
+            if (! $subscription->checkLimit('max_leaders', $currentCount)) {
+                return back()->withErrors(['limit' => 'Leader limit reached for your plan.']);
+            }
         }
 
         $disciple = $this->enrollmentService->enroll(auth()->user()->church_id, $request->validated());
