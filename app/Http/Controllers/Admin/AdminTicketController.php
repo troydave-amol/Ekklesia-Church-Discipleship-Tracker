@@ -84,7 +84,7 @@ class AdminTicketController extends Controller
             try { tenancy()->end(); } catch (\Throwable $ignored) {}
         }
 
-        \App\Models\VersionHistory::logChange(
+        \App\Models\AdminAuditLog::logChange(
             'support_ticket',
             $ticket->id,
             auth('admin')->id(),
@@ -104,7 +104,7 @@ class AdminTicketController extends Controller
     {
         $ticket->update(['status' => 'closed']);
 
-        \App\Models\VersionHistory::logChange(
+        \App\Models\AdminAuditLog::logChange(
             'support_ticket',
             $ticket->id,
             auth('admin')->id(),
