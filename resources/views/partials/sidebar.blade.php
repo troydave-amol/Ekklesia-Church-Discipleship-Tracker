@@ -44,6 +44,7 @@
             ],
             'Admin' => [
                 ['route' => 'settings.church',    'label' => 'Settings',    'icon' => 'settings'],
+                ['route' => 'settings.appearance', 'label' => 'Appearance',  'icon' => 'palette'],
             ],
         ],
         'leader' => [
@@ -139,7 +140,7 @@
                     $href = rescue(fn () => route($item['route']), '#', false);
                 @endphp
                 <a href="{{ $href }}" class="nav-item {{ $isActive ? 'active' : '' }}">
-                    @include('partials.icon', ['name' => $item['icon'], 'size' => 17, 'color' => $isActive ? '#D4A853' : '#8B949E'])
+                    @include('partials.icon', ['name' => $item['icon'], 'size' => 17, 'color' => $isActive ? (auth()->user()->church->brand_color ?? '#D4A853') : '#8B949E'])
                     <span>{{ $item['label'] }}</span>
                     @if(isset($item['unread']) && $item['unread'] && $__unreadCount > 0)
                         <span style="margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;animation:pulse 2s ease-in-out infinite;"></span>

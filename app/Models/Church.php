@@ -11,7 +11,19 @@ class Church extends Model
         'address',
         'subscription_plan',
         'is_active',
+        'logo_path',
+        'primary_color',
     ];
+
+    // ── Customization Defaults ──────────────────────────────────
+
+    /**
+     * Return the tenant's brand color, falling back to Ekklesia Gold.
+     */
+    public function getBrandColorAttribute(): string
+    {
+        return $this->primary_color ?? '#D4A853';
+    }
 
     // ── Relationships ──────────────────────────────────────────────
 

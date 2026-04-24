@@ -17,10 +17,17 @@ class AdminRBACController extends Controller
      */
     public function show(Tenant $tenant): View
     {
+        $data = $tenant->run(function () {
+            return [
+                'roles' => Role::with('permissions')->get(),
+                'permissions' => Permission::all(),
+            ];
+        });
+
         return view('admin.rbac.show', [
             'tenant' => $tenant,
-            'roles' => Role::all(),
-            'permissions' => Permission::all(),
+            'roles' => $data['roles'],
+            'permissions' => $data['permissions'],
         ]);
     }
 
@@ -29,43 +36,58 @@ class AdminRBACController extends Controller
      */
     public function editRoles(Tenant $tenant): View
     {
+        $data = $tenant->run(function () {
+            return [
+                'roles' => Role::with('permissions')->get(),
+                'permissions' => Permission::all(),
+            ];
+        });
+
         return view('admin.rbac.edit-roles', [
             'tenant' => $tenant,
-            'roles' => Role::with('permissions')->get(),
+            'roles' => $data['roles'],
+            'permissions' => $data['permissions'],
         ]);
     }
 
     /**
-     * Update role permissions for a tenant
+     * Update role permissions for a specific tenant role
      */
-    public function updateRolePermissions(Request $request, Tenant $tenant): RedirectResponse
+    public function updateRolePermissions(Request $request, Tenant $tenant, int $role): RedirectResponse
     {
         $validated = $request->validate([
-            'role_id' => 'required|exists:roles,id',
-            'permissions' => 'array',
-            'permissions.*' => 'exists:permissions,id',
+            'permissions'   => 'nullable|array',
+            'permissions.*' => 'integer',
         ]);
 
-        $role = Role::findOrFail($validated['role_id']);
         $permissions = $validated['permissions'] ?? [];
 
-        // Get old permissions for history
-        $oldPermissions = $role->permissions->pluck('id')->toArray();
+        // Execute inside the tenant's database context
+        $result = $tenant->run(function () use ($role, $permissions) {
+            $tenantRole = Role::findOrFail($role);
+            $oldPermissions = $tenantRole->permissions->pluck('id')->toArray();
 
-        // Sync permissions
-        $role->permissions()->sync($permissions);
+            $tenantRole->permissions()->sync($permissions);
 
+            return [
+                'roleName' => $tenantRole->name,
+                'old' => $oldPermissions,
+                'new' => $permissions,
+            ];
+        });
+
+        // Log on the central database (VersionHistory uses the central connection)
         \App\Models\VersionHistory::logChange(
             'role_permissions',
-            $role->id,
+            $role,
             auth('admin')->id(),
             'updated',
-            "Updated permissions for role: {$role->name} (Tenant: {$tenant->name})",
-            ['permissions' => $oldPermissions],
-            ['permissions' => $permissions]
+            "Updated permissions for role: {$result['roleName']} (Tenant: {$tenant->name})",
+            ['permissions' => $result['old']],
+            ['permissions' => $result['new']]
         );
 
-        return back()->with('success', "Permissions updated for {$role->name}.");
+        return back()->with('success', "Permissions updated for {$result['roleName']}.");
     }
 
     /**
@@ -73,13 +95,20 @@ class AdminRBACController extends Controller
      */
     public function auditLog(Tenant $tenant): View
     {
+        // VersionHistory lives on the central DB — filter by this tenant's name
+        $history = \App\Models\VersionHistory::query()
+            ->where(function ($q) {
+                $q->where('entity_type', 'role_permissions')
+                  ->orWhere('entity_type', 'permission');
+            })
+            ->where('change_description', 'like', "%Tenant: {$tenant->name}%")
+            ->latest()
+            ->paginate(30);
+
         return view('admin.rbac.audit-log', [
             'tenant' => $tenant,
-            'history' => \App\Models\VersionHistory::query()
-                ->where('entity_type', 'role_permissions')
-                ->orWhere('entity_type', 'permission')
-                ->latest()
-                ->paginate(30),
+            'history' => $history,
         ]);
     }
 }
+
