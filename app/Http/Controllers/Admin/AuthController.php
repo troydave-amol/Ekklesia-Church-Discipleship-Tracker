@@ -28,7 +28,7 @@ class AuthController extends Controller
             $admin = Auth::guard('admin')->user();
 
             // Check if admin account is active
-            if ($admin->status !== 'active') {
+            if (!$admin->is_active) {
                 Auth::guard('admin')->logout();
                 return back()->withErrors(['email' => 'Your account is inactive.']);
             }
