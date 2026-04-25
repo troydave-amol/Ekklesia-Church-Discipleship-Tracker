@@ -135,15 +135,6 @@ class FeatureUpdateController extends Controller
     }
 
     /**
-     * Show a list of all tenants with RBAC management links.
-     */
-    public function rbac()
-    {
-        $tenants = \App\Models\Tenant::orderBy('name')->get();
-        return view('admin.feature-updates.rbac', compact('tenants'));
-    }
-
-    /**
      * Publish the feature: mark it published, create pending installation
      * records for every active tenant, and notify their church admins.
      */

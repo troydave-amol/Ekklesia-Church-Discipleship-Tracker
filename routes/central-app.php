@@ -78,7 +78,6 @@ Route::middleware(['auth:admin', 'admin_auth'])->prefix('admin')->name('admin.')
         Route::get('/',                          [FeatureUpdateController::class, 'index'])->name('index');
         Route::get('/create',                    [FeatureUpdateController::class, 'create'])->name('create');
         Route::post('/',                         [FeatureUpdateController::class, 'store'])->name('store');
-        Route::get('/rbac',                      [FeatureUpdateController::class, 'rbac'])->name('rbac');
         Route::get('/{featureUpdate}',           [FeatureUpdateController::class, 'show'])->name('show');
         Route::post('/{featureUpdate}/publish',  [FeatureUpdateController::class, 'publish'])->name('publish');
         Route::post('/{featureUpdate}/seed',     [FeatureUpdateController::class, 'seed'])->name('seed');
