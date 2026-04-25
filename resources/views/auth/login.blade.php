@@ -12,6 +12,13 @@
 </div>
 @endif
 
+@if(session('success'))
+<div style="background:rgba(90,122,95,.08);color:var(--sage);border:1px solid rgba(90,122,95,.18);border-radius:10px;padding:12px 14px;font-size:13px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;animation:fadeUp .3s ease;">
+    <i class="fas fa-check-circle" style="margin-top:1px;flex-shrink:0;"></i>
+    {{ session('success') }}
+</div>
+@endif
+
 <form action="{{ route('login') }}" method="POST">
     @csrf
     <div class="form-group">
@@ -46,7 +53,7 @@
 </form>
 
 <div class="auth-links" style="margin-top:24px">
-    Don't have a church account? <a href="{{ route('register') }}">Register your church</a>
+    New member? <a href="{{ route('member.register') }}">Join this church</a>
 </div>
 @endsection
 

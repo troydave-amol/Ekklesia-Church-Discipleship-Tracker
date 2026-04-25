@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\RegisterChurchRequest;
-use App\Http\Requests\Auth\LoginRequest;
 use App\Models\Church;
 use App\Models\Role;
 use App\Models\User;
@@ -17,46 +15,67 @@ use Illuminate\Support\Facades\Hash;
 class AuthController extends Controller
 {
     public function showLogin()  { return view('auth.login'); }
-    public function showRegister(){ return view('auth.register'); }
 
-    public function register(RegisterChurchRequest $request)
+    /**
+     * Show the member self-registration form (tenant-scoped).
+     */
+    public function showMemberRegister()
     {
-        $pastor = DB::transaction(function () use ($request) {
+        return view('auth.member-register');
+    }
 
-            $church = Church::create([
-                'name'              => $request->church_name,
-                'subscription_plan' => $request->subscription_plan,
-            ]);
+    /**
+     * Process member self-registration.
+     * Creates a user with 'pending' membership status for pastor approval.
+     */
+    public function memberRegister(Request $request)
+    {
+        $validated = $request->validate([
+            'first_name'     => ['required', 'string', 'max:255'],
+            'last_name'      => ['required', 'string', 'max:255'],
+            'email'          => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password'       => ['required', 'string', 'min:8', 'confirmed'],
+            'requested_role' => ['required', 'in:disciple,program_leader'],
+        ]);
 
-            $adminRoleId = Role::query()->where('slug', 'church_admin')->value('id');
+        // Resolve the church for this tenant
+        $church = Church::first();
 
-            $pastor = User::create([
+        if (! $church) {
+            return back()->withErrors(['email' => 'This church workspace is not yet set up.']);
+        }
+
+        $role = $validated['requested_role'];
+        $roleId = Role::query()->where('slug', $role)->value('id');
+
+        $member = DB::transaction(function () use ($validated, $church, $role, $roleId) {
+            $member = User::create([
                 'church_id'  => $church->id,
-                'first_name' => $request->first_name,
-                'last_name'  => $request->last_name,
-                'email'      => $request->email,
-                'password'   => Hash::make($request->password),
-                'role'       => 'church_admin',
-                'role_id'    => $adminRoleId,
+                'first_name' => $validated['first_name'],
+                'last_name'  => $validated['last_name'],
+                'email'      => $validated['email'],
+                'password'   => Hash::make($validated['password']),
+                'role'       => $role,
+                'role_id'    => $roleId,
             ]);
 
-            UserProfile::create(['user_id' => $pastor->id]);
+            UserProfile::create(['user_id' => $member->id]);
 
             ChurchMembership::withoutGlobalScopes()->create([
-                'user_id'   => $pastor->id,
+                'user_id'   => $member->id,
                 'church_id' => $church->id,
-                'status'    => 'active',
+                'status'    => 'new_member',
                 'joined_at' => now(),
             ]);
 
-            return $pastor;
+            return $member;
         });
 
-        Auth::login($pastor);
-        return redirect()->route('login');
+        return redirect()->route('login')
+            ->with('success', 'Your request has been submitted! Your church administrator will review and approve your membership.');
     }
 
-    public function login(LoginRequest $request)
+    public function login(\App\Http\Requests\Auth\LoginRequest $request)
     {
         if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
             return back()->withErrors(['email' => 'These credentials do not match our records.']);
