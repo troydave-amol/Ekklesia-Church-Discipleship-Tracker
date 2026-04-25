@@ -27,6 +27,15 @@ class AdminAuthController extends Controller
             'password' => 'required|min:6',
         ]);
 
+        $admin = AdminUser::where('email', $credentials['email'])->first();
+
+        // Reject inactive accounts before attempting login to avoid creating session
+        if ($admin && $admin->status !== 'active') {
+            return back()->withErrors([
+                'email' => 'Your account is inactive.',
+            ]);
+        }
+
         if (Auth::guard('admin')->attempt($credentials, $request->boolean('remember'))) {
             // Log the login
             $admin = Auth::guard('admin')->user();
