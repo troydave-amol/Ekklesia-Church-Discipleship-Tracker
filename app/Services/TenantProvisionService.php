@@ -49,6 +49,9 @@ class TenantProvisionService
 
         $tenant->run(function () use ($signup, $plainPassword): void {
             $this->createPastorAccountInTenantDatabase($signup, $plainPassword);
+
+            // Seed the 4 default Destiny Training programs for this tenant
+            (new \Database\Seeders\TenantDefaultProgramsSeeder())->run();
         });
 
         try {
