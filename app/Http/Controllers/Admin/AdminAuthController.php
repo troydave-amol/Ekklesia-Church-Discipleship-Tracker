@@ -30,7 +30,7 @@ class AdminAuthController extends Controller
         $admin = AdminUser::where('email', $credentials['email'])->first();
 
         // Reject inactive accounts before attempting login to avoid creating session
-        if ($admin && $admin->status !== 'active') {
+        if ($admin && !$admin->is_active) {
             return back()->withErrors([
                 'email' => 'Your account is inactive.',
             ]);

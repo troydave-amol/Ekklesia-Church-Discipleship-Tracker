@@ -15,7 +15,7 @@ class AdminAuthenticate
             return redirect()->route('admin.login');
         }
 
-        if (Auth::guard('admin')->user()->status !== 'active') {
+        if (!Auth::guard('admin')->user()->is_active) {
             Auth::guard('admin')->logout();
             return redirect()->route('admin.login')->withErrors(['email' => 'Your account is inactive.']);
         }
