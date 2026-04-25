@@ -18,7 +18,7 @@ class AdminUser extends Authenticatable
         'email',
         'password',
         'role',
-        'is_active',
+        'status',
         'last_login_at',
     ];
 
@@ -60,6 +60,6 @@ class AdminUser extends Authenticatable
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('status', 'active');
     }
 }
