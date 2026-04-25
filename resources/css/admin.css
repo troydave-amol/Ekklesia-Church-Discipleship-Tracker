@@ -597,6 +597,25 @@ button { cursor: pointer; font-family: inherit; }
   color: var(--ca-ink-2);
 }
 
+.ca-subdomain-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+.ca-subdomain-link:hover {
+  text-decoration: none;
+}
+.ca-subdomain-link:hover .ca-code {
+  background: var(--ca-gold, #c9a227);
+  color: #fff;
+  border-color: var(--ca-gold, #c9a227);
+}
+.ca-subdomain-link:hover svg {
+  opacity: 1 !important;
+  stroke: var(--ca-gold, #c9a227);
+}
 
 /* ═══════════════════════════════════════════════════════════
    STATUS PILLS

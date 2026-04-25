@@ -30,7 +30,22 @@
                     @foreach($tenants as $tenant)
                     <tr>
                         <td style="font-weight:500;color:var(--ca-ink-2);">{{ $tenant->name }}</td>
-                        <td><code class="ca-code">{{ $tenant->subdomain }}</code></td>
+                        <td>
+                            @php
+                                $domain = config('app.domain', 'localhost');
+                                $scheme = request()->getScheme();
+                                $port = request()->getPort();
+                                $tenantUrl = in_array($domain, ['localhost', '127.0.0.1']) 
+                                    ? "{$scheme}://{$tenant->subdomain}.{$domain}:{$port}" 
+                                    : "https://{$tenant->subdomain}.{$domain}";
+                            @endphp
+                            <a href="{{ $tenantUrl }}" target="_blank" class="ca-subdomain-link" title="Open {{ $tenant->subdomain }}.{{ $domain }}">
+                                <code class="ca-code">{{ $tenant->subdomain }}</code>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.5;">
+                                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                                </svg>
+                            </a>
+                        </td>
                         <td>{{ ucfirst($tenant->subscription_plan ?? 'free') }}</td>
                         <td>
                             @if($tenant->status === 'active')

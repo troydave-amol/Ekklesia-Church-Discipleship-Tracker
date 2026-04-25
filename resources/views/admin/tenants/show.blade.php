@@ -63,7 +63,22 @@
     </div>
     <div class="ca-detail-item">
         <div class="ca-detail-label">Subdomain</div>
-        <div class="ca-detail-value"><code class="ca-code">{{ $tenant->subdomain }}</code></div>
+        <div class="ca-detail-value">
+            @php
+                $domain = config('app.domain', 'localhost');
+                $scheme = request()->getScheme();
+                $port = request()->getPort();
+                $tenantUrl = in_array($domain, ['localhost', '127.0.0.1']) 
+                    ? "{$scheme}://{$tenant->subdomain}.{$domain}:{$port}" 
+                    : "https://{$tenant->subdomain}.{$domain}";
+            @endphp
+            <a href="{{ $tenantUrl }}" target="_blank" class="ca-subdomain-link" title="Open {{ $tenant->subdomain }}.{{ $domain }}">
+                <code class="ca-code">{{ $tenant->subdomain }}</code>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.5;">
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+            </a>
+        </div>
     </div>
     <div class="ca-detail-item">
         <div class="ca-detail-label">Database</div>
@@ -102,7 +117,20 @@
                         <circle cx="12" cy="12" r="10"/>
                         <path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/>
                     </svg>
-                    <code class="ca-code">{{ $d->domain }}</code>
+                    @php
+                        $dDomain = config('app.domain', 'localhost');
+                        $dScheme = request()->getScheme();
+                        $dPort = request()->getPort();
+                        $dUrl = in_array($dDomain, ['localhost', '127.0.0.1']) 
+                            ? "{$dScheme}://{$d->domain}.{$dDomain}:{$dPort}" 
+                            : "https://{$d->domain}.{$dDomain}";
+                    @endphp
+                    <a href="{{ $dUrl }}" target="_blank" class="ca-subdomain-link" title="Open {{ $d->domain }}.{{ $dDomain }}">
+                        <code class="ca-code">{{ $d->domain }}</code>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.5;">
+                            <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                        </svg>
+                    </a>
                 </span>
             </div>
         @empty
