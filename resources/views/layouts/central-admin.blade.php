@@ -84,18 +84,8 @@
                 </a>
             </div>
 
-            <div class="ca-nav-group">
-                <div class="ca-nav-label">Feature Updates</div>
-                <a href="{{ route('admin.feature-updates.rbac') }}"
-                   class="ca-nav-link {{ request()->routeIs('admin.feature-updates.rbac') ? 'active' : '' }}">
-                    <svg class="ca-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                        <path d="M7 11V7a5 5 0 0110 0v4"></path>
-                    </svg>
-                    RBAC Management
-                    <span style="display:block;font-size:10px;color:var(--ca-ink-4);font-weight:normal;margin-left:auto;">Per tenant</span>
-                </a>
-            </div>
+
+
 
             <div class="ca-nav-group">
                 <div class="ca-nav-label">Administration</div>

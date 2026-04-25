@@ -48,7 +48,7 @@
                         </span>
                     </td>
                     <td>
-                        @if($admin->status === 'active')
+                        @if($admin->is_active)
                             <span class="ca-pill ca-pill-ok">
                                 <span class="ca-pill-dot"></span> Active
                             </span>
