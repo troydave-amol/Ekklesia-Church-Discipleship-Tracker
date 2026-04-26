@@ -2,15 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Church;
-use App\Models\Role;
-use App\Models\User;
-use App\Models\UserProfile;
-use App\Models\ChurchMembership;
+use App\Models\MemberJoinRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use App\Services\MemberJoinRequestService;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -26,9 +22,9 @@ class AuthController extends Controller
 
     /**
      * Process member self-registration.
-     * Creates a user with 'pending' membership status for pastor approval.
+     * Stores a pending join request for pastor approval.
      */
-    public function memberRegister(Request $request)
+    public function memberRegister(Request $request, MemberJoinRequestService $memberJoinRequestService)
     {
         $validated = $request->validate([
             'first_name'     => ['required', 'string', 'max:255'],
@@ -38,46 +34,27 @@ class AuthController extends Controller
             'requested_role' => ['required', 'in:disciple,program_leader'],
         ]);
 
-        // Resolve the church for this tenant
-        $church = Church::first();
-
-        if (! $church) {
-            return back()->withErrors(['email' => 'This church workspace is not yet set up.']);
+        try {
+            $memberJoinRequestService->submit($validated);
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\RuntimeException $e) {
+            return back()
+                ->withErrors(['email' => $e->getMessage()])
+                ->withInput();
         }
 
-        $role = $validated['requested_role'];
-        $roleId = Role::query()->where('slug', $role)->value('id');
-
-        $member = DB::transaction(function () use ($validated, $church, $role, $roleId) {
-            $member = User::create([
-                'church_id'  => $church->id,
-                'first_name' => $validated['first_name'],
-                'last_name'  => $validated['last_name'],
-                'email'      => $validated['email'],
-                'password'   => Hash::make($validated['password']),
-                'role'       => $role,
-                'role_id'    => $roleId,
-            ]);
-
-            UserProfile::create(['user_id' => $member->id]);
-
-            ChurchMembership::withoutGlobalScopes()->create([
-                'user_id'   => $member->id,
-                'church_id' => $church->id,
-                'status'    => 'new_member',
-                'joined_at' => now(),
-            ]);
-
-            return $member;
-        });
-
         return redirect()->route('login')
-            ->with('success', 'Your request has been submitted! Your church administrator will review and approve your membership.');
+            ->with('success', 'Your join request has been submitted. You can sign in after your church administrator approves your membership.');
     }
 
     public function login(\App\Http\Requests\Auth\LoginRequest $request)
     {
         if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+            if ($message = $this->memberJoinRequestLoginMessage((string) $request->input('email'))) {
+                return back()->withErrors(['email' => $message])->onlyInput('email');
+            }
+
             return back()->withErrors(['email' => 'These credentials do not match our records.']);
         }
         $request->session()->regenerate();
@@ -90,5 +67,29 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect()->route('login');
+    }
+
+    private function memberJoinRequestLoginMessage(string $email): ?string
+    {
+        $email = strtolower(trim($email));
+
+        if ($email === '') {
+            return null;
+        }
+
+        $joinRequest = MemberJoinRequest::query()
+            ->where('email', $email)
+            ->latest('created_at')
+            ->first();
+
+        if (! $joinRequest) {
+            return null;
+        }
+
+        return match ($joinRequest->status) {
+            MemberJoinRequest::STATUS_PENDING => 'Your join request is still awaiting church approval.',
+            MemberJoinRequest::STATUS_REJECTED => 'Your previous request was not approved. Submit a new request to try again.',
+            default => null,
+        };
     }
 }

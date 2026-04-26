@@ -205,8 +205,17 @@
                         </div>
                     </td>
                     <td>
-                        <span class="badge {{ ($disciple->membership?->status ?? 'inactive') === 'active' ? 'badge-green' : 'badge-red' }}">
-                            {{ strtoupper($disciple->membership?->status ?? 'inactive') }}
+                        @php
+                            $status = $disciple->membership?->status ?? 'inactive';
+                            $statusBadge = match($status) {
+                                'active' => 'badge-green',
+                                'visitor' => 'badge-blue',
+                                'new_member' => 'badge-purple',
+                                default => 'badge-red',
+                            };
+                        @endphp
+                        <span class="badge {{ $statusBadge }}">
+                            {{ strtoupper($status) }}
                         </span>
                     </td>
                     <td>

@@ -53,7 +53,9 @@
 </form>
 
 <div class="auth-links" style="margin-top:24px">
-    New member? <a href="{{ route('member.register') }}">Join this church</a>
+    @if (Route::has('member.register'))
+        New member? <a href="{{ route('member.register') }}">Join this church</a>
+    @endif
 </div>
 @endsection
 

@@ -3,7 +3,9 @@
 namespace Tests;
 
 use App\Models\Tenant;
+use App\Models\Church;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Stancl\Tenancy\Middleware\InitializeTenancyBySubdomain;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomainOrSubdomain;
@@ -14,6 +16,7 @@ abstract class TenantTestCase extends TestCase
     use RefreshDatabase;
 
     protected Tenant $tenant;
+    protected Church $church;
 
     protected function setUp(): void
     {
@@ -29,6 +32,7 @@ abstract class TenantTestCase extends TestCase
             InitializeTenancyByDomainOrSubdomain::class,
             PreventAccessFromCentralDomains::class,
             \App\Http\Middleware\EnsureTenantIsActive::class,
+            ValidateCsrfToken::class,
         ]);
 
         // Create a unique test tenant with a short alphanumeric ID
@@ -55,6 +59,13 @@ abstract class TenantTestCase extends TestCase
             '--tenants' => [$this->tenant->id],
             '--class'   => 'RolesAndPermissionsSeeder',
             '--force'   => true,
+        ]);
+
+        $this->church = Church::query()->create([
+            'name' => 'Test Church',
+            'address' => '123 Test Street',
+            'subscription_plan' => 'free',
+            'is_active' => true,
         ]);
     }
 
@@ -83,6 +94,8 @@ abstract class TenantTestCase extends TestCase
     {
         $role = \App\Models\Role::where('slug', $roleSlug)->firstOrFail();
 
+        $attributes['church_id'] ??= $this->church->id;
+        $attributes['role'] ??= $roleSlug;
         $attributes['role_id'] = $role->id;
 
         return \App\Models\User::factory()->create($attributes);

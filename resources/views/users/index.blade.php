@@ -3,6 +3,11 @@
 @section('title', 'Members')
 
 @section('content')
+@php
+    $activeTab = request('tab', 'disciples');
+    $pendingRequests = $pendingRequests ?? collect();
+    $pendingCount = $pendingRequests->count();
+@endphp
 
 {{-- Generate clean CSS for dynamic progress bars (computed entirely in PHP, output via JavaScript) --}}
 @php
@@ -76,14 +81,17 @@ foreach($leaders as $idx => $leader) {
 {{-- Tabs --}}
 <div data-tab-group="users" style="margin-bottom:20px;">
     <div class="tabs">
-        <button class="tab active" data-tab-target="tab-disciples">
+        <button class="tab {{ $activeTab === 'disciples' ? 'active' : '' }}" data-tab-target="tab-disciples">
             Disciples <span class="badge badge-blue" style="margin-left:6px;">{{ ($leaderScope ?? false) ? $disciples->total() : $totalDisciples }}</span>
         </button>
         @unless($leaderScope ?? false)
-        <button class="tab" data-tab-target="tab-leaders">
+        <button class="tab {{ $activeTab === 'leaders' ? 'active' : '' }}" data-tab-target="tab-leaders">
             Leaders <span class="badge badge-blue" style="margin-left:6px;">{{ $totalLeaders }}</span>
         </button>
-        <button class="tab" data-tab-target="tab-add">
+        <button class="tab {{ $activeTab === 'pending' ? 'active' : '' }}" data-tab-target="tab-pending">
+            Pending Requests <span class="badge {{ $pendingCount > 0 ? 'badge-gold' : 'badge-blue' }}" style="margin-left:6px;">{{ $pendingCount }}</span>
+        </button>
+        <button class="tab {{ $activeTab === 'add' ? 'active' : '' }}" data-tab-target="tab-add">
             @include('partials.icon',['name'=>'plus','size'=>13,'color'=>'currentColor'])
             Add Member
         </button>
@@ -91,7 +99,7 @@ foreach($leaders as $idx => $leader) {
     </div>
 
     {{-- Disciples Tab --}}
-    <div id="tab-disciples" class="tab-content active">
+    <div id="tab-disciples" class="tab-content {{ $activeTab === 'disciples' ? 'active' : '' }}">
         <div class="card" style="margin-top:16px;">
             <div class="card-header">
                 <form method="GET" action="{{ route('users.index') }}" class="table-controls" style="flex:1;">
@@ -116,6 +124,7 @@ foreach($leaders as $idx => $leader) {
                         <option value="active"   {{ request('status')=='active'?'selected':'' }}>Active</option>
                         <option value="inactive" {{ request('status')=='inactive'?'selected':'' }}>Inactive</option>
                         <option value="visitor"  {{ request('status')=='visitor'?'selected':'' }}>Visitor</option>
+                        <option value="new_member" {{ request('status')=='new_member'?'selected':'' }}>New Member</option>
                     </select>
                     <button type="submit" class="btn btn-ghost">Filter</button>
                     @if(request()->hasAny(['q','program','leader_id','status']))
@@ -222,7 +231,7 @@ foreach($leaders as $idx => $leader) {
     </div>
 
     {{-- Leaders Tab --}}
-    <div id="tab-leaders" class="tab-content" @if($leaderScope ?? false) style="display:none;" @endif>
+    <div id="tab-leaders" class="tab-content {{ $activeTab === 'leaders' ? 'active' : '' }}" @if($leaderScope ?? false) style="display:none;" @endif>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:16px;">
             @forelse($leaders as $index => $leader)
             @php $lColors=['var(--gold)','var(--blue)','var(--purple)','var(--green)','var(--orange)']; $lc=$lColors[$index%5]; @endphp
@@ -272,8 +281,81 @@ foreach($leaders as $idx => $leader) {
         </div>
     </div>
 
+    {{-- Pending Requests Tab --}}
+    <div id="tab-pending" class="tab-content {{ $activeTab === 'pending' ? 'active' : '' }}" @if($leaderScope ?? false) style="display:none;" @endif>
+        <div class="card" style="margin-top:16px;">
+            <div class="card-header">
+                <div>
+                    <span class="section-title">Pending Join Requests</span>
+                    <div class="text-muted" style="font-size:12px;margin-top:3px;">Approve members here before they are added to your church roster.</div>
+                </div>
+                <span class="badge {{ $pendingCount > 0 ? 'badge-gold' : 'badge-blue' }}">{{ $pendingCount }} OPEN</span>
+            </div>
+
+            @if($pendingCount === 0)
+                <div class="card-body">
+                    <div class="text-muted" style="text-align:center;padding:32px 12px;">
+                        No join requests are waiting for review.
+                    </div>
+                </div>
+            @else
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Applicant</th>
+                                <th>Requested Role</th>
+                                <th>Submitted</th>
+                                <th style="min-width:320px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($pendingRequests as $joinRequest)
+                                <tr>
+                                    <td>
+                                        <div style="font-weight:500;font-size:14px;">{{ $joinRequest->first_name }} {{ $joinRequest->last_name }}</div>
+                                        <div style="font-size:12px;color:var(--text-muted);">{{ $joinRequest->email }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge {{ $joinRequest->requested_role === 'program_leader' ? 'badge-blue' : 'badge-purple' }}">
+                                            {{ $joinRequest->requested_role === 'program_leader' ? 'PROGRAM LEADER' : 'DISCIPLE' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div style="font-size:13px;">{{ $joinRequest->created_at->format('M j, Y g:i A') }}</div>
+                                        <div style="font-size:11px;color:var(--text-muted);">{{ $joinRequest->created_at->diffForHumans() }}</div>
+                                    </td>
+                                    <td>
+                                        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+                                            <form method="POST" action="{{ route('join-requests.approve', $joinRequest) }}">
+                                                @csrf
+                                                <button type="submit" class="btn btn-primary btn-sm">Approve</button>
+                                            </form>
+
+                                            <form method="POST" action="{{ route('join-requests.reject', $joinRequest) }}" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+                                                @csrf
+                                                <input
+                                                    type="text"
+                                                    name="rejection_note"
+                                                    class="form-control"
+                                                    placeholder="Optional rejection note"
+                                                    style="max-width:220px;"
+                                                >
+                                                <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+    </div>
+
     {{-- Add Member Tab --}}
-    <div id="tab-add" class="tab-content" @if($leaderScope ?? false) style="display:none;" @endif>
+    <div id="tab-add" class="tab-content {{ $activeTab === 'add' ? 'active' : '' }}" @if($leaderScope ?? false) style="display:none;" @endif>
         <div class="grid-2 mt-16">
             @include('users.partials.create-form')
         </div>
