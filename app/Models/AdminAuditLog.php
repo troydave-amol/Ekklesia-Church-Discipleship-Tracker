@@ -19,6 +19,7 @@ class AdminAuditLog extends Model
 
     protected $fillable = [
         'admin_user_id',
+        'tenant_id',
         'action',
         'resource_type',
         'resource_id',
@@ -53,6 +54,7 @@ class AdminAuditLog extends Model
      * @param string|null $description   Human-readable change description (stored in changes JSON)
      * @param mixed       $oldValues     Previous state (optional)
      * @param mixed       $newValues     New state (optional)
+     * @param string|null $tenantId      Tenant ID when the action targets a specific tenant
      */
     public static function logChange(
         string  $resourceType,
@@ -62,6 +64,7 @@ class AdminAuditLog extends Model
         ?string $description = null,
         mixed   $oldValues = null,
         mixed   $newValues = null,
+        ?string $tenantId = null,
     ): static {
         // Normalise the action to the enum values in the migration
         $actionMap = [
@@ -76,6 +79,7 @@ class AdminAuditLog extends Model
 
         return static::create([
             'admin_user_id' => $adminId,
+            'tenant_id'     => $tenantId,
             'action'        => $normalisedAction,
             'resource_type' => $resourceType,
             'resource_id'   => (string) $resourceId,

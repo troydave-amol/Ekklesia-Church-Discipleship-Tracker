@@ -197,7 +197,7 @@
 <div class="card mt-16">
     <div class="card-header">
         <span class="section-title">Recent Attendance Records</span>
-        @can('export-reports')
+        @can('reports.export')
         <a href="{{ route('reports.attendance') }}" class="btn btn-ghost btn-sm">
             @include('partials.icon',['name'=>'download','size'=>13])
             Export

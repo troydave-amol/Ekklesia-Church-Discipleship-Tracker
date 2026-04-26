@@ -72,13 +72,7 @@ class LessonController extends Controller
                 abort(404);
             }
 
-            $assigned = \App\Models\ChurchMembership::where('leader_id', $user->id)
-                ->where('destiny_training_level', $program->program_key)
-                ->exists();
-
-            if (! $assigned) {
-                abort(403, 'You are not assigned to this program.');
-            }
+            $this->ensureLeaderCanManageProgram($user, $program);
         }
 
         Lesson::create(array_merge($request->validated(), ['church_id' => $request->user()->church_id]));
@@ -88,17 +82,12 @@ class LessonController extends Controller
 
     public function update(StoreLessonRequest $request, int $id)
     {
-        $lesson = Lesson::findOrFail($id);
+        $lesson = Lesson::with('program')->findOrFail($id);
         $user = $request->user();
 
         if ($user->isLeader()) {
-            // Leader may only edit lessons they created. If the lessons table does not
-            // have a creator column, deny edits by leaders to be safe.
-            if (isset($lesson->user_id) && $lesson->user_id === $user->id) {
-                $lesson->update($request->validated());
-            } else {
-                abort(403, 'You can only edit your own lessons.');
-            }
+            $this->ensureLeaderCanManageProgram($user, $lesson->program);
+            $lesson->update($request->validated());
         } else {
             $lesson->update($request->validated());
         }
@@ -108,19 +97,31 @@ class LessonController extends Controller
 
     public function destroy(int $id)
     {
-        $lesson = Lesson::findOrFail($id);
+        $lesson = Lesson::with('program')->findOrFail($id);
         $user = auth()->user();
 
         if ($user->isLeader()) {
-            if (isset($lesson->user_id) && $lesson->user_id === $user->id) {
-                $lesson->delete();
-            } else {
-                abort(403, 'You can only delete your own lessons.');
-            }
+            $this->ensureLeaderCanManageProgram($user, $lesson->program);
+            $lesson->delete();
         } else {
             $lesson->delete();
         }
 
         return redirect()->route('lessons.index')->with('success', 'Lesson deleted.');
+    }
+
+    private function ensureLeaderCanManageProgram($user, ?Program $program): void
+    {
+        if (! $program) {
+            abort(404);
+        }
+
+        $assigned = \App\Models\ChurchMembership::where('leader_id', $user->id)
+            ->where('destiny_training_level', $program->program_key)
+            ->exists();
+
+        if (! $assigned) {
+            abort(403, 'You are not assigned to this program.');
+        }
     }
 }
