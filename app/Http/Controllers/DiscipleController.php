@@ -11,6 +11,7 @@ use App\Services\SubscriptionService;
 use App\Models\Program;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\MemberJoinRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -44,6 +45,7 @@ class DiscipleController extends Controller
     private function indexData(Request $request, bool $leaderScope): array
     {
         $churchId = auth()->user()->church_id;
+        $pendingRequests = collect();
 
         $programs = Program::orderBy('name')->get();
 
@@ -102,12 +104,21 @@ class DiscipleController extends Controller
 
         $totalLeaders = $leaders->count();
 
+        if (! $leaderScope && auth()->user()->isChurchAdmin()) {
+            $pendingRequests = MemberJoinRequest::query()
+                ->where('church_id', $churchId)
+                ->pending()
+                ->latest('created_at')
+                ->get();
+        }
+
         return compact(
             'disciples',
             'leaders',
             'programs',
             'totalDisciples',
             'totalLeaders',
+            'pendingRequests',
             'leaderScope',
         );
     }

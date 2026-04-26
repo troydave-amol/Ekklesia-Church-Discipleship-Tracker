@@ -16,6 +16,14 @@ class ProgramEnrollmentService
      */
     public function enroll(int $churchId, array $data): User
     {
+        return $this->createMember($churchId, $data);
+    }
+
+    /**
+     * Create a member account, profile, and membership row.
+     */
+    public function createMember(int $churchId, array $data): User
+    {
         return DB::transaction(function () use ($churchId, $data) {
 
             $roleSlug = $data['role'] ?? 'disciple';
@@ -28,6 +36,7 @@ class ProgramEnrollmentService
             };
 
             $roleId = Role::query()->where('slug', $roleSlug)->value('id');
+            $password = $data['password_hash'] ?? Hash::make(! empty($data['password']) ? $data['password'] : 'Welcome1!');
 
             $user = User::create([
                 'church_id'  => $churchId,
@@ -35,7 +44,7 @@ class ProgramEnrollmentService
                 'last_name'  => $data['last_name'],
                 'nickname'   => $data['nickname'] ?? null,
                 'email'      => $data['email'],
-                'password'   => Hash::make(! empty($data['password']) ? $data['password'] : 'Welcome1!'),
+                'password'   => $password,
                 'role'       => $roleSlug,
                 'role_id'    => $roleId,
             ]);

@@ -18,6 +18,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SystemInfoController;
 use App\Http\Controllers\SystemChangelogController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\MemberJoinRequestController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
@@ -32,8 +33,9 @@ Route::get('/', function () {
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/register', [AuthController::class, 'showMemberRegister'])->name('member.register');
-Route::post('/register', [AuthController::class, 'memberRegister'])->name('member.register.submit');
+// Tenant member self-registration must not collide with the central SaaS /register page.
+Route::get('/member/register', [AuthController::class, 'showMemberRegister'])->name('member.register');
+Route::post('/member/register', [AuthController::class, 'memberRegister'])->name('member.register.submit');
 
 // Password Reset routes (Breeze-compatible, backed by Auth controllers)
 Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
@@ -58,6 +60,8 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
             Route::get('/users/{id}/edit', [DiscipleController::class, 'edit'])->name('users.edit');
             Route::put('/users/{id}', [DiscipleController::class, 'update'])->name('users.update');
             Route::post('/users/import', [DiscipleController::class, 'import'])->middleware('subscription:bulk_import')->name('users.import');
+            Route::post('/join-requests/{joinRequest}/approve', [MemberJoinRequestController::class, 'approve'])->name('join-requests.approve');
+            Route::post('/join-requests/{joinRequest}/reject', [MemberJoinRequestController::class, 'reject'])->name('join-requests.reject');
         });
 
         // Delete user only for church_admin
