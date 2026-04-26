@@ -10,6 +10,7 @@ use App\Models\FeatureUpdate;
 use App\Models\Tenant;
 use App\Models\TenantFeatureInstallation;
 use App\Models\VersionHistory;
+use App\Services\FeaturePackageInspector;
 use Illuminate\Http\Request;
 
 class FeatureUpdateController extends Controller
@@ -86,52 +87,9 @@ class FeatureUpdateController extends Controller
     public function show(FeatureUpdate $featureUpdate)
     {
         $featureUpdate->load('installations.tenant');
+        $inspection = app(FeaturePackageInspector::class)->inspect($featureUpdate);
 
-        $payload = $featureUpdate->payload ?? [];
-        $model   = $payload['model'] ?? null;
-        $migFile = $payload['migration_file'] ?? null;
-
-        $files = [];
-        if ($model) {
-            $files = [
-                [
-                    'label' => "database/migrations/tenant/{$migFile}.php",
-                    'path'  => database_path("migrations/tenant/{$migFile}.php"),
-                    'key'   => 'migration',
-                ],
-                [
-                    'label' => "app/Models/{$model}.php",
-                    'path'  => app_path("Models/{$model}.php"),
-                    'key'   => 'model',
-                ],
-                [
-                    'label' => "database/factories/{$model}Factory.php",
-                    'path'  => database_path("factories/{$model}Factory.php"),
-                    'key'   => 'factory',
-                ],
-                [
-                    'label' => "database/seeders/{$model}Seeder.php",
-                    'path'  => database_path("seeders/{$model}Seeder.php"),
-                    'key'   => 'seeder',
-                ],
-                [
-                    'label' => "app/Http/Controllers/{$model}Controller.php",
-                    'path'  => app_path("Http/Controllers/{$model}Controller.php"),
-                    'key'   => 'controller',
-                ],
-                [
-                    'label' => "app/Http/Requests/{$model}Request.php",
-                    'path'  => app_path("Http/Requests/{$model}Request.php"),
-                    'key'   => 'request',
-                ],
-            ];
-
-            foreach ($files as &$f) {
-                $f['exists'] = \Illuminate\Support\Facades\File::exists($f['path']);
-            }
-        }
-
-        return view('admin.feature-updates.show', compact('featureUpdate', 'files'));
+        return view('admin.feature-updates.show', compact('featureUpdate', 'inspection'));
     }
 
     /**
@@ -140,6 +98,16 @@ class FeatureUpdateController extends Controller
      */
     public function publish(FeatureUpdate $featureUpdate)
     {
+        $inspection = app(FeaturePackageInspector::class)->inspect($featureUpdate);
+
+        if (!$inspection['is_complete']) {
+            $missingLabels = implode(', ', $inspection['missing_labels']);
+
+            return redirect()
+                ->back()
+                ->with('error', "Publish blocked. Missing or incomplete components: {$missingLabels}.");
+        }
+
         $featureUpdate->update([
             'status'       => 'published',
             'published_at' => now(),

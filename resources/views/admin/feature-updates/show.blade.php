@@ -18,6 +18,18 @@
     </a>
 </div>
 
+@if(session('success'))
+    <div class="ca-card" style="padding:14px 18px;margin-bottom:20px;background:rgba(39,174,96,.08);border:1px solid rgba(39,174,96,.18);color:#1f7a45;">
+        {{ session('success') }}
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="ca-card" style="padding:14px 18px;margin-bottom:20px;background:#fdeaea;border:1px solid #efc2c2;color:#c0392b;">
+        {{ session('error') }}
+    </div>
+@endif
+
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
 
     {{-- Status & Actions Card --}}
@@ -78,29 +90,42 @@
     <div class="ca-card" style="padding:20px;">
         <div style="font-size:11px;font-weight:600;color:var(--ca-ink-4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;">Generated Files</div>
 
-        @if(empty($files))
-            <div style="font-size:13px;color:var(--ca-ink-4);">Scaffold has not run yet. Files will appear here once generated.</div>
+        @if($inspection['selected_count'] === 0)
+            <div style="font-size:13px;color:var(--ca-ink-4);">No scaffold components were selected for this feature package.</div>
         @else
-            <div style="font-family:'DM Mono',monospace;font-size:12px;line-height:2;">
-                @foreach($files as $file)
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        @if($file['exists'])
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            <span style="color:var(--ca-ink-2);">{{ $file['label'] }}</span>
+            @if(!$inspection['is_complete'])
+                <div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;background:#fdeaea;border:1px solid #efc2c2;margin-bottom:14px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <div style="font-size:12px;line-height:1.5;color:#c0392b;">
+                        Missing or incomplete selected components:
+                        <strong>{{ implode(', ', $inspection['missing_labels']) }}</strong>
+                    </div>
+                </div>
+            @endif
+
+            <div style="display:grid;gap:10px;">
+                @foreach($inspection['selected_components'] as $component)
+                    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--ca-border);border-radius:10px;background:var(--ca-surface);">
+                        @if($component['exists'])
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg>
                         @else
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                            <span style="color:var(--ca-ink-4);text-decoration:line-through;">{{ $file['label'] }}</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         @endif
+
+                        <div style="min-width:0;">
+                            <div style="font-size:13px;font-weight:600;color:{{ $component['exists'] ? 'var(--ca-ink-2)' : '#c0392b' }};">
+                                {{ $component['label'] }}
+                            </div>
+                            <div style="font-family:'DM Mono',monospace;font-size:11.5px;color:var(--ca-ink-4);margin-top:2px;word-break:break-all;">
+                                {{ $component['relative_path'] ?? 'Path metadata unavailable' }}
+                            </div>
+                        </div>
                     </div>
                 @endforeach
             </div>
 
-            @php
-                $existsCount = collect($files)->where('exists', true)->count();
-                $totalCount  = count($files);
-            @endphp
             <div style="margin-top:12px;font-size:12px;color:var(--ca-ink-4);">
-                {{ $existsCount }}/{{ $totalCount }} files present on disk
+                {{ $inspection['existing_count'] }}/{{ $inspection['selected_count'] }} selected files present on disk
             </div>
         @endif
     </div>
