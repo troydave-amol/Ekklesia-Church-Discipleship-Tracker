@@ -3,104 +3,116 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Role;
+use App\Models\AdminAuditLog;
 use App\Models\Permission;
+use App\Models\Role;
 use App\Models\Tenant;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 
 class AdminRBACController extends Controller
 {
     /**
-     * View RBAC overview for a tenant
+     * View RBAC overview for a tenant.
      */
     public function show(Tenant $tenant): View
     {
-        $data = $tenant->run(function () {
-            return [
-                'roles' => Role::with('permissions')->get(),
-                'permissions' => Permission::all(),
-            ];
-        });
-
-        return view('admin.rbac.show', [
-            'tenant' => $tenant,
-            'roles' => $data['roles'],
-            'permissions' => $data['permissions'],
-        ]);
+        return view('admin.rbac.show', $this->tenantRbacViewData($tenant));
     }
 
     /**
-     * Show role management page
+     * Show role management page.
      */
     public function editRoles(Tenant $tenant): View
     {
-        $data = $tenant->run(function () {
-            return [
-                'roles' => Role::with('permissions')->get(),
-                'permissions' => Permission::all(),
-            ];
-        });
-
-        return view('admin.rbac.edit-roles', [
-            'tenant' => $tenant,
-            'roles' => $data['roles'],
-            'permissions' => $data['permissions'],
-        ]);
+        return view('admin.rbac.edit-roles', $this->tenantRbacViewData($tenant));
     }
 
     /**
-     * Update role permissions for a specific tenant role
+     * Update role permissions for a specific tenant role.
      */
     public function updateRolePermissions(Request $request, Tenant $tenant, int $role): RedirectResponse
     {
         $validated = $request->validate([
-            'permissions'   => 'nullable|array',
-            'permissions.*' => 'integer',
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['integer', 'distinct'],
         ]);
 
-        $permissions = $validated['permissions'] ?? [];
+        $permissionIds = collect($validated['permissions'] ?? [])
+            ->map(static fn (mixed $id): int => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
 
-        // Execute inside the tenant's database context
-        $result = $tenant->run(function () use ($role, $permissions) {
-            $tenantRole = Role::findOrFail($role);
-            $oldPermissions = $tenantRole->permissions->pluck('id')->toArray();
+        $result = $tenant->run(function () use ($role, $permissionIds) {
+            $tenantRole = Role::query()
+                ->with('permissions:id,slug,name')
+                ->findOrFail($role);
 
-            $tenantRole->permissions()->sync($permissions);
+            $availablePermissionIds = Permission::query()->pluck('id');
+            $unknownPermissionIds = collect($permissionIds)->diff($availablePermissionIds);
+
+            if ($unknownPermissionIds->isNotEmpty()) {
+                throw ValidationException::withMessages([
+                    'permissions' => 'One or more selected permissions do not belong to this tenant.',
+                ]);
+            }
+
+            $oldPermissionSlugs = $tenantRole->permissions
+                ->pluck('slug')
+                ->sort()
+                ->values()
+                ->all();
+
+            $tenantRole->permissions()->sync($permissionIds);
+            $tenantRole->load('permissions:id,slug,name');
+
+            $newPermissionSlugs = $tenantRole->permissions
+                ->pluck('slug')
+                ->sort()
+                ->values()
+                ->all();
 
             return [
-                'roleName' => $tenantRole->name,
-                'old' => $oldPermissions,
-                'new' => $permissions,
+                'role_id' => $tenantRole->id,
+                'role_name' => $tenantRole->name,
+                'role_slug' => $tenantRole->slug,
+                'old_permissions' => $oldPermissionSlugs,
+                'new_permissions' => $newPermissionSlugs,
             ];
         });
 
-        // Log on the central database (AdminAuditLog uses the central connection)
-        \App\Models\AdminAuditLog::logChange(
+        AdminAuditLog::logChange(
             'role_permissions',
-            $role,
+            $result['role_id'],
             auth('admin')->id(),
             'updated',
-            "Updated permissions for role: {$result['roleName']} (Tenant: {$tenant->name})",
-            ['permissions' => $result['old']],
-            ['permissions' => $result['new']]
+            "Updated permissions for {$result['role_name']} in {$tenant->name}.",
+            [
+                'role_slug' => $result['role_slug'],
+                'permissions' => $result['old_permissions'],
+            ],
+            [
+                'role_slug' => $result['role_slug'],
+                'permissions' => $result['new_permissions'],
+            ],
+            (string) $tenant->id,
         );
 
-        return back()->with('success', "Permissions updated for {$result['roleName']}.");
+        return back()->with('success', "Permissions updated for {$result['role_name']}.");
     }
 
     /**
-     * Show audit log for RBAC changes
+     * Show audit log for RBAC changes.
      */
     public function auditLog(Tenant $tenant): View
     {
-        // AdminAuditLog lives on the central DB — filter by this tenant's name
-        $history = \App\Models\AdminAuditLog::query()
-            ->where(function ($q) {
-                $q->where('resource_type', 'role_permissions')
-                  ->orWhere('resource_type', 'permission');
-            })
+        $history = AdminAuditLog::query()
+            ->with('adminUser')
+            ->where('tenant_id', (string) $tenant->id)
+            ->where('resource_type', 'role_permissions')
             ->latest()
             ->paginate(30);
 
@@ -109,5 +121,28 @@ class AdminRBACController extends Controller
             'history' => $history,
         ]);
     }
-}
 
+    /**
+     * @return array{tenant: Tenant, roles: \Illuminate\Support\Collection<int, Role>, permissions: \Illuminate\Support\Collection<int, Permission>}
+     */
+    private function tenantRbacViewData(Tenant $tenant): array
+    {
+        $data = $tenant->run(function () {
+            return [
+                'roles' => Role::query()
+                    ->with('permissions:id,slug,name')
+                    ->orderBy('id')
+                    ->get(),
+                'permissions' => Permission::query()
+                    ->orderBy('name')
+                    ->get(),
+            ];
+        });
+
+        return [
+            'tenant' => $tenant,
+            'roles' => $data['roles'],
+            'permissions' => $data['permissions'],
+        ];
+    }
+}

@@ -4,7 +4,7 @@
 @section('content')
 <div class="mb-20 flex gap-8">
     <a href="{{ route('lessons.index') }}" class="btn btn-ghost btn-sm">← Lessons</a>
-    @can('manage-lessons')
+    @can('lessons.manage')
     <a href="{{ route('lessons.edit', $lesson) }}" class="btn btn-ghost btn-sm">Edit</a>
     @endcan
 </div>

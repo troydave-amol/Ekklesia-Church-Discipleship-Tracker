@@ -9,7 +9,7 @@
         <h1 class="page-title">Destiny Training Programs</h1>
         <p class="page-subtitle">Manage your church's discipleship curriculum</p>
     </div>
-    @can('manage-programs')
+    @can('programs.manage')
     <button class="btn btn-primary" onclick="document.getElementById('createProgramModal').style.display='flex'">
         @include('partials.icon',['name'=>'plus','size'=>14])
         Create Program
@@ -104,7 +104,7 @@
                     @include('partials.icon',['name'=>'users','size'=>12,'color'=>$pc['color']])
                     Disciples
                 </a>
-                @can('manage-programs')
+                @can('programs.manage')
                 <a href="{{ route('programs.edit', $program) }}" class="btn btn-ghost btn-icon btn-sm">
                     @include('partials.icon',['name'=>'edit','size'=>13])
                 </a>
@@ -117,7 +117,7 @@
         <div style="padding:64px;text-align:center;color:var(--text-muted);">
             @include('partials.icon',['name'=>'cross','size'=>40,'color'=>'var(--border)'])
             <div style="font-size:16px;margin-top:16px;margin-bottom:8px;color:var(--text);">No programs created yet</div>
-            @can('manage-programs')
+            @can('programs.manage')
             <p style="font-size:13px;margin-bottom:20px;">Create your first destiny training program to get started.</p>
             <button class="btn btn-primary" onclick="document.getElementById('createProgramModal').style.display='flex'">
                 @include('partials.icon',['name'=>'plus','size'=>14])

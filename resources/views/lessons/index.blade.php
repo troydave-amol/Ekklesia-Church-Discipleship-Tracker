@@ -9,7 +9,7 @@
         <h1 class="page-title">Lesson Management</h1>
         <p class="page-subtitle">Upload and manage weekly lessons per program</p>
     </div>
-    @can('manage-lessons')
+    @can('lessons.manage')
     <a href="{{ route('lessons.create') }}" class="btn btn-primary">
         @include('partials.icon',['name'=>'upload','size'=>14])
         Upload New Lesson
@@ -55,7 +55,7 @@
             <a href="{{ route('lessons.show', $lesson) }}" class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;">
                 View
             </a>
-            @can('manage-lessons')
+            @can('lessons.manage')
             <a href="{{ route('lessons.edit', $lesson) }}" class="btn btn-ghost btn-icon btn-sm">
                 @include('partials.icon',['name'=>'edit','size'=>13])
             </a>
@@ -73,7 +73,7 @@
         <div style="padding:64px;text-align:center;color:var(--text-muted);">
             @include('partials.icon',['name'=>'book','size'=>40,'color'=>'var(--border)'])
             <div style="font-size:16px;margin-top:16px;margin-bottom:8px;color:var(--text);">No lessons yet</div>
-            @can('manage-lessons')
+            @can('lessons.manage')
             <a href="{{ route('lessons.create') }}" class="btn btn-primary" style="margin-top:8px;">Upload First Lesson</a>
             @endcan
         </div>

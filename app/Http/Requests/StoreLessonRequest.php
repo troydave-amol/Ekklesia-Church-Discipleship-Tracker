@@ -11,7 +11,11 @@ class StoreLessonRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->user()->isChurchAdmin();
+        $user = $this->user();
+
+        return $user !== null
+            && ($user->isChurchAdmin() || $user->isRestrictedLeader())
+            && $user->hasPermission('lessons.manage');
     }
 
     /**

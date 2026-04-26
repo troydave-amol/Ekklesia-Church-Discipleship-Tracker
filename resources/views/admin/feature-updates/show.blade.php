@@ -18,6 +18,14 @@
     </a>
 </div>
 
+@php
+    $adminUser = auth('admin')->user();
+    $isSuperAdmin = $adminUser && method_exists($adminUser, 'isSuperAdmin') && $adminUser->isSuperAdmin();
+    $installationStatusSummary = collect($deleteImpact['installation_status_counts'] ?? [])
+        ->map(fn ($count, $status) => ucfirst($status) . ': ' . $count)
+        ->implode(' · ');
+@endphp
+
 @if(session('success'))
     <div class="ca-card" style="padding:14px 18px;margin-bottom:20px;background:rgba(39,174,96,.08);border:1px solid rgba(39,174,96,.18);color:#1f7a45;">
         {{ session('success') }}
@@ -197,4 +205,85 @@
         </div>
     @endif
 </div>
+
+@if($isSuperAdmin)
+    <div class="ca-danger-zone" style="margin-top:24px;">
+        <div class="ca-danger-zone-head">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span>Danger Zone</span>
+        </div>
+        <div class="ca-danger-zone-body">
+            <div class="ca-danger-zone-row" style="align-items:flex-start;gap:18px;">
+                <div style="flex:1;min-width:0;">
+                    <div class="ca-danger-zone-title">Delete this feature package</div>
+                    <div class="ca-danger-zone-desc" style="margin-bottom:12px;">
+                        Permanently removes <strong>{{ $featureUpdate->name }}</strong> (v{{ $featureUpdate->version }}) from the central app, deletes its tracked installation records, and cleans up any managed scaffold files still present on disk.
+                    </div>
+                    <div style="display:grid;gap:6px;font-size:12px;color:var(--ca-ink-3);line-height:1.6;">
+                        <div><strong style="color:var(--ca-ink-2);">{{ $deleteImpact['selected_component_count'] }}</strong> selected scaffold file(s) targeted for cleanup.</div>
+                        <div><strong style="color:var(--ca-ink-2);">{{ $deleteImpact['tracked_tenant_count'] }}</strong> tenant installation record(s) will be removed from central tracking.</div>
+                        <div>Tenant-side schema changes, seeded data, and past tenant notifications will <strong>not</strong> be rolled back.</div>
+                        @if($installationStatusSummary !== '')
+                            <div>Current installation states: {{ $installationStatusSummary }}</div>
+                        @endif
+                    </div>
+
+                    @if($deleteImpact['has_installing_installations'])
+                        <div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;background:#fff4e5;border:1px solid #f3d2a4;color:#9a5d00;margin-top:14px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <div style="font-size:12px;line-height:1.5;">
+                                Deletion is temporarily blocked because at least one tenant installation is currently in progress.
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                <form method="POST" action="{{ route('admin.feature-updates.destroy', $featureUpdate) }}" id="delete-feature-package-form" style="flex-shrink:0;">
+                    @csrf
+                    @method('DELETE')
+                    <button
+                        type="button"
+                        class="ca-cta ca-cta-danger"
+                        onclick="confirmDeleteFeaturePackage()"
+                        @if($deleteImpact['has_installing_installations']) disabled @endif
+                        style="@if($deleteImpact['has_installing_installations']) opacity:.6;cursor:not-allowed; @endif"
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                            <line x1="10" y1="11" x2="10" y2="17"/>
+                            <line x1="14" y1="11" x2="14" y2="17"/>
+                        </svg>
+                        Delete Feature Package
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function confirmDeleteFeaturePackage() {
+        const packageName = @json($featureUpdate->name);
+        const packageVersion = @json($featureUpdate->version);
+        const typedName = prompt(`Type "${packageName}" to confirm deletion of feature package v${packageVersion}.`);
+
+        if (typedName === null) {
+            return;
+        }
+
+        if (typedName.trim() !== packageName) {
+            alert(`Package name did not match. "${packageName}" was not deleted.`);
+            return;
+        }
+
+        if (confirm(`Final warning: deleting "${packageName}" will remove its central tracking records and delete any managed scaffold files still present on disk.\n\nTenant-side schema changes and seeded data will NOT be rolled back.\n\nClick OK to permanently delete this feature package.`)) {
+            document.getElementById('delete-feature-package-form').submit();
+        }
+    }
+    </script>
+@endif
 @endsection
