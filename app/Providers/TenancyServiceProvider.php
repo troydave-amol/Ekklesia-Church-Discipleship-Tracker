@@ -12,7 +12,7 @@ use Stancl\Tenancy\Events;
 use Stancl\Tenancy\Jobs;
 use Stancl\Tenancy\Listeners;
 use Stancl\Tenancy\Middleware;
-use Stancl\Tenancy\Middleware\InitializeTenancyBySubdomain;
+use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 
 class TenancyServiceProvider extends ServiceProvider
@@ -125,7 +125,7 @@ class TenancyServiceProvider extends ServiceProvider
         if (file_exists(base_path('routes/tenant.php'))) {
             Route::middleware([
                 'web',
-                InitializeTenancyBySubdomain::class,
+                InitializeTenancyByDomain::class,
                 PreventAccessFromCentralDomains::class,
                 \App\Http\Middleware\EnsureTenantIsActive::class,
             ])->group(base_path('routes/tenant.php'));

@@ -39,7 +39,7 @@
                 <div style="display:flex;align-items:center;gap:0;">
                     <input type="text" name="subdomain" id="subdomain" value="{{ old('subdomain') }}"
                            placeholder="firstbaptist" class="ca-input" style="width:100%;border-radius:6px 0 0 6px;border-right:none;" required>
-                    <span style="display:inline-flex;align-items:center;padding:0 12px;height:38px;background:var(--ca-surface-dim);border:1px solid var(--ca-border);border-radius:0 6px 6px 0;font-size:12.5px;color:var(--ca-ink-4);white-space:nowrap;">.{{ config('app.domain', 'localhost') }}</span>
+                    <span style="display:inline-flex;align-items:center;padding:0 12px;height:38px;background:var(--ca-surface-dim);border:1px solid var(--ca-border);border-radius:0 6px 6px 0;font-size:12.5px;color:var(--ca-ink-4);white-space:nowrap;">.{{ config('app.domain') }}</span>
                 </div>
                 <div style="font-size:11px;color:var(--ca-ink-4);margin-top:4px;">Lowercase letters, numbers, and hyphens only. Min 3 chars.</div>
             </div>

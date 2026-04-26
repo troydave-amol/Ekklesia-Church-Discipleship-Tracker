@@ -39,7 +39,7 @@ class TenantWelcomeMail extends Mailable implements ShouldQueue
 
     public function content(): Content
     {
-        $loginUrl = app(TenantProvisionService::class)->buildTenantUrl($this->tenant->subdomain) . '/login';
+        $loginUrl = app(TenantProvisionService::class)->buildTenantUrl($this->tenant->subdomain, 'login');
 
         return new Content(
             markdown: 'emails.tenant.welcome',
