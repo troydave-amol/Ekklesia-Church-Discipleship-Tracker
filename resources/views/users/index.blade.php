@@ -7,6 +7,8 @@
     $activeTab = request('tab', 'disciples');
     $pendingRequests = $pendingRequests ?? collect();
     $pendingCount = $pendingRequests->count();
+    $canImportDisciples = auth()->user()->can('users.manage')
+        && app(\App\Services\SubscriptionService::class)->isAllowed(auth()->user()->church, 'bulk_import');
 @endphp
 
 {{-- Generate clean CSS for dynamic progress bars (computed entirely in PHP, output via JavaScript) --}}
@@ -48,12 +50,12 @@ foreach($leaders as $idx => $leader) {
     </div>
     @unless($leaderScope ?? false)
     <div class="flex gap-8">
-        @can('import-disciples')
+        @if($canImportDisciples)
         <button class="btn btn-ghost" onclick="document.getElementById('importModal').style.display='flex'">
             @include('partials.icon',['name'=>'upload','size'=>14])
             Import CSV
         </button>
-        @endcan
+        @endif
         <a href="{{ route('users.create') }}" class="btn btn-primary">
             @include('partials.icon',['name'=>'plus','size'=>14])
             Add Member

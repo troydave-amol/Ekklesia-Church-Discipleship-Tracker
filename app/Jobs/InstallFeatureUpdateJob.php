@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\FeatureUpdate;
 use App\Models\Tenant;
 use App\Models\TenantFeatureInstallation;
+use App\Services\FeaturePackageInspector;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\Log;
 class InstallFeatureUpdateJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public bool $deleteWhenMissingModels = true;
 
     /**
      * Timeout in seconds — prevents hanging on bad migrations.
@@ -33,7 +36,7 @@ class InstallFeatureUpdateJob implements ShouldQueue
         public FeatureUpdate $featureUpdate,
     ) {}
 
-    public function handle(): void
+    public function handle(FeaturePackageInspector $inspector): void
     {
         $installation = TenantFeatureInstallation::where('tenant_id', $this->tenant->id)
             ->where('feature_update_id', $this->featureUpdate->id)
@@ -47,6 +50,20 @@ class InstallFeatureUpdateJob implements ShouldQueue
         // Guard: skip if already installed (idempotency for duplicate dispatches)
         if ($installation->status === 'installed') {
             Log::info("InstallFeatureUpdateJob: Feature [{$this->featureUpdate->slug}] already installed for tenant [{$this->tenant->id}]. Skipping.");
+            return;
+        }
+
+        $inspection = $inspector->inspect($this->featureUpdate);
+        if (!$inspection['is_complete']) {
+            $missingLabels = implode(', ', $inspection['missing_labels']);
+
+            $installation->update([
+                'status' => 'failed',
+                'error_log' => "Package incomplete. Missing or incomplete components: {$missingLabels}.",
+            ]);
+
+            Log::warning("InstallFeatureUpdateJob: Package incomplete for feature [{$this->featureUpdate->id}] before install. Missing: {$missingLabels}");
+
             return;
         }
 

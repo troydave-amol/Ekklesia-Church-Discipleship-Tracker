@@ -47,13 +47,15 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('tenant.dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->middleware('permission:dashboard.view')
+        ->name('tenant.dashboard');
 
     // Church Admin routes
     Route::middleware('role:church_admin')->group(function () {
 
         // Users: church_admin and program_leader may view/create/update (program_leader limited by service-level scoping). Delete only for church_admin.
-        Route::middleware('role:church_admin,program_leader')->group(function () {
+        Route::middleware('permission:users.manage')->group(function () {
             Route::get('/users', [DiscipleController::class, 'index'])->name('users.index');
             Route::get('/users/create', [DiscipleController::class, 'create'])->name('users.create');
             Route::post('/users', [DiscipleController::class, 'store'])->middleware('subscription:add_disciple')->name('users.store');
@@ -65,29 +67,31 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
         });
 
         // Delete user only for church_admin
-        Route::delete('/users/{id}', [DiscipleController::class, 'destroy'])->middleware('role:church_admin')->name('users.destroy');
+        Route::delete('/users/{id}', [DiscipleController::class, 'destroy'])
+            ->middleware(['role:church_admin', 'permission:users.manage'])
+            ->name('users.destroy');
 
         // Programs
         Route::get('/programs', [ProgramController::class, 'index'])->middleware('role:church_admin,program_leader,disciple')->name('programs.index');
         Route::get('/programs/{program}', [ProgramController::class, 'show'])->middleware('role:church_admin,program_leader,disciple')->name('programs.show');
 
         // Program write actions: church_admin + subscription gate
-        Route::post('/programs', [ProgramController::class, 'store'])->middleware(['role:church_admin', 'subscription:manage-programs', 'subscription:max_programs'])->name('programs.store');
-        Route::put('/programs/{id}', [ProgramController::class, 'update'])->middleware(['role:church_admin', 'subscription:manage-programs'])->name('programs.update');
-        Route::delete('/programs/{id}', [ProgramController::class, 'destroy'])->middleware(['role:church_admin', 'subscription:manage-programs'])->name('programs.destroy');
-        Route::patch('programs/{program}/toggle', [ProgramController::class, 'toggle'])->middleware(['role:church_admin', 'subscription:manage-programs'])->name('programs.toggle');
-        Route::get('programs/{program}/edit', [ProgramController::class, 'edit'])->middleware(['role:church_admin', 'subscription:manage-programs'])->name('programs.edit');
+        Route::post('/programs', [ProgramController::class, 'store'])->middleware(['role:church_admin', 'permission:programs.manage', 'subscription:manage-programs', 'subscription:max_programs'])->name('programs.store');
+        Route::put('/programs/{id}', [ProgramController::class, 'update'])->middleware(['role:church_admin', 'permission:programs.manage', 'subscription:manage-programs'])->name('programs.update');
+        Route::delete('/programs/{id}', [ProgramController::class, 'destroy'])->middleware(['role:church_admin', 'permission:programs.manage', 'subscription:manage-programs'])->name('programs.destroy');
+        Route::patch('programs/{program}/toggle', [ProgramController::class, 'toggle'])->middleware(['role:church_admin', 'permission:programs.manage', 'subscription:manage-programs'])->name('programs.toggle');
+        Route::get('programs/{program}/edit', [ProgramController::class, 'edit'])->middleware(['role:church_admin', 'permission:programs.manage', 'subscription:manage-programs'])->name('programs.edit');
 
         // Enroll endpoint for disciples
         Route::post('/programs/{id}/enroll', [ProgramController::class, 'enroll'])->middleware('role:disciple')->name('programs.enroll');
 
-        Route::get('/church/subscription', [ChurchController::class, 'subscription'])->middleware(['role:church_admin', 'permission:manage-subscription'])->name('church.subscription');
-        Route::post('/church/subscription', [ChurchController::class, 'updatePlan'])->middleware(['role:church_admin', 'permission:manage-subscription'])->name('church.subscription.update');
+        Route::get('/church/subscription', [ChurchController::class, 'subscription'])->middleware(['role:church_admin', 'permission:church.manage'])->name('church.subscription');
+        Route::post('/church/subscription', [ChurchController::class, 'updatePlan'])->middleware(['role:church_admin', 'permission:church.manage'])->name('church.subscription.update');
 
         // Reports (church_admin only — already inside church_admin group)
-        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports', [ReportController::class, 'index'])->middleware('permission:reports.view')->name('reports.index');
 
-        Route::middleware('subscription:export_sheets')->group(function () {
+        Route::middleware(['permission:reports.export', 'subscription:export_sheets'])->group(function () {
             Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
             Route::get('/reports/attendance', [ReportController::class, 'attendanceExport'])->name('reports.attendance');
             Route::get('/reports/devotionals', [ReportController::class, 'devotionalsExport'])->name('reports.devotionals');
@@ -95,50 +99,57 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
             Route::get('/reports/historical', [ReportController::class, 'historicalExport'])->name('reports.historical');
         });
 
-        Route::get('/settings/church', [SettingsController::class, 'church'])->name('settings.church');
-        Route::patch('/settings/church', [SettingsController::class, 'updateChurch'])->name('settings.church.update');
-        Route::get('/settings/upgrade/{plan}', [SettingsController::class, 'upgrade'])->name('settings.upgrade');
+        Route::get('/settings/church', [SettingsController::class, 'church'])->middleware('permission:church.manage')->name('settings.church');
+        Route::patch('/settings/church', [SettingsController::class, 'updateChurch'])->middleware('permission:church.manage')->name('settings.church.update');
+        Route::get('/settings/upgrade/{plan}', [SettingsController::class, 'upgrade'])->middleware('permission:church.manage')->name('settings.upgrade');
     });
 
     // Lessons — read routes accessible by all authenticated roles
-    Route::get('/lessons', [LessonController::class, 'index'])->middleware('role:church_admin,program_leader,disciple')->name('lessons.index');
+    Route::get('/lessons', [LessonController::class, 'index'])->middleware('role:church_admin,program_leader,cell_leader,disciple')->name('lessons.index');
 
     // Lessons — write routes: church_admin + program_leader (with permission + subscription gates)
-    Route::get('/lessons/create', [LessonController::class, 'create'])->middleware('role:church_admin,program_leader')->name('lessons.create');
-    Route::post('/lessons', [LessonController::class, 'store'])->middleware(['role:church_admin,program_leader', 'permission:create-lesson', 'subscription:manage-lessons'])->name('lessons.store');
-    Route::get('/lessons/{lesson}/edit', [LessonController::class, 'edit'])->middleware('role:church_admin,program_leader')->name('lessons.edit');
-    Route::put('/lessons/{id}', [LessonController::class, 'update'])->middleware(['role:church_admin,program_leader', 'permission:edit-own-lesson', 'subscription:manage-lessons'])->name('lessons.update');
-    Route::delete('/lessons/{id}', [LessonController::class, 'destroy'])->middleware(['role:church_admin,program_leader', 'permission:edit-own-lesson', 'subscription:manage-lessons'])->name('lessons.destroy');
+    Route::get('/lessons/create', [LessonController::class, 'create'])->middleware(['role:church_admin,program_leader,cell_leader', 'permission:lessons.manage'])->name('lessons.create');
+    Route::post('/lessons', [LessonController::class, 'store'])->middleware(['role:church_admin,program_leader,cell_leader', 'permission:lessons.manage', 'subscription:manage-lessons'])->name('lessons.store');
+    Route::get('/lessons/{lesson}/edit', [LessonController::class, 'edit'])->middleware(['role:church_admin,program_leader,cell_leader', 'permission:lessons.manage'])->name('lessons.edit');
+    Route::put('/lessons/{id}', [LessonController::class, 'update'])->middleware(['role:church_admin,program_leader,cell_leader', 'permission:lessons.manage', 'subscription:manage-lessons'])->name('lessons.update');
+    Route::delete('/lessons/{id}', [LessonController::class, 'destroy'])->middleware(['role:church_admin,program_leader,cell_leader', 'permission:lessons.manage', 'subscription:manage-lessons'])->name('lessons.destroy');
 
     // Lesson show — wildcard MUST come after static routes like /create
-    Route::get('/lessons/{lesson}', [LessonController::class, 'show'])->middleware('role:church_admin,program_leader,disciple')->name('lessons.show');
+    Route::get('/lessons/{lesson}', [LessonController::class, 'show'])->middleware('role:church_admin,program_leader,cell_leader,disciple')->name('lessons.show');
 
     Route::middleware('role:church_admin,program_leader,cell_leader')
     ->get('/users/{id}', [DiscipleController::class, 'show'])
     ->whereNumber('id')
     ->name('users.show');
 
-    // Attendance & Devotional viewers for church_admin and program_leader
-    Route::middleware(['role:church_admin,program_leader'])->group(function () {
+    // Leader disciple overview
+    Route::middleware(['role:church_admin,program_leader,cell_leader'])->group(function () {
         Route::get('/my-disciples', [DiscipleController::class, 'leaderDisciples'])->name('users.disciples');
+    });
+
+    // Attendance & devotional management pages
+    Route::middleware(['role:church_admin,program_leader,cell_leader', 'permission:attendance.manage'])->group(function () {
         Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+        Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+    });
+    Route::middleware(['role:church_admin,program_leader,cell_leader', 'permission:devotionals.manage'])->group(function () {
         Route::get('/devotionals', [DevotionalController::class, 'index'])->name('devotionals.index');
     });
+    Route::middleware(['role:church_admin,program_leader,cell_leader', 'permission:devotionals.manage', 'subscription:devotional_tracking'])->group(function () {
+        Route::post('/devotionals', [DevotionalController::class, 'bulkStore'])->name('devotionals.store');
+    });
 
-    // Attendance write actions: church_admin (any record) + disciple (own record)
+    // Disciples update their own attendance/devotional records separately.
     Route::middleware(['role:church_admin,disciple'])->group(function () {
-        Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
         Route::put('/attendance/{id}', [AttendanceController::class, 'update'])->name('attendance.update');
     });
-    Route::delete('/attendance/{id}', [AttendanceController::class, 'destroy'])->middleware(['role:church_admin', 'subscription:manage-programs'])->name('attendance.destroy');
+    Route::delete('/attendance/{id}', [AttendanceController::class, 'destroy'])->middleware(['role:church_admin', 'permission:attendance.manage', 'subscription:manage-programs'])->name('attendance.destroy');
 
-    // Devotional write actions: church_admin (any record) + disciple (own record)
     Route::middleware(['role:church_admin,disciple', 'subscription:devotional_tracking'])->group(function () {
-        Route::post('/devotionals', [DevotionalController::class, 'bulkStore'])->name('devotionals.store');
         Route::post('/devotionals/self', [DevotionalController::class, 'markComplete'])->name('devotionals.complete');
         Route::put('/devotionals/{id}', [DevotionalController::class, 'update'])->name('devotionals.update');
     });
-    Route::delete('/devotionals/{id}', [DevotionalController::class, 'destroy'])->middleware(['role:church_admin', 'subscription:manage-programs'])->name('devotionals.destroy');
+    Route::delete('/devotionals/{id}', [DevotionalController::class, 'destroy'])->middleware(['role:church_admin', 'permission:devotionals.manage', 'subscription:manage-programs'])->name('devotionals.destroy');
 
     Route::middleware(['role:disciple'])->group(function () {
         Route::get('/my-lessons', [LessonController::class, 'myLessons'])->name('lessons.my');
@@ -171,9 +182,9 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
     Route::post('/confirm-password', [ConfirmablePasswordController::class, 'store']);
 
     Route::middleware('role:church_admin')->group(function () {
-        Route::get('/settings/church', [SettingsController::class, 'church'])->name('settings.church');
-        Route::patch('/settings/church', [SettingsController::class, 'updateChurch'])->name('settings.church.update');
-        Route::get('/settings/upgrade/{plan}', [SettingsController::class, 'upgrade'])->name('settings.upgrade');
+        Route::get('/settings/church', [SettingsController::class, 'church'])->middleware('permission:church.manage')->name('settings.church');
+        Route::patch('/settings/church', [SettingsController::class, 'updateChurch'])->middleware('permission:church.manage')->name('settings.church.update');
+        Route::get('/settings/upgrade/{plan}', [SettingsController::class, 'upgrade'])->middleware('permission:church.manage')->name('settings.upgrade');
 
         // Appearance / White-labeling
         Route::get('/settings/appearance', [\App\Http\Controllers\AppearanceController::class, 'edit'])->name('settings.appearance');

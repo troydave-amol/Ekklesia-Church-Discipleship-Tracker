@@ -25,7 +25,7 @@ class FeatureUpdateAvailable extends Notification
             'version'    => $this->featureUpdate->version,
             'title'      => "New feature available: {$this->featureUpdate->name} v{$this->featureUpdate->version}",
             'message'    => $this->featureUpdate->description ?? 'A new feature is ready to install.',
-            'url'        => '/system/changelog',
+            'url'        => '/system/updates',
             'feature_id' => $this->featureUpdate->id,
         ];
     }

@@ -11,7 +11,7 @@ class CheckPermission
     /**
      * Handle an incoming request.
      * Resolves user permissions from role_id and checks against required permissions.
-     * Accepts comma-separated permission slugs: permission:manage-programs,manage-lessons
+     * Accepts comma-separated permission slugs: permission:programs.manage,lessons.manage
      * Caches resolved permissions in request attributes for the lifecycle.
      */
     public function handle(Request $request, Closure $next, string ...$permissions): mixed
@@ -81,6 +81,10 @@ class CheckPermission
     {
         if ($request->expectsJson()) {
             return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        if ($request->route()?->getName() === 'tenant.dashboard') {
+            abort(403, 'You do not have permission to access the dashboard.');
         }
 
         return redirect()

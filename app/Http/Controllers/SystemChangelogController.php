@@ -8,6 +8,7 @@ use App\Models\Tenant;
 use App\Models\TenantFeatureInstallation;
 use App\Models\TenantReleaseAcknowledgment;
 use App\Models\VersionHistory;
+use App\Services\FeaturePackageInspector;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -84,7 +85,25 @@ class SystemChangelogController extends Controller
             ->get()
             ->keyBy('feature_update_id');
 
-        return view('system.updates', compact('featureUpdates', 'installations'));
+        $inspector = app(FeaturePackageInspector::class);
+
+        $featureCards = $featureUpdates->map(function (FeatureUpdate $featureUpdate) use ($installations, $inspector) {
+            $installation = $installations[$featureUpdate->id] ?? null;
+            $inspection = $inspector->inspect($featureUpdate);
+
+            return [
+                'feature' => $featureUpdate,
+                'installation' => $installation,
+                'status' => $installation?->status ?? 'pending',
+                'inspection' => $inspection,
+                'included_components' => $inspection['selected_components'],
+                'missing_components' => $inspection['missing_components'],
+                'missing_labels' => $inspection['missing_labels'],
+                'is_complete' => $inspection['is_complete'],
+            ];
+        });
+
+        return view('system.updates', compact('featureCards', 'installations'));
     }
 
     /**
@@ -95,12 +114,22 @@ class SystemChangelogController extends Controller
     {
         $tenantId = tenancy()->tenant->getTenantKey();
 
-        $installation = TenantFeatureInstallation::where('tenant_id', $tenantId)
-            ->where('feature_update_id', $featureUpdate->id)
-            ->first();
+        $installation = TenantFeatureInstallation::firstOrCreate(
+            [
+                'tenant_id' => $tenantId,
+                'feature_update_id' => $featureUpdate->id,
+            ],
+            ['status' => 'pending']
+        );
 
-        if (! $installation) {
-            return redirect()->back()->with('error', 'No installation record found for this update.');
+        $inspection = app(FeaturePackageInspector::class)->inspect($featureUpdate);
+
+        if (!$inspection['is_complete']) {
+            $missingLabels = implode(', ', $inspection['missing_labels']);
+
+            return redirect()
+                ->back()
+                ->with('error', "This update cannot be installed yet. Missing or incomplete components: {$missingLabels}.");
         }
 
         // Prevent duplicate dispatches — only allow from pending or failed states
@@ -129,4 +158,3 @@ class SystemChangelogController extends Controller
         return redirect()->back()->with('success', 'Update installation started. This may take a minute — refresh the page to check status.');
     }
 }
-

@@ -53,10 +53,17 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Devotional::class, DevotionalPolicy::class);
         Gate::policy(SupportTicket::class, SupportTicketPolicy::class);
 
-        Gate::define('manage-lessons', fn (User $user) => $user->isChurchAdmin());
-        Gate::define('export-reports', fn (User $user) => $user->isChurchAdmin()
-            && app(SubscriptionService::class)->isAllowed($user->church, 'export_sheets'));
-        Gate::define('import-disciples', fn (User $user) => $user->isChurchAdmin()
-            && app(SubscriptionService::class)->isAllowed($user->church, 'bulk_import'));
+        Gate::before(function (User $user, string $ability): ?bool {
+            if (! function_exists('tenancy') || ! tenancy()->initialized || ! str_contains($ability, '.')) {
+                return null;
+            }
+
+            if ($ability === 'reports.export') {
+                return $user->hasPermission($ability)
+                    && app(SubscriptionService::class)->isAllowed($user->church, 'export_sheets');
+            }
+
+            return $user->hasPermission($ability);
+        });
     }
 }

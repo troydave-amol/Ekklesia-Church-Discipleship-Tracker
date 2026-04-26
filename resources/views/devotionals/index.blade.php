@@ -12,7 +12,7 @@
     <div class="flex gap-8">
         <a href="?week={{ $prevWeek }}" class="btn btn-ghost btn-sm">← Prev Week</a>
         <a href="?week={{ $nextWeek }}" class="btn btn-ghost btn-sm">Next Week →</a>
-        @can('export-reports')
+        @can('reports.export')
         <a href="{{ route('reports.devotionals') }}" class="btn btn-ghost btn-sm">
             @include('partials.icon',['name'=>'download','size'=>13])
             Export

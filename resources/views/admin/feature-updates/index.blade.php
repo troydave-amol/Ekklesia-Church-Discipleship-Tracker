@@ -11,6 +11,18 @@
     </div>
 </div>
 
+@if(session('success'))
+    <div class="ca-card" style="padding:14px 18px;margin-bottom:20px;background:rgba(39,174,96,.08);border:1px solid rgba(39,174,96,.18);color:#1f7a45;">
+        {{ session('success') }}
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="ca-card" style="padding:14px 18px;margin-bottom:20px;background:#fdeaea;border:1px solid #efc2c2;color:#c0392b;">
+        {{ session('error') }}
+    </div>
+@endif
+
 {{-- ── SECTION A: Application Versions ─────────────────────────────────────── --}}
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
     <h2 style="font-size:16px;font-weight:600;color:var(--ca-ink-1);margin:0;">Application Versions</h2>
@@ -84,7 +96,7 @@
 {{-- ── SECTION B: Feature Packages ─────────────────────────────────────────── --}}
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
     <h2 style="font-size:16px;font-weight:600;color:var(--ca-ink-1);margin:0;">Feature Packages</h2>
-    <a href="{{ route('admin.feature-updates.create') }}" class="ca-btn ca-btn-primary" style="background:var(--ca-ink-1);color:white;border:none;">
+    <a href="{{ route('admin.feature-updates.create') }}" class="ca-btn ca-btn-primary">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         New Feature Package
     </a>

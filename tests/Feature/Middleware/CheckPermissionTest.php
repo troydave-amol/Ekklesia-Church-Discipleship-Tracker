@@ -20,7 +20,7 @@ test('middleware returns 403 for user without permission', function () {
     
     $response = $middleware->handle($request, function ($request) {
         return response()->json(['message' => 'Success']);
-    }, 'manage-programs');
+    }, 'programs.manage');
     
     // Without database setup, this tests the structure
     expect($response->status())->toBeIn([403, 500]);
@@ -41,7 +41,7 @@ test('middleware accepts comma-separated permissions', function () {
     
     $response = $middleware->handle($request, function ($request) {
         return response()->json(['message' => 'Success']);
-    }, 'manage-programs,manage-lessons,record-attendance');
+    }, 'programs.manage,lessons.manage,attendance.manage');
     
     // Verify middleware processes permissions
     expect($response)->not->toBeNull();
@@ -62,7 +62,7 @@ test('middleware caches permissions in request attributes', function () {
     
     $middleware->handle($request, function ($request) {
         return response()->json(['message' => 'Success']);
-    }, 'manage-programs');
+    }, 'programs.manage');
     
     // Verify cache key format in request attributes
     $cacheKey = "user_permissions_{$user->id}";
@@ -80,7 +80,7 @@ test('guest cannot access permission protected routes', function () {
     
     $response = $middleware->handle($request, function ($request) {
         return response()->json(['message' => 'Success']);
-    }, 'manage-programs');
+    }, 'programs.manage');
     
     // Unauthenticated request should be handled
     expect($response->status())->toBeIn([302, 403, 500]);

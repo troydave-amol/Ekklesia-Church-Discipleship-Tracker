@@ -17,6 +17,8 @@ class ReseedFeatureJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public bool $deleteWhenMissingModels = true;
+
     public function __construct(
         public FeatureUpdate $featureUpdate,
         public Tenant $tenant,

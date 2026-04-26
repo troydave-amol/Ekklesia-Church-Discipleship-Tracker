@@ -144,10 +144,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function hasPermission(string $permissionSlug): bool
     {
-        if ($this->isChurchAdmin()) {
-            return true;
-        }
-
         $this->loadMissing('roleRecord.permissions');
 
         return $this->roleRecord

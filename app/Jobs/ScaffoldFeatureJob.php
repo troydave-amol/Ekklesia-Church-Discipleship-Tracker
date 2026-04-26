@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\FeatureUpdate;
+use App\Services\FeaturePackageInspector;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -15,6 +16,8 @@ use Illuminate\Support\Str;
 class ScaffoldFeatureJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public bool $deleteWhenMissingModels = true;
 
     public function __construct(public FeatureUpdate $featureUpdate) {}
 
@@ -94,17 +97,23 @@ class ScaffoldFeatureJob implements ShouldQueue
             }
 
             // ── 7) Update payload ─────────────────────────────────
+            $updatedPayload = array_merge($this->featureUpdate->payload ?? [], [
+                'model'           => $model,
+                'migration_file'  => $migFile,
+                'seeder_class'    => "{$model}Seeder",
+                'factory_class'   => "{$model}Factory",
+                'factory_count'   => $seedCount,
+                'request_class'   => "{$model}Request",
+                'request_file'    => "app/Http/Requests/{$model}Request.php",
+                'controller_file' => "app/Http/Controllers/{$model}Controller.php",
+                'files_generated' => true,
+            ]);
+
+            $updatedPayload['artifact_manifest'] = app(FeaturePackageInspector::class)
+                ->buildArtifactManifest($updatedPayload);
+
             $this->featureUpdate->update([
-                'payload' => array_merge($this->featureUpdate->payload ?? [], [
-                    'model'           => $model,
-                    'migration_file'  => $migFile,
-                    'seeder_class'    => "{$model}Seeder",
-                    'factory_class'   => "{$model}Factory",
-                    'factory_count'   => $seedCount,
-                    'request_class'   => "{$model}Request",
-                    'request_file'    => "app/Http/Requests/{$model}Request.php",
-                    'files_generated' => true,
-                ]),
+                'payload' => $updatedPayload,
             ]);
 
             Log::info("ScaffoldFeatureJob: Successfully scaffolded '{$model}' for feature '{$this->featureUpdate->name}'.");

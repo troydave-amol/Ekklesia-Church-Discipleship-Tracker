@@ -33,29 +33,35 @@
             @forelse($history as $log)
                 <tr>
                     <td class="ca-table-muted">{{ $log->created_at->format('M j, Y H:i') }}</td>
-                    <td>{{ $log->changedByAdmin->name ?? 'System' }}</td>
+                    <td>{{ $log->adminUser?->name ?? 'System' }}</td>
                     <td>
                         @php
                             $actionColor = match($log->action) {
-                                'created' => 'ca-badge-ok',
-                                'deleted' => 'ca-badge-no',
-                                'updated' => 'ca-badge-warn',
+                                'create' => 'ca-badge-ok',
+                                'delete' => 'ca-badge-no',
+                                'update' => 'ca-badge-warn',
                                 default => 'ca-badge'
                             };
                         @endphp
                         <span class="ca-badge {{ $actionColor }}">{{ ucfirst($log->action) }}</span>
                     </td>
-                    <td class="ca-table-strong">{{ $log->change_description }}</td>
+                    <td class="ca-table-strong">{{ $log->changes['description'] ?? 'RBAC change recorded.' }}</td>
                     <td>
-                        @if($log->old_values || $log->new_values)
+                        @if(($log->changes['old'] ?? null) || ($log->changes['new'] ?? null))
                             <details style="cursor: pointer;">
                                 <summary style="font-size: 12px; color: #2563eb;">View details</summary>
                                 <div style="margin-top: 0.5rem; font-family: monospace; font-size: 11px; background: #f3f4f6; padding: 0.5rem; border-radius: 3px; max-height: 150px; overflow-y: auto;">
-                                    @if($log->old_values)
-                                        <div><strong>Before:</strong> {{ json_encode($log->old_values) }}</div>
+                                    @if($log->changes['old'] ?? null)
+                                        <div style="margin-bottom:8px;">
+                                            <strong>Before:</strong>
+                                            <pre style="white-space:pre-wrap;margin:6px 0 0;">{{ json_encode($log->changes['old'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                                        </div>
                                     @endif
-                                    @if($log->new_values)
-                                        <div><strong>After:</strong> {{ json_encode($log->new_values) }}</div>
+                                    @if($log->changes['new'] ?? null)
+                                        <div>
+                                            <strong>After:</strong>
+                                            <pre style="white-space:pre-wrap;margin:6px 0 0;">{{ json_encode($log->changes['new'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                                        </div>
                                     @endif
                                 </div>
                             </details>
@@ -81,4 +87,3 @@
 .ca-badge-warn { background: #fef3c7; color: #92400e; }
 </style>
 @endsection
-
