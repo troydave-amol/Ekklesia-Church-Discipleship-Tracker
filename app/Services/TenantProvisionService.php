@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\DomainHelper;
 use App\Mail\TenantWelcomeMail;
 use App\Models\Church;
 use App\Models\ChurchMembership;
@@ -44,7 +45,7 @@ class TenantProvisionService
         ]);
 
         $tenant->domains()->create([
-            'domain' => $signup->subdomain,
+            'domain' => DomainHelper::forTenant($signup->subdomain),
         ]);
 
         $tenant->run(function () use ($signup, $plainPassword): void {
@@ -129,16 +130,8 @@ class TenantProvisionService
         return [$first, $last];
     }
 
-    public function buildTenantUrl(string $subdomain): string
+    public function buildTenantUrl(string $subdomain, string $path = ''): string
     {
-        $domain = config('app.domain', 'localhost', 'church-discipleship-tracker.io');
-        $scheme = request()->getScheme();
-        $port   = request()->getPort();
-
-        if (in_array($domain, ['church-discipleship-tracker.io', '127.0.0.1'], true)) {
-            return "{$scheme}://{$subdomain}.{$domain}:{$port}";
-        }
-
-        return "https://{$subdomain}.{$domain}";
+        return DomainHelper::tenantUrl($subdomain, $path);
     }
 }

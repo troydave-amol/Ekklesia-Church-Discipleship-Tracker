@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\DomainHelper;
 use App\Models\Tenant;
 use App\Models\TenantSignup;
 use Illuminate\Http\JsonResponse;
@@ -215,7 +216,7 @@ class TenantRegistrationController extends Controller
 
             // 2. Create Domain
             $tenant->domains()->create([
-                'domain' => $subdomain . '.' . config('app.domain', 'localhost', 'church-discipleship-tracker.io'),
+                'domain' => DomainHelper::forTenant($subdomain),
             ]);
 
             // 3. Run tenant migrations

@@ -17,10 +17,10 @@ return [
      * Only relevant if you're using the domain or subdomain identification middleware.
      */
     'central_domains' => [
-        '127.0.0.1',
-        'localhost',
-        'test',
         'church-discipleship-tracker.io',
+        'www.church-discipleship-tracker.io',
+        '127.0.0.1',
+        parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST),
     ],
 
     /**
