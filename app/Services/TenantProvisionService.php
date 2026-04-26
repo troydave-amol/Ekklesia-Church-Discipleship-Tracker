@@ -131,11 +131,11 @@ class TenantProvisionService
 
     public function buildTenantUrl(string $subdomain): string
     {
-        $domain = config('app.domain', 'localhost');
+        $domain = config('app.domain', 'localhost', 'church-discipleship-tracker.io');
         $scheme = request()->getScheme();
         $port   = request()->getPort();
 
-        if (in_array($domain, ['localhost', '127.0.0.1'], true)) {
+        if (in_array($domain, ['church-discipleship-tracker.io', '127.0.0.1'], true)) {
             return "{$scheme}://{$subdomain}.{$domain}:{$port}";
         }
 

@@ -215,7 +215,7 @@ class TenantRegistrationController extends Controller
 
             // 2. Create Domain
             $tenant->domains()->create([
-                'domain' => $subdomain . '.' . config('app.domain', 'localhost'),
+                'domain' => $subdomain . '.' . config('app.domain', 'localhost', 'church-discipleship-tracker.io'),
             ]);
 
             // 3. Run tenant migrations
