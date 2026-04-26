@@ -18,6 +18,8 @@ class InstallFeatureUpdateJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public bool $deleteWhenMissingModels = true;
+
     /**
      * Timeout in seconds — prevents hanging on bad migrations.
      */

@@ -79,6 +79,7 @@ Route::middleware(['auth:admin', 'admin_auth'])->prefix('admin')->name('admin.')
         Route::get('/create',                    [FeatureUpdateController::class, 'create'])->name('create');
         Route::post('/',                         [FeatureUpdateController::class, 'store'])->name('store');
         Route::get('/{featureUpdate}',           [FeatureUpdateController::class, 'show'])->name('show');
+        Route::delete('/{featureUpdate}',        [FeatureUpdateController::class, 'destroy'])->middleware('admin_role:superadmin')->name('destroy');
         Route::post('/{featureUpdate}/publish',  [FeatureUpdateController::class, 'publish'])->name('publish');
         Route::post('/{featureUpdate}/seed',     [FeatureUpdateController::class, 'seed'])->name('seed');
     });
