@@ -99,10 +99,8 @@ Route::middleware(['auth', 'church.tenant'])->group(function () {
             Route::get('/reports/historical', [ReportController::class, 'historicalExport'])->name('reports.historical');
         });
 
-        Route::get('/settings/church', [SettingsController::class, 'church'])->middleware('permission:church.manage')->name('settings.church');
-        Route::patch('/settings/church', [SettingsController::class, 'updateChurch'])->middleware('permission:church.manage')->name('settings.church.update');
-        Route::get('/settings/upgrade/{plan}', [SettingsController::class, 'upgrade'])->middleware('permission:church.manage')->name('settings.upgrade');
     });
+
 
     // Lessons — read routes accessible by all authenticated roles
     Route::get('/lessons', [LessonController::class, 'index'])->middleware('role:church_admin,program_leader,cell_leader,disciple')->name('lessons.index');
