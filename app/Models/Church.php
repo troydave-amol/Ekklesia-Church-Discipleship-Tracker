@@ -12,7 +12,17 @@ class Church extends Model
         'subscription_plan',
         'is_active',
         'logo_path',
+        'logo_dark_path',
+        'favicon_path',
         'primary_color',
+        'secondary_color',
+        'accent_color',
+        'theme_config',
+    ];
+
+    protected $casts = [
+        'theme_config' => 'array',
+        'is_active' => 'boolean',
     ];
 
     // ── Customization Defaults ──────────────────────────────────
@@ -23,6 +33,47 @@ class Church extends Model
     public function getBrandColorAttribute(): string
     {
         return $this->primary_color ?? '#D4A853';
+    }
+
+    /**
+     * Get the logo URL with fallback.
+     */
+    public function getLogoUrlAttribute(): ?string
+    {
+        if ($this->logo_path) {
+            return asset('storage/' . $this->logo_path);
+        }
+        return null;
+    }
+
+    /**
+     * Get the dark mode logo URL with fallback to regular logo.
+     */
+    public function getLogoDarkUrlAttribute(): ?string
+    {
+        if ($this->logo_dark_path) {
+            return asset('storage/' . $this->logo_dark_path);
+        }
+        return $this->logo_url;
+    }
+
+    /**
+     * Get the favicon URL.
+     */
+    public function getFaviconUrlAttribute(): ?string
+    {
+        if ($this->favicon_path) {
+            return asset('storage/' . $this->favicon_path);
+        }
+        return null;
+    }
+
+    /**
+     * Check if church has a custom logo.
+     */
+    public function hasLogo(): bool
+    {
+        return !empty($this->logo_path);
     }
 
     // ── Relationships ──────────────────────────────────────────────

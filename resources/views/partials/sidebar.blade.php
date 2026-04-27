@@ -120,9 +120,22 @@
     {{-- Brand --}}
     <div class="sidebar-brand">
         <div class="brand-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0D1117" stroke-width="2">
-                <line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="9" x2="22" y2="9"/>
-            </svg>
+            @if($church && $church->hasLogo())
+                <img 
+                    src="{{ $church->logo_url }}" 
+                    alt="{{ $church->name }}"
+                    style="width:100%;height:100%;object-fit:contain;padding:2px;"
+                    onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+                >
+                {{-- Fallback SVG (hidden by default, shown on error) --}}
+                <svg style="display:none;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="9" x2="22" y2="9"/>
+                </svg>
+            @else
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="9" x2="22" y2="9"/>
+                </svg>
+            @endif
         </div>
         <div class="brand-text">
             <strong>Discipleship</strong>

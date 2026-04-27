@@ -41,8 +41,18 @@
             --radius:       10px;
             --radius-lg:    14px;
 
-            /* ── Tenant-specific brand color (database-driven) ── */
-            --tenant-primary: {{ auth()->check() && auth()->user()->church ? auth()->user()->church->brand_color : '#D4A853' }};
+            @php
+                $church = auth()->check() && auth()->user()->church ? auth()->user()->church : null;
+                $themeService = app(\App\Services\ThemeService::class);
+                
+                if ($church && $church->primary_color) {
+                    echo $themeService->generateCSSVariables($church);
+                } else {
+                    echo "/* Using default theme */\n";
+                    echo "--tenant-primary: #D4A853;\n";
+                    echo "--tenant-text-on-primary: #0D1117;\n";
+                }
+            @endphp
         }
 
         html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 1.5; }
@@ -85,12 +95,13 @@
         }
         .brand-icon {
             width: 36px; height: 36px; border-radius: 10px;
-            background: linear-gradient(135deg, color-mix(in srgb, var(--tenant-primary) 40%, #000), var(--tenant-primary));
+            background: linear-gradient(135deg, var(--tenant-primary-400, var(--gold-dim)), var(--tenant-primary, var(--gold)));
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
             animation: glow 4s ease-in-out infinite;
         }
-        .brand-icon svg { color: #0D1117; }
+        .brand-icon svg { color: var(--tenant-text-on-primary, #0D1117); }
+        .brand-icon img { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1)); }
         .brand-text { white-space: nowrap; overflow: hidden; }
         .brand-text strong { font-family: 'Playfair Display', serif; font-size: 14px; display: block; line-height: 1.2; }
         .brand-text span   { font-size: 10px; color: var(--text-muted); letter-spacing: .08em; }
@@ -123,7 +134,7 @@
         }
         .nav-item svg { flex-shrink: 0; }
         .nav-item:hover { background: var(--surface-hover); color: var(--text); }
-        .nav-item.active { background: color-mix(in srgb, var(--tenant-primary) 10%, transparent); color: var(--tenant-primary); font-weight: 500; border-left-color: var(--tenant-primary); }
+        .nav-item.active { background: var(--nav-active-bg, var(--tenant-primary-100, rgba(212,168,83,.1))); color: var(--nav-active-text, var(--tenant-primary)); font-weight: 500; border-left-color: var(--nav-active-border, var(--tenant-primary)); }
         .nav-item .badge-count { margin-left: auto; font-size: 10px; background: var(--red); color: #fff; border-radius: 10px; padding: 1px 6px; font-family: 'DM Mono', monospace; }
 
         .sidebar-user {
@@ -179,7 +190,7 @@
             transition: border-color .2s, box-shadow .2s;
         }
         .topbar-search:focus-within {
-            border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,168,83,.1);
+            border-color: var(--tenant-primary, var(--gold)); box-shadow: 0 0 0 3px var(--tenant-primary-100, rgba(212,168,83,.1));
         }
         .topbar-search input { 
             background: none; border: none; outline: none; color: var(--text); 
@@ -203,10 +214,10 @@
         .btn-sm { padding: 0 14px; font-size: 12px; border-radius: 6px; height: 32px; }
         .btn-icon { padding: 0; width: 32px; height: 32px; border-radius: 6px; }
 
-        .btn-primary { background: linear-gradient(135deg, var(--tenant-primary), color-mix(in srgb, var(--tenant-primary) 80%, #fff)); color: #0D1117; font-weight: 600; }
-        .btn-primary:hover { box-shadow: 0 4px 16px color-mix(in srgb, var(--tenant-primary) 40%, transparent); }
-        .btn-secondary { background: transparent; color: var(--tenant-primary); border: 1px solid color-mix(in srgb, var(--tenant-primary) 40%, transparent); }
-        .btn-secondary:hover { background: color-mix(in srgb, var(--tenant-primary) 8%, transparent); }
+        .btn-primary { background: linear-gradient(135deg, var(--btn-primary-bg, var(--tenant-primary)), var(--tenant-primary-600, var(--gold-light))); color: var(--btn-primary-text, #0D1117); font-weight: 600; }
+        .btn-primary:hover { box-shadow: 0 4px 16px var(--tenant-primary-200, rgba(212,168,83,.4)); }
+        .btn-secondary { background: transparent; color: var(--tenant-primary, var(--gold)); border: 1px solid var(--tenant-primary-300, rgba(212,168,83,.4)); }
+        .btn-secondary:hover { background: var(--tenant-primary-50, rgba(212,168,83,.08)); }
         .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
         .btn-ghost:hover { color: var(--text); border-color: var(--text-muted); }
         .btn-danger { background: transparent; color: var(--red); border: 1px solid rgba(248,81,73,.3); }
@@ -236,7 +247,7 @@
 
         /* ── BADGES ───────────────────────────────────────── */
         .badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: .06em; font-family: 'DM Mono', monospace; white-space: nowrap; }
-        .badge-gold   { background: rgba(212,168,83,.12); color: var(--gold-light); border: 1px solid rgba(212,168,83,.3); }
+        .badge-gold   { background: var(--badge-accent-bg, rgba(212,168,83,.12)); color: var(--badge-accent-text, var(--gold-light)); border: 1px solid var(--badge-accent-border, rgba(212,168,83,.3)); }
         .badge-green  { background: rgba(63,185,80,.1);  color: var(--green);      border: 1px solid rgba(63,185,80,.25); }
         .badge-red    { background: rgba(248,81,73,.1);  color: var(--red);        border: 1px solid rgba(248,81,73,.25); }
         .badge-blue   { background: rgba(88,166,255,.1); color: var(--blue);       border: 1px solid rgba(88,166,255,.25); }
@@ -266,7 +277,7 @@
             padding-right: 36px;
         }
         textarea { resize: vertical; padding: 12px; }
-        input:focus, select:focus, textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,168,83,.1); }
+        input:focus, select:focus, textarea:focus { border-color: var(--focus-ring, var(--tenant-primary)); box-shadow: 0 0 0 3px var(--tenant-primary-100, rgba(212,168,83,.1)); }
         input::placeholder, textarea::placeholder { color: var(--text-dim); }
 
         /* Unified Top Controls Row */
@@ -292,7 +303,7 @@
 
         /* ── PROGRESS ─────────────────────────────────────── */
         .progress { height: 6px; background: var(--border-light); border-radius: 3px; overflow: hidden; }
-        .progress-bar { height: 100%; border-radius: 3px; transition: width .5s ease; }
+        .progress-bar { height: 100%; border-radius: 3px; transition: width .5s ease; background: var(--progress-bar, var(--tenant-primary)); }
 
         /* ── AVATAR ───────────────────────────────────────── */
         .avatar {
@@ -315,14 +326,14 @@
             content:''; position:absolute; width:16px; height:16px; background:#fff;
             border-radius:50%; top:3px; left:3px; transition: transform .2s;
         }
-        input:checked + .toggle-slider { background: var(--green); }
+        input:checked + .toggle-slider { background: var(--toggle-active, var(--tenant-primary, var(--green))); }
         input:checked + .toggle-slider::after { transform: translateX(18px); }
 
         /* ── TABS ─────────────────────────────────────────── */
         .tabs { display: flex; border-bottom: 1px solid var(--border); gap: 0; overflow-x: auto; }
         .tab { padding: 10px 18px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; white-space: nowrap; background: none; border-top: none; border-left: none; border-right: none; font-family: inherit; }
         .tab:hover { color: var(--text); }
-        .tab.active { color: var(--gold-light); border-bottom-color: var(--gold); }
+        .tab.active { color: var(--tenant-primary, var(--gold-light)); border-bottom-color: var(--tab-active, var(--tenant-primary)); }
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeUp .25s ease; }
 

@@ -79,6 +79,24 @@
                 @error('primary_color')
                     <div class="invalid-feedback" style="display:block;">{{ $message }}</div>
                 @enderror
+
+                {{-- Accessibility Warning --}}
+                @if($accessibilityCheck && !$accessibilityCheck['passes'])
+                <div class="alert alert-warning" style="margin-top:12px;padding:12px 16px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    <div>
+                        <strong>Accessibility Notice:</strong>
+                        <ul style="margin:4px 0 0 0;padding-left:20px;font-size:12px;">
+                            @foreach($accessibilityCheck['issues'] as $issue)
+                                <li>{{ $issue }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
 
@@ -96,14 +114,14 @@
                 <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
                     <div id="logoPreviewContainer" style="
                         width:72px;height:72px;border-radius:14px;overflow:hidden;flex-shrink:0;
-                        background:linear-gradient(135deg,var(--gold-dim),var(--gold));
+                        background:var(--surface);
                         display:flex;align-items:center;justify-content:center;
                         border:2px solid var(--border);
                     ">
                         @if($church->logo_path)
-                            <img id="logoImg" src="{{ asset('storage/' . $church->logo_path) }}" alt="Church Logo" style="width:100%;height:100%;object-fit:cover;">
+                            <img id="logoImg" src="{{ $church->logo_url }}" alt="Church Logo" style="width:100%;height:100%;object-fit:contain;padding:4px;">
                         @else
-                            <svg id="logoPlaceholder" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0D1117" stroke-width="2">
+                            <svg id="logoPlaceholder" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2">
                                 <line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="9" x2="22" y2="9"/>
                             </svg>
                         @endif
@@ -229,7 +247,8 @@
         const reader = new FileReader();
         reader.onload = (e) => {
             const container = document.getElementById('logoPreviewContainer');
-            container.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;" alt="Preview">';
+            container.style.background = 'var(--surface)';
+            container.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:contain;padding:4px;" alt="Preview">';
             zone.innerHTML = '<p style="font-size:13px;color:var(--green);font-weight:500;">✓ ' + file.name + ' selected</p>';
         };
         reader.readAsDataURL(file);
