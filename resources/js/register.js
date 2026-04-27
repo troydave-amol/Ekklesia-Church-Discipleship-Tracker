@@ -188,6 +188,31 @@ window.submitRegistration = async function() {
   }
 }
 
+function buildPaymentStep() {
+  const body = document.getElementById('payment-body');
+  if (!body) return;
+
+  const planKey = state.selectedPlan || 'free';
+  const plan = PLANS[planKey];
+  const isFree = plan.price === 0;
+
+  body.innerHTML = `
+    <div style="background:var(--cream); padding:20px; border-radius:10px; border:1px solid var(--border); text-align:center;">
+        <div style="font-weight:600; margin-bottom:10px; font-size:18px;">Plan: ${plan.name}</div>
+        <div style="margin-bottom:20px;">
+            ${isFree 
+                ? 'No payment required for the Free plan.' 
+                : `<span style="font-size:24px; font-weight:700;">${plan.priceStr}</span>/month`
+            }
+        </div>
+        <div style="font-size:14px; color:var(--text-muted); margin-bottom:20px;">
+            Payment processing will be available in a future update.<br>
+            Click Continue to complete your registration.
+        </div>
+    </div>
+  `;
+}
+
 function buildConfirmStep() {
   const body = document.getElementById('confirm-body');
   if (!body) return;
