@@ -67,8 +67,8 @@
         <div class="card">
             <div class="card-header"><span class="section-title">Change Password</span></div>
             <div class="card-body">
-                <form method="POST" action="{{ route('settings.password') }}">
-                    @csrf @method('PATCH')
+                <form method="POST" action="{{ route('password.update') }}">
+                    @csrf @method('PUT')
                     <div style="display:flex;flex-direction:column;gap:12px;">
                         <div>
                             <label class="field-label">Current Password</label>
