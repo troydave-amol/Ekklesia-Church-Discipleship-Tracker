@@ -1,243 +1,233 @@
-# Discipleship Progress Tracker
+# Ekklesia — Smart Church Discipleship & Progression Platform
 
-A multi-tenant SaaS platform enabling churches to track and manage disciple progression through structured training programs with role-based access control, attendance monitoring, and devotional tracking.
+> **A Multi-Tenant Cloud SaaS Platform for Structured Discipleship Tracking, Spiritual Growth Analytics, and Congregational Leadership Pipelines.**
 
----
-
-## Local Setup
-
-1. **Clone and install**
-   ```bash
-   git clone https://github.com/your-org/church-discipleship-tracker.git
-   cd church-discipleship-tracker
-   composer install && npm install
-   ```
-
-2. **Configure environment**
-   ```bash
-   cp .env.example .env
-   php artisan key:generate
-   ```
-
-3. **Migrate central database**
-   ```bash
-   php artisan migrate
-   ```
-
-4. **Migrate tenant databases**
-   ```bash
-   php artisan tenancy:migrate
-   ```
-
-5. **Seed database**
-   ```bash
-   php artisan db:seed
-   ```
-
-6. **Start development server**
-   ```bash
-   npm run dev
-   ```
+[![Laravel](https://img.shields.io/badge/Laravel-12.x-FF2D20?style=flat-square&logo=laravel)](https://laravel.com)
+[![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square&logo=php)](https://php.net)
+[![Multi--Tenancy](https://img.shields.io/badge/Tenancy-Stancl%20v3.10-4A90E2?style=flat-square)](https://tenancyforlaravel.com/)
+[![Database](https://img.shields.io/badge/Database-MySQL%20Isolated-00758F?style=flat-square&logo=mysql)](https://mysql.com)
+[![Frontend](https://img.shields.io/badge/Vite-Tailwind%20CSS-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com)
+[![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
 ---
 
-## Central Admin Dashboard Setup
+## 1. Executive Summary & Purpose
 
-After initial setup, you need to create a super admin user to access the central control plane at `/admin/login`.
+While generic Church Management Systems (ChMS) focus heavily on financial tithing, member directories, or broad event announcements, they rarely address the core spiritual engine of the church: **disciple development and intentional mentoring**. In traditional church environments, discipleship progress, cell group attendance, and devotional habits are typically scattered across paper journals, chat apps, or unstandardized spreadsheets.
 
-### Creating Your First Admin User
+**Ekklesia (Church Discipleship Tracker)** solves this challenge by providing local churches with a dedicated, cloud-native discipleship platform. It bridges the gap between casual Sunday attendance and active spiritual leadership through structured training stages, accountability tracking, and quantitative engagement insights.
 
-**Option 1: Using Artisan Command (Recommended)**
-```bash
-php artisan app:create-admin
+---
+
+## 2. Project Objectives
+
+* **Standardize Spiritual Milestones:** Transition informal discipleship into structured, trackable progression phases (e.g., *Life Class*, *School of Leaders 1, 2, and 3*).
+* **Guaranteed Data Isolation:** Implement a strict **database-per-tenant architecture** ensuring zero cross-tenant data contamination or shared-table privacy risks.
+* **Streamline Mentorship & Accountability:** Equip cell leaders with direct visibility into their disciples' attendance consistency, lesson prerequisites, and daily devotional habits.
+* **White-Label Customization:** Provide church administrators with accessible, brand-aligned interfaces featuring custom church logos and mathematically computed, WCAG-compliant color palettes.
+* **Scalable Central Governance:** Enable SaaS operators to review church registrations, automatically provision independent tenant databases, and push modular feature updates seamlessly.
+
+---
+
+## 3. Target Audience & Stakeholders
+
 ```
-This will prompt you for:
-- Admin name
-- Admin email
-- Admin password
-
-**Option 2: Using Flags**
-```bash
-php artisan app:create-admin --name="John Doe" --email="admin@church.local" --password="secure-password"
+┌────────────────────────────────────────────────────────────────────────┐
+│                        CENTRAL PLATFORM OPERATOR                       │
+│    (SaaS Super Admin · Tenant Review · Automated DB Provisioning)      │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ Dedicated Subdomains
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                        LOCAL CHURCH WORKSPACE                          │
+│                                                                        │
+│  [Church Admin / Senior Pastor]  ── Full church oversight & settings  │
+│  [Program Leader / Director]     ── Curriculum & cohort coordination   │
+│  [Cell Leader / Small Group]     ── Discipleship mentorship & habit review │
+│  [Disciple / Member]             ── Personal spiritual progress portal │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Option 3: Seeding (Fresh Installation)**
+* **Senior Pastors & Church Boards:** High-level dashboard visibility into congregational maturity, retention trends, and leadership readiness.
+* **Ministry Directors & Program Leaders:** Tools to schedule cohorts, manage lesson outlines, and track graduation prerequisites.
+* **Cell Group Mentors:** Scoped access to mentor assigned disciples, log weekly cell meetings, and endorse devotional consistency.
+* **Church Members & Disciples:** A self-service portal to review class lessons, log spiritual quiet time, and monitor their pathway toward leadership.
+* **SaaS Service Providers & Partner Organizations:** An enterprise-ready multi-tenant codebase built for sustainable subscription models and multi-site network deployments.
+
+---
+
+## 4. Key System Features
+
+### Multi-Tenant Architecture & Automated Provisioning
+* **Dedicated Subdomain Routing:** Dynamic tenant resolution (`churchname.domain.com` or `churchname.localhost`).
+* **Database-per-Tenant Separation:** Powered by `stancl/tenancy`, every church is allocated its own database, ensuring enterprise-grade privacy and zero foreign-key collisions.
+* **Zero-Touch Provisioning Engine:** Automatically executes migrations, seeds default roles, sets up four foundational curricula, and configures storage upon admin approval.
+
+### Discipleship Progression Pathway
+* **Structured Curricula:** Pre-configured four-stage training pipeline:
+  1. **Life Class:** Foundations of faith and newcomer integration.
+  2. **School of Leaders 1 (SOL 1):** Personal spiritual disciplines and evangelism.
+  3. **School of Leaders 2 (SOL 2):** Cell group planting and small-group leadership.
+  4. **School of Leaders 3 (SOL 3):** Senior leadership, counseling, and church administration.
+* **Lesson Builder & Prerequisites:** Teachers can author lesson outlines, attach resource materials, and mandate prerequisite completions before disciples advance.
+
+### Attendance & Devotional Tracking Engine
+* **Session Attendance Logging:** Fast, mobile-responsive recording for Sunday worship services and mid-week cell meetings.
+* **Devotional Journaling:** Disciples log daily Bible reflections and prayer requests, shifting the focus from mere physical presence to holistic spiritual health.
+* **Verification Workflow:** Leaders review and confirm journal entries to validate disciple consistency.
+
+### Granular Role-Based Access Control (RBAC)
+* Built-in hierarchical permissions across five tiers: **Super Admin**, **Church Admin**, **Program Leader**, **Cell Leader**, and **Disciple**.
+* Strict data scoping ensures leaders only view and manage members within their assigned sphere of care.
+
+### Dynamic White-Labeling & Accessible Theming
+* **WCAG-Compliant Palette Engine:** Admins enter a primary hex color; the system programmatically generates an 11-shade palette (`50` through `950`) and evaluates luminance contrast ratios.
+* **Logo Management:** Secure upload and storage pipeline supporting PNG, JPG, SVG, and WebP, dynamically branding sidebars and communication emails.
+
+### Central SaaS Control Plane & Feature Deployment
+* **Tenant Lifecycle Management:** Comprehensive registration approval queue, tenant suspension controls, and billing tier oversight.
+* **Integrated Support Desk:** In-app ticket routing connecting church leaders directly with platform support administrators.
+* **In-App Product Changelogs & Feature Pipelines:** System-wide release notifications and self-service feature package installers for tenants.
+
+---
+
+## 5. Technology Stack
+
+| Layer | Technologies | Purpose |
+| :--- | :--- | :--- |
+| **Backend Framework** | PHP 8.2+, Laravel 12.x | High-performance application core, validation, routing, and ORM. |
+| **Multi-Tenancy** | Stancl Tenancy v3.10 | Subdomain identification and automated multi-database lifecycle management. |
+| **Database** | MySQL 8.0+ / MariaDB | Dual-connection architecture: Central catalog DB + isolated Tenant DBs. |
+| **Frontend & UI** | Blade, Tailwind CSS, Vanilla JS | Lightweight, server-rendered views with zero heavy frontend framework overhead. |
+| **Build & Assets** | Vite 7.x, PostCSS | Page-split asset bundling (`admin.css`, `auth.css`, `base.css`, `landing.css`). |
+| **Testing** | Pest PHP, PHPUnit | End-to-end multi-tenant feature and unit test coverage. |
+
+---
+
+## 6. System Architecture & Workflow
+
+```
+                                 [ Incoming Request ]
+                                          │
+                        ┌─────────────────┴─────────────────┐
+                        │ Stancl Subdomain / Host Resolver  │
+                        └─────────────────┬─────────────────┘
+                                          │
+                  ┌───────────────────────┴───────────────────────┐
+                  ▼                                               ▼
+         [ Central Domain ]                              [ Tenant Subdomain ]
+       (app.io / localhost)                           (smhs.io / smhs.localhost)
+                  │                                               │
+          ┌───────┴───────┐                               ┌───────┴───────┐
+          │ routes/central│                               │ routes/tenant │
+          └───────┬───────┘                               └───────┬───────┘
+                  ▼                                               ▼
+      ┌───────────────────────┐                       ┌───────────────────────┐
+      │  Central Database     │                       │ Dedicated Tenant DB   │
+      │  • Tenants & Domains  │                       │ • Church Profile      │
+      │  • Admin Users & RBAC │                       │ • Members & Roles     │
+      │  • Global Changelog   │                       │ • Classes & Lessons   │
+      │  • Support Desk       │                       │ • Attendance & Habits │
+      └───────────────────────┘                       └───────────────────────┘
+```
+
+### End-to-End Workflow
+
+1. **Church Registration:** A church representative registers via the public landing page with desired church details, pastor credentials, and chosen subdomain.
+2. **Review & Approval:** The platform Super Admin reviews the application in the Central Admin console and clicks **Approve**.
+3. **Automated Provisioning:** The provisioning service creates a dedicated MySQL database, executes tenant migrations, seeds standard roles/permissions/curricula, and emits a welcome notification.
+4. **Onboarding & White-Labeling:** The pastor logs in, uploads the church emblem, configures their brand color, and defines program schedules.
+5. **Active Discipleship:** Leaders onboard disciples, log attendance, review daily quiet times, and advance mature members through the leadership pipeline.
+
+---
+
+## 7. Expected Outcomes & Impact
+
+* **Increased Member Retention:** Structured milestone tracking significantly mitigates the "back-door" attrition common in growing churches.
+* **Pastoral Leadership Clarity:** Replaces anecdotal impressions with empirical attendance rates and spiritual habit engagement metrics.
+* **Institutional Memory:** Preserves multi-year discipleship and baptismal records regardless of leader turnover.
+* **Uncompromising Security:** Complete database separation guarantees church records remain strictly confidential and isolated from neighboring tenants.
+
+---
+
+## 8. Quick Start & Local Deployment
+
+### Prerequisites
+* **PHP 8.2+** with extensions: `pdo_mysql`, `openssl`, `mbstring`, `fileinfo`, `curl`
+* **Composer 2.x**
+* **Node.js (v18+) & NPM**
+* **MySQL / MariaDB** (e.g., via XAMPP on port `3306`)
+
+### Step-by-Step Installation
+
 ```bash
+# 1. Clone the repository
+git clone https://github.com/your-org/church-discipleship-tracker.git
+cd church-discipleship-tracker
+
+# 2. Install dependencies
+composer install
+npm install
+
+# 3. Environment configuration
+cp .env.example .env
+php artisan key:generate
+php artisan storage:link
+
+# 4. Database initialization
+# Ensure central DB exists: 'church_discipleship_tracker'
+php artisan migrate
 php artisan db:seed --class=AdminSeeder
-```
-This creates a default super admin:
-- Email: `admin@church.local`
-- Password: `admin@123` (⚠️ Change immediately!)
+php artisan tenancy:migrate
 
-### Accessing the Admin Dashboard
-
-1. Navigate to: `http://your-domain.local/admin/login`
-2. Log in with your admin credentials
-3. You'll see the central control plane with:
-   - Tenant management
-   - Support ticket handling
-   - System announcements
-   - Admin user management
-
-### Initial Configuration Tasks
-
-After logging in:
-1. ✅ Create additional admin users (Admin Staff section)
-2. ✅ Approve pending tenant signups (Approvals section)
-3. ✅ Configure system announcements (if needed)
-4. ✅ Monitor support tickets
-
----
-
-## Asset Pipeline
-
-The project uses **Vite** for asset bundling. CSS is split per-page for optimization:
-
-| File | Usage | Rebuilt |
-|------|-------|---------|
-| `auth.css` | Admin & tenant login pages | `npm run dev` |
-| `admin.css` | Central admin dashboard | `npm run dev` |
-| `app.css` | Tenant application (empty) | `npm run dev` |
-| `base.css` | Shared utility styles | `npm run dev` |
-
-To rebuild assets:
-```bash
-npm run dev    # Development (watch mode)
-npm run build  # Production (minified)
+# 5. Compile production frontend assets
+npm run build
 ```
 
----
+### Running the System
+Because Apache/XAMPP serves directly from the `public/` directory or via Artisan:
+```bash
+# Start Laravel development server (if not using Apache)
+php artisan serve --host=0.0.0.0 --port=80
+```
 
-## Architecture
+### Default Access Points
 
-| Database | Tables |
-|----------|--------|
-| **Central** | tenants, domains, cache, migrations |
-| **Tenant** | users, church, programs, lessons, attendance, devotionals, roles, permissions, permission_role |
-
----
-
-## Roles
-
-| Slug | Display Name | Key Permissions |
-|------|--------------|-----------------|
-| `church_admin` | Church Administrator | manage-users, manage-programs, manage-lessons, manage-subscription, view-reports |
-| `program_leader` | Program Leader | manage-programs, manage-lessons, record-attendance |
-| `cell_leader` | Cell Leader | record-attendance |
-| `disciple` | Disciple | dashboard-view |
+| Portal | URL | Demo Credentials | Description |
+| :--- | :--- | :--- | :--- |
+| **Public Landing** | `http://localhost/` | *Public Access* | Registration wizard, pricing plans, and overview. |
+| **Central Admin** | `http://localhost/admin/login` | `admin@church.local`<br>`admin@123` | Platform-wide control plane, tenant approvals, and releases. |
+| **Tenant Portal** | `http://smhs.localhost/login` | `kaelithsuperstar@gmail.com`<br>`password123` | Church Pastor / Administrator workspace. |
+| **Program Leader** | `http://smhs.localhost/login` | `programleader@smhs.local`<br>`password123` | Curriculum coordinator and cohort oversight. |
+| **Disciple Portal** | `http://smhs.localhost/login` | `disciple@smhs.local`<br>`password123` | Personal progress, lessons, and quiet time logs. |
 
 ---
 
-## Branch Naming
+## 9. Quality Assurance & Testing
 
-Follow Git Flow conventions:
-- `main` — Production (protected)
-- `develop` — Integration (protected)
-- `feature/{ticket}-{desc}` — Features
-- `fix/{ticket}-{desc}` — Bugfixes
-- `release/{semver}` — Release prep
-- `hotfix/{semver}-{desc}` — Production hotfixes
-
----
-
-## Running Tests
+The project maintains test suites covering role-based permission gates, multi-tenant isolation, and service workflows:
 
 ```bash
+# Run unit and feature test suites
 php artisan test
-```
 
-## Running Tests
-
-```bash
-php artisan test
-```
-
----
-
-## Contributing
-
-For detailed contribution guidelines and setup instructions, see:
-- [Version Control Workflow](Docs/VERSION-CONTROL-WORKFLOW.md)
-- [Migration Strategy](Docs/MIGRATION-STRATEGY.md)
-- [Branch Protection Rules](Docs/branch-protection.md)
-
-```bash
-# Format code
-./vendor/bin/pint
-
-# Check for issues
+# Verify code styling standards
 ./vendor/bin/pint --test
 ```
 
 ---
 
-## Project Docs
+## 10. Project Documentation Directory
 
-- [RBAC Enforcement Guide](./Docs/RBAC%20ENFORCER.md)
-- [Dashboard & Metrics Implementation](./Docs/Dashboard%20%26%20Metrics%20Completer.md)
-- [Subscription & Feature Gating](./Docs/Subscription%20%26%20Feature%20Gating%20Injector.md)
-- [Tenancy Integrity Guard](./Docs/Tenancy%20Integrity%20Guard.md)
-- [System Auditor](./Docs/System%20Auditor.md)
-
----
-
-## Support & Issues
-
-For issues, feature requests, or questions:
-1. Check existing [GitHub Issues](https://github.com/your-org/church-discipleship-tracker/issues)
-2. Create a new issue with template (bug/feature)
-3. For security issues, email: security@yourdomain.com
+For deeper architectural guidelines, refer to the project documentation:
+* [Architecture Master Specifications](Docs/CODEBASE-AWARE%20MASTER%20PROMPT.md)
+* [Central Admin Control Subsystem](Docs/ADMIN-SYSTEM.md)
+* [Database Migration & Tenancy Strategy](Docs/MIGRATION-STRATEGY.md)
+* [Multi-Tenant RBAC Enforcement Guide](Docs/RBAC%20ENFORCER.md)
+* [Version Control & Release Pipeline](Docs/VERSION-CONTROL-WORKFLOW.md)
 
 ---
 
-## License
+## 11. License
 
-MIT License — see LICENSE file for details
-
----
-
-## Troubleshooting
-
-### Admin Login Issues
-
-**Problem: 404 Error at `/admin/login`**
-- ✅ Verify routes: `php artisan route:list | grep admin`
-- ✅ Clear cache: `php artisan route:cache && php artisan config:cache`
-- ✅ Check `.env` for correct `APP_URL`
-
-**Problem: Login fails with valid credentials**
-- ✅ Verify admin user exists: `php artisan tinker` then `AdminUser::active()->first()`
-- ✅ Check default admin created: `php artisan db:seed --class=AdminSeeder`
-- ✅ Verify password is hashed: `AdminUser::where('email', 'admin@church.local')->first()->password`
-
-**Problem: Login page has no CSS styling**
-- ✅ Rebuild assets: `npm run dev` (wait for compilation)
-- ✅ Check Vite manifest: `ls -la public/build/manifest.json`
-- ✅ Clear browser cache: Ctrl+Shift+Delete (Chrome) or Cmd+Shift+Delete (Safari)
-- ✅ Verify `auth.css` is included: Check Vite config for `resources/css/auth.css`
-
-### Asset Pipeline Issues
-
-**Problem: Styles not appearing on dashboard**
-- ✅ Verify admin.css is built: `npm run dev`
-- ✅ Check assets in public/build folder: `ls public/build/assets/`
-- ✅ Inspect network tab in browser DevTools (check for 404 on CSS files)
-
-**Problem: JavaScript not working**
-- ✅ Verify Vite is running: Check terminal for `http://localhost:5173`
-- ✅ Restart Vite: Stop `npm run dev`, then start again
-- ✅ Clear node_modules: `rm -rf node_modules && npm install`
-
-### Database Issues
-
-**Problem: Admin user creation fails**
-- ✅ Verify database connection: `php artisan db:show`
-- ✅ Check migration status: `php artisan migrate:status`
-- ✅ Verify table exists: `php artisan tinker` then `DB::table('admin_users')->count()`
-
----
-
-## Architecture Docs (For Developers)
-
-- [Codebase Architecture](./Docs/CODEBASE-AWARE%20MASTER%20PROMPT.md)
-- [Project Rules & Tenancy](./Rule.md)
+This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for complete licensing terms.

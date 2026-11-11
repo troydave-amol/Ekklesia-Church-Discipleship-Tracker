@@ -123,7 +123,7 @@ class ThemeService
         $css .= "--badge-accent-border: var(--tenant-primary-300);\n";
         $css .= "--tab-active: var(--tenant-primary);\n";
         $css .= "--toggle-active: var(--tenant-primary);\n";
-        $css .= "--nav-active-bg: var(--tenant-primary-100);\n";
+        $css .= "--nav-active-bg: color-mix(in srgb, var(--tenant-primary) 10%, transparent);\n";
         $css .= "--nav-active-text: var(--tenant-primary);\n";
         $css .= "--nav-active-border: var(--tenant-primary);\n";
         

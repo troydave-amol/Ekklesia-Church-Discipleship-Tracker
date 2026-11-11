@@ -134,7 +134,7 @@
         }
         .nav-item svg { flex-shrink: 0; }
         .nav-item:hover { background: var(--surface-hover); color: var(--text); }
-        .nav-item.active { background: var(--nav-active-bg, var(--tenant-primary-100, rgba(212,168,83,.1))); color: var(--nav-active-text, var(--tenant-primary)); font-weight: 500; border-left-color: var(--nav-active-border, var(--tenant-primary)); }
+        .nav-item.active { background: color-mix(in srgb, var(--tenant-primary) 10%, transparent); color: var(--tenant-primary); font-weight: 500; border-left-color: var(--tenant-primary); }
         .nav-item .badge-count { margin-left: auto; font-size: 10px; background: var(--red); color: #fff; border-radius: 10px; padding: 1px 6px; font-family: 'DM Mono', monospace; }
 
         .sidebar-user {

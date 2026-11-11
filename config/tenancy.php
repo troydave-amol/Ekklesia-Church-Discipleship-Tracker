@@ -20,6 +20,7 @@ return [
         'church-discipleship-tracker.io',
         'www.church-discipleship-tracker.io',
         '127.0.0.1',
+        'localhost',
         parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST),
     ],
 
